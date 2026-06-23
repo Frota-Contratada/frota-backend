@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import 'dotenv/config';
+import { Settings } from 'luxon';
+import { AppModule } from './app.module';
+
+Settings.defaultZone = 'utc';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ConfirmarPinResponseDto } from '../dtos/response/confirmar-pin-response.dto';
-import { ConfirmarPinRequestDto } from '../dtos/request/confirmar-pin-request.dto';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { ConfirmarPinRequestDto } from './dtos/request/confirmar-pin-request.dto';
+import { ConfirmarPinResponseDto } from './dtos/response/confirmar-pin-response.dto';
 
 @Controller()
 export class ConfirmarPinController {

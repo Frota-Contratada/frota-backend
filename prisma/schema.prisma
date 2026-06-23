@@ -1,10 +1,34 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlserver"
+}
+
+model TipoToken {
+  nCdTpToken      Decimal      @id(map: "PK_TipoToken") @db.Decimal(10, 0)
+  cNmTpToken      String       @db.VarChar(100)
+  nQtdSegValidade Int
+  PinUsuario      PinUsuario[]
+}
+
+model PinUsuario {
+  nCdPinUsuario BigInt    @id(map: "PK_PinUsuario") @default(autoincrement())
+  nCdUsuario    Decimal   @db.Decimal(10, 0)
+  nCdTpToken    Decimal   @db.Decimal(10, 0)
+  cPin          String    @db.Char(6)
+  cToken        String?   @unique(map: "UK_PinUsuario_cToken") @db.VarChar(255)
+  cUtilizado    String    @default("N") @db.Char(1)
+  dCriacao      DateTime  @default(now(), map: "DF_PinUsuario_dCriacao") @db.DateTime
+  dExpiracao    DateTime  @db.DateTime
+  dUtilizacao   DateTime? @db.DateTime
+
+  Usuario   Usuario   @relation(fields: [nCdUsuario], references: [nCdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_PinUsuario_Usuario")
+  TipoToken TipoToken @relation(fields: [nCdTpToken], references: [nCdTpToken], onDelete: NoAction, onUpdate: NoAction, map: "FK_PinUsuario_TipoToken")
+
+  @@index([nCdUsuario, nCdTpToken, cUtilizado], map: "IX_PinUsuario_BuscaAtivoPorPin")
+  @@index([cToken, cUtilizado], map: "IX_PinUsuario_BuscaAtivoPorToken")
 }
 
 model CentroCusto {
@@ -290,7 +314,7 @@ model Usuario {
   cCdSeara               String?                  @unique(map: "UK_Usuario_cCdSeara") @db.VarChar(255)
   cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
   cCargo                 String?                  @db.VarChar(100)
-  cHashSenha             String                   @db.VarChar(255)
+  cHashSenha             String?                  @db.VarChar(255)
   cCPF                   String?                  @unique(map: "UK_Usuario_cCPF") @db.VarChar(11)
   cDisponivel            String                   @db.Char(1)
   dAtivacao              DateTime                 @default(now(), map: "DF_Usuario_dAtivacao") @db.DateTime
@@ -302,6 +326,7 @@ model Usuario {
   Filial                 Filial?                  @relation(fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
   Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
   UsuarioPerfil          UsuarioPerfil[]
+  PinUsuario             PinUsuario[]
 
   @@index([cEmail, cDisponivel], map: "IX_Usuario_LoginRumo")
 }

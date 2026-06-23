@@ -26,7 +26,6 @@
       "@core/*": ["./src/core/*"],
       "@module/*": ["./src/modules/*"],
       "@integration/*": ["./src/integrations/*"],
-      "@prisma/*": ["./prisma/generated/*"]
     }
   }
 }

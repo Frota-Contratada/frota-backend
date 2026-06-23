@@ -1,17 +1,30 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { AuthTokenDto } from '../dtos/response/auth-token.dto';
-import { LoginRequestDto } from '../dtos/request/login-request.dto';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { LoginRequestDto } from './dtos/request/login-request.dto';
+import { AuthTokenDto } from './dtos/response/auth-token.dto';
+import { LoginService } from '../services/login.service';
+import { DateTime } from 'luxon';
 
 @Controller()
 export class LoginController {
-  constructor() {}
+  constructor(private readonly loginService: LoginService) {}
 
   @Post('login')
   async handle(
     @Body() body: LoginRequestDto,
   ): Promise<ResponseInterface<AuthTokenDto>> {
-    const response = new AuthTokenDto();
-    return { response };
+    const result = await this.loginService.execute(
+      body.email,
+      body.senha,
+      body.plataforma,
+    );
+    const response = new AuthTokenDto(
+      result.accessToken,
+      result.refreshToken,
+      DateTime.now().plus({ seconds: result.validade }),
+    );
+    return {
+      response,
+    };
   }
 }

@@ -1,17 +1,26 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { RefreshTokenRequestDto } from '../dtos/request/refresh-token-request.dto';
-import { AuthTokenDto } from '../dtos/response/auth-token.dto';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { RefreshTokenRequestDto } from './dtos/request/refresh-token-request.dto';
+import { AuthTokenDto } from './dtos/response/auth-token.dto';
+import { RefreshTokenService } from '../services/refresh-token.service';
+import { DateTime } from 'luxon';
 
 @Controller()
 export class RefreshTokenController {
-  constructor() {}
+  constructor(private readonly refreshTokenService: RefreshTokenService) {}
 
   @Post('refresh')
   async handle(
     @Body() body: RefreshTokenRequestDto,
   ): Promise<ResponseInterface<AuthTokenDto>> {
-    const response = new AuthTokenDto();
-    return { response };
+    const result = await this.refreshTokenService.execute(body.refreshToken);
+    const response = new AuthTokenDto(
+      result.accessToken,
+      result.refreshToken,
+      DateTime.now().plus({ seconds: result.validade }),
+    );
+    return {
+      response,
+    };
   }
 }
