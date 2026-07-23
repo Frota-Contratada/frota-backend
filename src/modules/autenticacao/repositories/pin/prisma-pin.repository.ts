@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { PinRepositoryContract } from './pin-repository.contract';
-import { TipoToken } from '../enums/tipo-token.enum';
-import { Pin } from '../domain/pin';
+import { TipoToken } from '../../enums/tipo-token.enum';
+import { Pin } from '../../domain/pin';
 import { PrismaPinMapper } from './prisma-pin.mapper';
-import { Decimal } from '@prisma/client/runtime/client';
 
 @Injectable()
 export class PrismaPinRepository extends PinRepositoryContract {
@@ -18,7 +17,7 @@ export class PrismaPinRepository extends PinRepositoryContract {
     pin: string,
   ): Promise<Pin> {
     const tipo = await this.prisma.tipoToken.findUniqueOrThrow({
-      where: { nCdTpToken: new Decimal(TipoToken[tipoToken]) },
+      where: { nCdTpToken: tipoToken },
     });
 
     const expiraEm = new Date(Date.now() + tipo.nQtdSegValidade * 1000);
@@ -26,7 +25,7 @@ export class PrismaPinRepository extends PinRepositoryContract {
     const registro = await this.prisma.pinUsuario.create({
       data: {
         nCdUsuario: usuarioId,
-        nCdTpToken: new Decimal(TipoToken[tipoToken]),
+        nCdTpToken: tipoToken,
         cPin: pin,
         dExpiracao: expiraEm,
       },
@@ -43,7 +42,7 @@ export class PrismaPinRepository extends PinRepositoryContract {
     const registro = await this.prisma.pinUsuario.findFirst({
       where: {
         nCdUsuario: usuarioId,
-        nCdTpToken: new Decimal(TipoToken[tipoToken]),
+        nCdTpToken: tipoToken,
         cPin: pin,
         cToken: null,
         cUtilizado: 'N',
@@ -71,7 +70,7 @@ export class PrismaPinRepository extends PinRepositoryContract {
     const registro = await this.prisma.pinUsuario.findFirst({
       where: {
         cToken: token,
-        nCdTpToken: new Decimal(TipoToken[tipoToken]),
+        nCdTpToken: tipoToken,
         cUtilizado: 'N',
         dExpiracao: { gt: new Date() },
       },
@@ -94,7 +93,7 @@ export class PrismaPinRepository extends PinRepositoryContract {
     await this.prisma.pinUsuario.updateMany({
       where: {
         nCdUsuario: usuarioId,
-        nCdTpToken: new Decimal(TipoToken[tipoToken]),
+        nCdTpToken: tipoToken,
         cUtilizado: 'N',
       },
       data: { cUtilizado: 'S' },

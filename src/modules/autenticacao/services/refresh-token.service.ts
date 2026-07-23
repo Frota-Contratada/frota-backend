@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { TokenCacheServiceContract } from '@core/auth/contracts/token-cache-service.contract';
 import { TokenServiceContract } from '@core/auth/contracts/token-service.contract';
 import { RefreshTokenPayload } from '@core/auth/types/refresh-token-payload';
-import { AuthToken } from '@core/auth/types/auth-token';
-import { AutenticacaoRepositoryContract } from '../repositories/autenticacao-repository.contract';
 import { RefreshTokenInvalidoException } from '../exceptions/refresh-token-invalido.exception';
+import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
 
 @Injectable()
 export class RefreshTokenService {

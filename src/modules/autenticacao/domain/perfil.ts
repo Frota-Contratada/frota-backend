@@ -8,5 +8,5 @@ export class Perfil {
   dataAtivacao: DateTime;
   dataDesativacao?: DateTime;
 
-  permisoes: Permissao[];
+  permissoes: Permissao[];
 }

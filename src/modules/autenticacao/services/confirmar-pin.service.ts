@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { TipoToken } from '../enums/tipo-token.enum';
-import { AutenticacaoRepositoryContract } from '../repositories/autenticacao-repository.contract';
-import { PinRepositoryContract } from '../repositories/pin-repository.contract';
+import { PinRepositoryContract } from '../repositories/pin/pin-repository.contract';
 import { PinInvalidoException } from '../exceptions/pin-invalido.exception';
+import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
 
 @Injectable()
 export class ConfirmarPinService {
@@ -12,8 +12,15 @@ export class ConfirmarPinService {
     private readonly pinRepository: PinRepositoryContract,
   ) {}
 
-  async execute(email: string, tipoToken: TipoToken, pin: string): Promise<string> {
-    const autenticacao = await this.autenticacaoRepository.buscarPorEmail(email);
+  async execute(
+    email: string,
+    tipoToken: TipoToken,
+    pin: string,
+  ): Promise<{
+    token: string;
+  }> {
+    const autenticacao =
+      await this.autenticacaoRepository.buscarPorEmail(email);
 
     if (!autenticacao) {
       throw new PinInvalidoException();
@@ -33,6 +40,6 @@ export class ConfirmarPinService {
 
     await this.pinRepository.definirToken(pinAtivo.id, token);
 
-    return token;
+    return { token };
   }
 }

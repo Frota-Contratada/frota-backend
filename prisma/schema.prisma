@@ -18,7 +18,7 @@ model PinUsuario {
   nCdUsuario    Decimal   @db.Decimal(10, 0)
   nCdTpToken    Decimal   @db.Decimal(10, 0)
   cPin          String    @db.Char(6)
-  cToken        String?   @unique(map: "UK_PinUsuario_cToken") @db.VarChar(255)
+  cToken        String?   @db.VarChar(255)
   cUtilizado    String    @default("N") @db.Char(1)
   dCriacao      DateTime  @default(now(), map: "DF_PinUsuario_dCriacao") @db.DateTime
   dExpiracao    DateTime  @db.DateTime

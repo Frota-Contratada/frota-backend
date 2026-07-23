@@ -1,4 +1,4 @@
 export enum Plataforma {
-    "WEB",
-    "MOBILE"
+    "WEB"="WEB",
+    "MOBILE"="MOBILE"
 }

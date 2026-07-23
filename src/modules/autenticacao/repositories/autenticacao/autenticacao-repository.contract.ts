@@ -1,4 +1,4 @@
-import { Autenticacao } from '../domain/autenticacao';
+import { Autenticacao } from '@module/autenticacao/domain/autenticacao';
 
 export abstract class AutenticacaoRepositoryContract {
   abstract buscarPorEmail(email: string): Promise<Autenticacao | null>;

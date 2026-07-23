@@ -1,4 +1,3 @@
-import { Plataforma } from '@common/enums/plataforma.enum';
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 

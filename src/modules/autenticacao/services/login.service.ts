@@ -4,7 +4,7 @@ import { TokenCacheServiceContract } from '@core/auth/contracts/token-cache-serv
 import { TokenServiceContract } from '@core/auth/contracts/token-service.contract';
 import { Injectable } from '@nestjs/common';
 import { CredenciaisInvalidasException } from '../exceptions/credenciais-invalidas.exception';
-import { AutenticacaoRepositoryContract } from '../repositories/autenticacao-repository.contract';
+import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
 
 @Injectable()
 export class LoginService {

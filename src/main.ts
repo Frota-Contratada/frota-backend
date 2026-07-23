@@ -3,11 +3,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import 'dotenv/config';
 import { Settings } from 'luxon';
 import { AppModule } from './app.module';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 Settings.defaultZone = 'utc';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: '*',
+    methods: '*',
+    allowedHeaders: '*',
+  });
+
+  app.useGlobalPipes(new ZodValidationPipe())
 
   const config = new DocumentBuilder()
     .setTitle('Backend Gestão de Frota Contratada')

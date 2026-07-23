@@ -1,6 +1,6 @@
 import { Usuario } from '@prisma/client';
-import { Autenticacao } from '../domain/autenticacao';
 import { PrismaUsuarioMapper } from '@module/usuario/info/repositories/prisma-usuario.mapper';
+import { Autenticacao } from '@module/autenticacao/domain/autenticacao';
 
 export class PrismaAutenticacaoMapper {
   static toDomain(entity: Usuario): Autenticacao;

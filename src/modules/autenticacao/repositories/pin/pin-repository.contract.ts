@@ -1,5 +1,5 @@
-import { TipoToken } from '../enums/tipo-token.enum';
-import { Pin } from '../domain/pin';
+import { TipoToken } from '../../enums/tipo-token.enum';
+import { Pin } from '../../domain/pin';
 
 export abstract class PinRepositoryContract {
   abstract criar(

@@ -7,7 +7,11 @@ export const LoginRequestSchema = z.object({
   senha: z
     .string()
     .min(6, { message: 'Informe uma senha com 6 caracteres no mínimo' }),
-  plataforma: z.enum(Plataforma),
+  plataforma: z
+    .enum(['MOBILE', 'WEB'])
+    .transform((value) =>
+      value === 'MOBILE' ? Plataforma.MOBILE : Plataforma.WEB,
+    ),
 });
 
 export class LoginRequestDto extends createZodDto(LoginRequestSchema) {}

@@ -1,6 +1,6 @@
 import { PinUsuario } from '@prisma/client';
-import { Pin } from '../domain/pin';
-import { TipoToken } from '../enums/tipo-token.enum';
+import { Pin } from '../../domain/pin';
+import { TipoToken } from '../../enums/tipo-token.enum';
 
 export class PrismaPinMapper {
   static toDomain(entity: PinUsuario): Pin;

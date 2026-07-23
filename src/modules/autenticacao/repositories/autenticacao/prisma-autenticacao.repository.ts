@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AutenticacaoRepositoryContract } from './autenticacao-repository.contract';
 import { PrismaService } from '@core/prisma/services/prisma.service';
-import { Autenticacao } from '../domain/autenticacao';
+import { Autenticacao } from '../../domain/autenticacao';
 import { PrismaAutenticacaoMapper } from './prisma-autenticacao.mapper';
 
 @Injectable()

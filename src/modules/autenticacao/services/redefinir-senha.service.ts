@@ -6,7 +6,7 @@ import { CredenciaisInvalidasException } from '../exceptions/credenciais-invalid
 import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
 
 @Injectable()
-export class SignUpService {
+export class RedefinirSenhaService {
   constructor(
     private readonly pinRepository: PinRepositoryContract,
     private readonly autenticacaoRepository: AutenticacaoRepositoryContract,
@@ -16,7 +16,7 @@ export class SignUpService {
   async execute(token: string, senha: string): Promise<void> {
     const tokenAtivo = await this.pinRepository.encontrarTokenAtivo(
       token,
-      TipoToken.SIGN_UP,
+      TipoToken.REDEFINIR_SENHA,
     );
 
     if (!tokenAtivo) {
@@ -27,7 +27,7 @@ export class SignUpService {
       tokenAtivo.usuarioId,
     );
 
-    if (!autenticacao || autenticacao?.senha) {
+    if (!autenticacao || !autenticacao?.senha) {
       throw new CredenciaisInvalidasException();
     }
 
