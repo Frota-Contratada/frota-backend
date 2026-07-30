@@ -67,8 +67,7 @@ export class EnviarPinEmailService {
     destinatario: string,
     campos: EmailTemplateAutenticacaoCampos[TTipoToken],
   ): Promise<void> {
-    const { caminhoArquivo, assunto } =
-      EMAIL_TEMPLATES_AUTENTICACAO[tipoToken];
+    const { caminhoArquivo, assunto } = EMAIL_TEMPLATES_AUTENTICACAO[tipoToken];
 
     await this.emailService.enviarEmail({
       email: destinatario,

@@ -1,14 +1,19 @@
 import { join } from 'path';
 import { TipoToken } from '../enums/tipo-token.enum';
 
-export interface EmailTemplateCamposSignUpInterface extends Record<string, string> {
+export interface EmailTemplateCamposSignUpInterface extends Record<
+  string,
+  string
+> {
   nome: string;
   codigo: string;
   tempo: string;
 }
 
-export interface EmailTemplateCamposRedefinirSenhaInterface
-  extends Record<string, string> {
+export interface EmailTemplateCamposRedefinirSenhaInterface extends Record<
+  string,
+  string
+> {
   nome: string;
   codigo: string;
   tempo: string;

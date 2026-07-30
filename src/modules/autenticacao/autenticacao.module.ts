@@ -29,7 +29,7 @@ import { EmailModule } from '@core/email/email.module';
     RefreshTokenController,
     SignUpController,
     RedefinirSenhaController,
-    VerificarPrimeiroAcessoController
+    VerificarPrimeiroAcessoController,
   ],
   providers: [
     LoginService,

@@ -5,7 +5,7 @@ export abstract class TokenCacheServiceContract {
     usuarioId: number,
     plataforma: Plataforma,
     refreshToken: string,
-    validade: number
+    validade: number,
   ): Promise<void>;
   abstract encontrarPorUsuarioIdPlataforma(
     usuarioId: number,

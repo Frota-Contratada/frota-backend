@@ -6,5 +6,5 @@ export abstract class UsuarioRepositoryContract {
   abstract contar(): Promise<number>;
   abstract atualizar(id: number, data: Usuario): Promise<Usuario>;
   abstract deletar(id: number): Promise<void>;
-  abstract buscarPorEmail(email: String): Promise<Usuario | null>;
+  abstract buscarPorEmail(email: string): Promise<Usuario | null>;
 }

@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-import {
-  EmailServiceContract
-} from '../contracts/email-service.contract';
+import { EmailServiceContract } from '../contracts/email-service.contract';
 import { EmailTemplateService } from './email-template.service';
 import { EmailTemplateInterface } from '../interfaces/email-template.interface';
 
@@ -41,7 +39,13 @@ export class JbsEmailService extends EmailServiceContract {
     }
   }
 
-  async enviarEmail(campos: {email: string; assunto: string; template: EmailTemplateInterface; cc?: string |string []; ccOculto?: string | string[];}): Promise<void> {
+  async enviarEmail(campos: {
+    email: string;
+    assunto: string;
+    template: EmailTemplateInterface;
+    cc?: string | string[];
+    ccOculto?: string | string[];
+  }): Promise<void> {
     const html = this.emailTemplateService.renderizar(campos.template);
 
     await this.transporter.sendMail({

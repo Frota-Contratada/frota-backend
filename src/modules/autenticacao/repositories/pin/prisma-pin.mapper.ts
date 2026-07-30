@@ -10,7 +10,7 @@ export class PrismaPinMapper {
       ? new Pin(
           Number(entity.nCdPinUsuario),
           Number(entity.nCdUsuario),
-          Number(entity.nCdTpToken) as TipoToken,
+          Number(entity.nCdTpToken),
           entity.cPin,
           entity.cToken,
           entity.cUtilizado === 'S',
