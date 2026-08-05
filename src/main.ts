@@ -5,7 +5,7 @@ import { Settings } from 'luxon';
 import { AppModule } from './app.module';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-Settings.defaultZone = 'utc';
+Settings.defaultZone = process.env.TZ ?? 'UTC';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +26,7 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(3000);
+  const port = Number.parseInt(process.env.BACKEND_PORT ?? '3000', 10);
+  await app.listen(port);
 }
 bootstrap();

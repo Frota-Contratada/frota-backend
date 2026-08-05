@@ -1,0 +1,31 @@
+# Dependências e build (reinstalados/recompilados dentro da imagem)
+node_modules
+dist
+build
+coverage
+
+# Pasta acidental de caminho absoluto (não faz parte do projeto)
+home
+
+# Git / editores / ferramentas
+.git
+.gitignore
+.vscode
+.idea
+.kiro
+
+# Segredos e ambiente (injetados em runtime via env_file no compose)
+.env
+.env.*
+
+# Arquivos Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Logs e misc
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+README.md

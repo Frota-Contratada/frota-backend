@@ -44,13 +44,18 @@ export class LoginService {
       throw new CredenciaisInvalidasException();
     }
 
+    const perfis = await this.autenticacaoRepository.buscarPerfisVigentes(
+      autenticacao.usuario.id,
+    );
+
     const tokens = await this.tokenService.gerarTokens(
       {
         sub: autenticacao.usuario.id,
         email: autenticacao.usuario.email,
         plataforma,
+        perfis,
       },
-      { sub: autenticacao.usuario.id, plataforma },
+      { sub: autenticacao.usuario.id, plataforma, perfis },
     );
 
     await this.tokenCacheService.salvar(

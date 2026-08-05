@@ -1,7 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Public } from '@common/decorators/public.decorator';
 import { SignUpRequestDto } from './dtos/request/sign-up-request.dto';
 import { RedefinirSenhaService } from '../services/redefinir-senha.service';
 
+@ApiTags('Autenticação')
+@Public()
 @Controller()
 export class RedefinirSenhaController {
   constructor(private readonly redefinirSenhaService: RedefinirSenhaService) {}

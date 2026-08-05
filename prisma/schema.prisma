@@ -39,6 +39,7 @@ model CentroCusto {
   dDesativacao           DateTime?                @db.DateTime
   Filial                 Filial                   @relation(fields: [nCdFilial], references: [nCdFilial], onUpdate: NoAction, map: "FK_CentroCusto_Filial")
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
+  AprovadorCentroCusto   AprovadorCentroCusto[]
 
   @@id([nCdFilial, nCdCentroCusto], map: "PK_CentroCusto")
 }
@@ -120,14 +121,15 @@ model Endereco {
 
 model Filial {
   nCdFilial        Decimal            @id(map: "PK_Filial") @db.Decimal(10, 0)
-  cNmFilial        String             @db.VarChar(100)
+  cNmFilial        String             @unique(map: "UK_Filial_cNmFilial") @db.VarChar(100)
+  cCNPJ            String             @unique(map: "UK_Filial_cCNPJ") @db.VarChar(14)
   nCdEndereco      Decimal            @db.Decimal(10, 0)
   dAtivacao        DateTime           @default(now(), map: "DF_Filial_dAtivacao") @db.DateTime
   dDesativacao     DateTime?          @db.DateTime
   CentroCusto      CentroCusto[]
   Endereco         Endereco           @relation(fields: [nCdEndereco], references: [nCdEndereco], onUpdate: NoAction, map: "FK_Filial_Endereco")
   FilialFornecedor FilialFornecedor[]
-  Usuario          Usuario[]
+  Usuario          Usuario[]          @relation("UsuarioFilial")
 }
 
 model FilialFornecedor {
@@ -184,28 +186,9 @@ model Parada {
   @@index([nCdSolicitacao], map: "IX_Parada_nCdSolicitacao")
 }
 
-model Perfil {
-  nCdPerfil       Decimal           @id(map: "PK_Perfil") @db.Decimal(10, 0)
-  cNmPerfil       String?           @db.VarChar(50)
-  dAtivacao       DateTime          @default(now(), map: "DF_Perfil_dAtivacao") @db.DateTime
-  dDesativacao    DateTime?         @db.DateTime
-  PermissaoPerfil PermissaoPerfil[]
-  UsuarioPerfil   UsuarioPerfil[]
-}
-
 model Permissao {
-  nCdPermissao    Decimal           @id(map: "PK_Permissao") @db.Decimal(10, 0)
-  cNmPermissao    String            @db.VarChar(100)
-  PermissaoPerfil PermissaoPerfil[]
-}
-
-model PermissaoPerfil {
-  nCdPerfil    Decimal   @db.Decimal(10, 0)
-  nCdPermissao Decimal   @db.Decimal(10, 0)
-  Perfil       Perfil    @relation(fields: [nCdPerfil], references: [nCdPerfil], onUpdate: NoAction, map: "FK_PermissaoPerfil_Perfil")
-  Permissao    Permissao @relation(fields: [nCdPermissao], references: [nCdPermissao], onUpdate: NoAction, map: "FK_PermissaoPerfil_Permis")
-
-  @@id([nCdPerfil, nCdPermissao], map: "PK_PermissaoPerfil")
+  nCdPermissao Decimal @id(map: "PK_Permissao") @db.Decimal(10, 0)
+  cNmPermissao String  @db.VarChar(100)
 }
 
 model Regra {
@@ -311,7 +294,7 @@ model Usuario {
   cNmUsuario             String                   @db.VarChar(100)
   nCdFilial              Decimal?                 @db.Decimal(10, 0)
   nCdFornecedor          Decimal?                 @db.Decimal(10, 0)
-  cCdSeara               String?                  @unique(map: "UK_Usuario_cCdSeara") @db.VarChar(255)
+  cCdSeara               String?                  @db.VarChar(255)
   cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
   cCargo                 String?                  @db.VarChar(100)
   cHashSenha             String?                  @db.VarChar(255)
@@ -323,7 +306,8 @@ model Usuario {
   Corrida                Corrida[]
   Solicitacao            Solicitacao[]
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
-  Filial                 Filial?                  @relation(fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
+  AprovadorCentroCusto   AprovadorCentroCusto?
+  Filial                 Filial?                  @relation("UsuarioFilial", fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
   Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
   UsuarioPerfil          UsuarioPerfil[]
   PinUsuario             PinUsuario[]
@@ -333,14 +317,13 @@ model Usuario {
 
 model UsuarioPerfil {
   nCdUsuario      Decimal   @db.Decimal(10, 0)
-  nCdPerfil       Decimal   @db.Decimal(10, 0)
+  cTipoPerfil     String    @db.VarChar(30)
   dInicioVigencia DateTime  @db.DateTime
   dFimVigencia    DateTime? @db.DateTime
-  Perfil          Perfil    @relation(fields: [nCdPerfil], references: [nCdPerfil], onUpdate: NoAction, map: "FK_UsuarioPerfil_Perfil")
   Usuario         Usuario   @relation(fields: [nCdUsuario], references: [nCdUsuario], onUpdate: NoAction, map: "FK_UsuarioPerfil_Usuario")
 
-  @@id([nCdUsuario, nCdPerfil], map: "PK_UsuarioPerfil")
-  @@index([nCdPerfil], map: "IX_UsuarioPerfil_nCdPerfil")
+  @@id([nCdUsuario, cTipoPerfil], map: "PK_UsuarioPerfil")
+  @@index([cTipoPerfil], map: "IX_UsuarioPerfil_cTipoPerfil")
 }
 
 model Veiculo {
@@ -356,4 +339,15 @@ model Veiculo {
 
   @@id([nCdFornecedor, nCdVeiculo], map: "PK_Veiculo")
   @@index([nCdFornecedor], map: "IX_Veiculo_nCdFornecedor")
+}
+
+model AprovadorCentroCusto {
+  nCdUsuario     Decimal     @id(map: "PK_AprovadorCentroCusto") @db.Decimal(10, 0)
+  nCdFilial      Decimal     @db.Decimal(10, 0)
+  nCdCentroCusto Decimal     @db.Decimal(10, 0)
+  dVinculo       DateTime    @default(now(), map: "DF_AprovadorCentroCusto_dVinculo") @db.DateTime
+  CentroCusto    CentroCusto @relation(fields: [nCdFilial, nCdCentroCusto], references: [nCdFilial, nCdCentroCusto], onUpdate: NoAction, map: "FK_AprovadorCentroCusto_CentroCusto")
+  Usuario        Usuario     @relation(fields: [nCdUsuario], references: [nCdUsuario], onUpdate: NoAction, map: "FK_AprovadorCentroCusto_Usuario")
+
+  @@index([nCdFilial, nCdCentroCusto], map: "IX_AprovadorCentroCusto_CentroCusto")
 }

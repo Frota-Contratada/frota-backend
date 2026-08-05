@@ -10,8 +10,34 @@ export class PrismaUsuarioRepository extends UsuarioRepositoryContract {
   constructor(private readonly prismaService: PrismaService) {
     super();
   }
-  async buscar(id: number): Promise<Usuario> {
-    throw new MetodoNaoImplementadoException();
+  async buscar(id: number): Promise<Usuario | null> {
+    return PrismaUsuarioMapper.toDomain(
+      await this.prismaService.usuario.findUnique({
+        where: {
+          nCdUsuario: id,
+        },
+      }),
+    );
+  }
+
+  async buscarComPerfisVigentes(id: number): Promise<Usuario | null> {
+    const agora = new Date();
+
+    return PrismaUsuarioMapper.toDomainComPerfis(
+      await this.prismaService.usuario.findUnique({
+        where: {
+          nCdUsuario: id,
+        },
+        include: {
+          UsuarioPerfil: {
+            where: {
+              dInicioVigencia: { lte: agora },
+              OR: [{ dFimVigencia: null }, { dFimVigencia: { gt: agora } }],
+            },
+          },
+        },
+      }),
+    );
   }
   async buscarVarios(): Promise<Usuario[]> {
     throw new MetodoNaoImplementadoException();
@@ -30,6 +56,15 @@ export class PrismaUsuarioRepository extends UsuarioRepositoryContract {
       await this.prismaService.usuario.findUnique({
         where: {
           cEmail: email,
+        },
+      }),
+    );
+  }
+  async buscarPorCpf(cpf: string): Promise<Usuario | null> {
+    return PrismaUsuarioMapper.toDomain(
+      await this.prismaService.usuario.findUnique({
+        where: {
+          cCPF: cpf,
         },
       }),
     );

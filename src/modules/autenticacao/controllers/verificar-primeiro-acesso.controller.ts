@@ -1,10 +1,14 @@
 import { Body, Controller, Get, Param } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Public } from '@common/decorators/public.decorator';
 import { VerificarPrimeiroAcessoService } from '../services/verificar-primeiro-acesso.service';
 import { VerificarPrimeiroAcessoResponseDto } from './dtos/response/verificar-primeiro-acesso-response.dto';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 
+@ApiTags('Autenticação')
+@Public()
 @Controller()
 export class VerificarPrimeiroAcessoController {
   constructor(

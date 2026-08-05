@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { UsuarioPerfil } from './usuario-perfil';
 
 export class Usuario {
   constructor(
@@ -8,5 +9,7 @@ export class Usuario {
     public id: number,
     public cpf?: string,
     public dataDesativacao?: DateTime,
+    public perfis: UsuarioPerfil[] = [],
+    public filialId?: number,
   ) {}
 }

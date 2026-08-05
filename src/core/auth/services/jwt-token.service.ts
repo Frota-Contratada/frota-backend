@@ -21,11 +21,11 @@ export class JwtTokenService extends TokenServiceContract {
     super();
     this.refreshSecret = configService.getOrThrow<string>('JWT_REFRESH_SECRET');
     this.accessSecret = configService.getOrThrow<string>('JWT_ACCESS_SECRET');
-    this.refreshExpiresIn = configService.getOrThrow<number>(
-      'JWT_REFRESH_EXPIRES_IN',
+    this.refreshExpiresIn = Number(
+      configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
     );
-    this.accessExpiresIn = configService.getOrThrow<number>(
-      'JWT_ACCESS_EXPIRES_IN',
+    this.accessExpiresIn = Number(
+      configService.getOrThrow<string>('JWT_ACCESS_EXPIRES_IN'),
     );
   }
 

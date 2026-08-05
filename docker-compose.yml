@@ -1,0 +1,85 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${DATABASE_PASSWORD}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "${DATABASE_PORT}:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost,1433 -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\" -b -o /dev/null"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  database-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: "${DATABASE_HOST}"
+      DATABASE_PORT: "${DATABASE_PORT}"
+      DATABASE_USER: "${DATABASE_USER}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      DATABASE_NAME: "${DATABASE_NAME}"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - >-
+        set -e;
+        /opt/mssql-tools18/bin/sqlcmd
+        -S "$${DATABASE_HOST},$${DATABASE_PORT}"
+        -U "$${DATABASE_USER}"
+        -P "$${DATABASE_PASSWORD}"
+        -C
+        -Q "IF DB_ID(N'$${DATABASE_NAME}') IS NULL CREATE DATABASE [$${DATABASE_NAME}];"
+        -b
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BACKEND_PORT: "${BACKEND_PORT}"
+    env_file:
+      - .env
+    environment:
+      TZ: "${TZ:-UTC}"
+      DATABASE_URL: "${DATABASE_URL}"
+      REDIS_URL: "${REDIS_URL}"
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command: ["node", "dist/src/main.js"]
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  redis_data:

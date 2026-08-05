@@ -45,13 +45,22 @@ export class RefreshTokenService {
       throw new RefreshTokenInvalidoException();
     }
 
+    const perfis = await this.autenticacaoRepository.buscarPerfisVigentes(
+      autenticacao.usuario.id,
+    );
+
     const tokens = await this.tokenService.gerarTokens(
       {
         sub: autenticacao.usuario.id,
         email: autenticacao.usuario.email,
         plataforma: payload.plataforma,
+        perfis,
       },
-      { sub: autenticacao.usuario.id, plataforma: payload.plataforma },
+      {
+        sub: autenticacao.usuario.id,
+        plataforma: payload.plataforma,
+        perfis,
+      },
     );
 
     await this.tokenCacheService.salvar(

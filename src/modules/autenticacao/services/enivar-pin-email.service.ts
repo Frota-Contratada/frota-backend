@@ -36,6 +36,8 @@ export class EnviarPinEmailService {
 
     const pinGerado = randomInt(0, 1_000_000).toString().padStart(6, '0');
 
+    console.log(pinGerado)
+
     const pin = await this.pinRepository.criar(
       autenticacao.usuario.id,
       tipoToken,
