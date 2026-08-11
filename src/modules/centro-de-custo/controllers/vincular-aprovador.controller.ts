@@ -17,7 +17,7 @@ export class VincularAprovadorController {
   async handle(
     @Body() body: VincularAprovadorRequestDto,
   ): Promise<ResponseInterface<AprovadorCentroCustoDto>> {
-    const aprovador = await this.vincularAprovadorService.executar(
+    const aprovador = await this.vincularAprovadorService.execute(
       body.usuarioId,
       body.filialId,
       body.centroCustoId,

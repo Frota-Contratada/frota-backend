@@ -3,6 +3,7 @@ import { CriarMotoristaController } from './controllers/criar-motorista.controll
 import { BuscarMotoristaController } from './controllers/buscar-motorista.controller';
 import { CriarMotoristaService } from './services/criar-motorista.service';
 import { BuscarMotoristaService } from './services/buscar-motorista.service';
+import { BuscarVariosMotoristasService } from './services/buscar-varios-motoristas.service';
 import { MotoristaRepositoryContract } from './repositories/motorista-repository.contract';
 import { PrismaMotoristaRepository } from './repositories/prisma-motorista.repository';
 import { FornecedorModule } from '@module/fornecedor/fornecedor.module';
@@ -20,6 +21,7 @@ import { UsuarioAtualService } from '../info/services/usuario-atual.service';
   ],
   providers: [
     CriarMotoristaService,
+    BuscarVariosMotoristasService,
     BuscarMotoristaService,
     UsuarioAtualService,
     {
@@ -27,11 +29,6 @@ import { UsuarioAtualService } from '../info/services/usuario-atual.service';
       useClass: PrismaMotoristaRepository,
     },
   ],
-  imports: [
-    PrismaModule,
-    FornecedorModule,
-    UsuarioInfoModule,
-    AuthModule,
-  ],
+  imports: [PrismaModule, FornecedorModule, UsuarioInfoModule, AuthModule],
 })
 export class MotoristaModule {}

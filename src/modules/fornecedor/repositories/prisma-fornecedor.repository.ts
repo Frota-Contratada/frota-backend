@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  FiltrosFornecedor,
-  FornecedorRepositoryContract,
-} from './fornecedor-repository.contract';
+import { FornecedorRepositoryContract } from './fornecedor-repository.contract';
 import { Fornecedor } from '../domain/fornecedor';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { PrismaFornecedorMapper } from './prisma-fornecedor.mapper';
@@ -23,15 +20,14 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     );
   }
 
-  async buscarVarios(filtros: FiltrosFornecedor): Promise<Fornecedor[]> {
+  async buscarVarios(filtros: {
+    nome?: string;
+    cnpjCpf?: string;
+  }): Promise<Fornecedor[]> {
     const fornecedores = await this.prismaService.fornecedor.findMany({
       where: {
-        ...(filtros.cnpjCpf
-          ? { cCNPJCPF: { contains: filtros.cnpjCpf } }
-          : {}),
-        ...(filtros.nome
-          ? { cNmFornecedor: { contains: filtros.nome } }
-          : {}),
+        ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
+        ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
       },
       orderBy: { cNmFornecedor: 'asc' },
     });
@@ -60,7 +56,10 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     });
   }
 
-  async existePorNomeNaFilial(nome: string, filialId: number): Promise<boolean> {
+  async existePorNomeNaFilial(
+    nome: string,
+    filialId: number,
+  ): Promise<boolean> {
     const resultado = await this.prismaService.filialFornecedor.findFirst({
       where: {
         nCdFilial: filialId,

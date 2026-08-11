@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  FiltrosMotorista,
-  MotoristaRepositoryContract,
-} from './motorista-repository.contract';
+import { MotoristaRepositoryContract } from './motorista-repository.contract';
 import { Motorista } from '../domain/motorista';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { PrismaMotoristaMapper } from './prisma-motorista.mapper';
@@ -24,13 +21,14 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
     );
   }
 
-  async buscarVarios(filtros: FiltrosMotorista): Promise<Motorista[]> {
+  async buscarVarios(filtros: {
+    nome?: string;
+    cpf?: string;
+  }): Promise<Motorista[]> {
     const motoristas = await this.prismaService.usuario.findMany({
       where: {
         nCdFornecedor: { not: null },
-        ...(filtros.nome
-          ? { cNmUsuario: { contains: filtros.nome } }
-          : {}),
+        ...(filtros.nome ? { cNmUsuario: { contains: filtros.nome } } : {}),
         ...(filtros.cpf ? { cCPF: { contains: filtros.cpf } } : {}),
       },
       orderBy: { cNmUsuario: 'asc' },
@@ -60,7 +58,7 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
             cDisponivel: 'S',
           },
         }),
-      )!;
+      );
     });
   }
 }

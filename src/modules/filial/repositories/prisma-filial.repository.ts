@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { AdministradorNaoEncontradoException } from '../exceptions/administrador-nao-encontrado.exception';
 import { FilialNaoEncontradaException } from '../exceptions/filial-nao-encontrada.exception';
-import { FilialRepositoryContract, FiltrosFilial } from './filial-repository.contract';
+import { FilialRepositoryContract } from './filial-repository.contract';
 import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 import { PrismaService } from '@core/prisma/services/prisma.service';
@@ -23,21 +23,31 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     );
   }
 
-  async buscarVarios(filtros: FiltrosFilial): Promise<Filial[]> {
+  async buscarVarios(filtros: {
+    nome?: string;
+    cnpj?: string;
+    endereco?: string;
+  }): Promise<Filial[]> {
     const filiais = await this.prismaService.filial.findMany({
       where: {
-        ...(filtros.cnpj
-          ? { cCNPJ: { contains: filtros.cnpj } }
-          : {}),
-        ...(filtros.nome
-          ? { cNmFilial: { contains: filtros.nome } }
+        ...(filtros.cnpj ? { cCNPJ: { contains: filtros.cnpj } } : {}),
+        ...(filtros.nome ? { cNmFilial: { contains: filtros.nome } } : {}),
+        ...(filtros.endereco
+          ? {
+              Endereco: {
+                OR: [
+                  { cCidade: { contains: filtros.endereco } },
+                  { cBairro: { contains: filtros.endereco } },
+                ],
+              },
+            }
           : {}),
       },
       include: { Endereco: true },
       orderBy: { cNmFilial: 'asc' },
     });
 
-    return filiais.map((filial) => PrismaFilialMapper.toDomain(filial)!);
+    return filiais.map((filial) => PrismaFilialMapper.toDomain(filial));
   }
 
   async criar(filial: Filial): Promise<Filial> {
@@ -154,10 +164,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
             some: {
               cTipoPerfil: TipoPerfil.ADMIN_FILIAL,
               dInicioVigencia: { lte: agora },
-              OR: [
-                { dFimVigencia: null },
-                { dFimVigencia: { gt: agora } },
-              ],
+              OR: [{ dFimVigencia: null }, { dFimVigencia: { gt: agora } }],
             },
           },
         },
@@ -184,10 +191,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
             some: {
               cTipoPerfil: TipoPerfil.ADMIN_FILIAL,
               dInicioVigencia: { lte: agora },
-              OR: [
-                { dFimVigencia: null },
-                { dFimVigencia: { gt: agora } },
-              ],
+              OR: [{ dFimVigencia: null }, { dFimVigencia: { gt: agora } }],
             },
           },
         },

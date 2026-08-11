@@ -4,6 +4,7 @@ import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarMotoristaService } from '../services/buscar-motorista.service';
+import { BuscarVariosMotoristasService } from '../services/buscar-varios-motoristas.service';
 import { BuscarMotoristasQueryDto } from './dtos/request/buscar-motoristas-query.dto';
 import { MotoristaDto } from './dtos/response/motorista.dto';
 
@@ -12,14 +13,14 @@ import { MotoristaDto } from './dtos/response/motorista.dto';
 export class BuscarMotoristaController {
   constructor(
     private readonly buscarMotoristaService: BuscarMotoristaService,
+    private readonly buscarVariosMotoristasService: BuscarVariosMotoristasService,
   ) {}
 
   @Get()
   async buscarVarios(
     @Query() query: BuscarMotoristasQueryDto,
   ): Promise<ResponseInterface<MotoristaDto[]>> {
-    const motoristas =
-      await this.buscarMotoristaService.executarVarios(query);
+    const motoristas = await this.buscarVariosMotoristasService.execute(query);
 
     return {
       response: motoristas.map(
@@ -40,7 +41,7 @@ export class BuscarMotoristaController {
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<MotoristaDto>> {
-    const motorista = await this.buscarMotoristaService.executar(id);
+    const motorista = await this.buscarMotoristaService.execute(id);
 
     return {
       response: new MotoristaDto(

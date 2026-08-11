@@ -26,7 +26,7 @@ export class SubstituirAdministradoresController {
     id: number,
     @Body() body: SubstituirAdministradoresRequestDto,
   ): Promise<void> {
-    await this.substituirAdministradoresService.executar(
+    await this.substituirAdministradoresService.execute(
       id,
       body.administradorIds,
     );

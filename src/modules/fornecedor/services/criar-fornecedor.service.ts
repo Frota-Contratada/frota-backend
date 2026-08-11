@@ -39,12 +39,7 @@ export class CriarFornecedorService {
       throw new FornecedorJaCadastradoException(nome);
     }
 
-    const fornecedor = new Fornecedor(
-      nome,
-      cnpjCpf,
-      DateTime.now(),
-      0,
-    );
+    const fornecedor = new Fornecedor(nome, cnpjCpf, DateTime.now(), 0);
 
     return this.fornecedorRepository.criar(fornecedor);
   }

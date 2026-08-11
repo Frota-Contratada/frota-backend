@@ -22,8 +22,7 @@ export class CriarMotoristaService {
     cpf: string,
     fornecedorId: number,
   ): Promise<Motorista> {
-    const usuarioComMesmoCpf =
-      await this.usuarioRepository.buscarPorCpf(cpf);
+    const usuarioComMesmoCpf = await this.usuarioRepository.buscarPorCpf(cpf);
 
     if (usuarioComMesmoCpf) {
       throw new CpfJaCadastradoException(cpf);

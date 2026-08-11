@@ -4,6 +4,7 @@ import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarFornecedorService } from '../services/buscar-fornecedor.service';
+import { BuscarVariosFornecedoresService } from '../services/buscar-varios-fornecedores.service';
 import { BuscarFornecedoresQueryDto } from './dtos/request/buscar-fornecedores-query.dto';
 import { FornecedorDto } from './dtos/response/fornecedor.dto';
 
@@ -12,6 +13,7 @@ import { FornecedorDto } from './dtos/response/fornecedor.dto';
 export class BuscarFornecedorController {
   constructor(
     private readonly buscarFornecedorService: BuscarFornecedorService,
+    private readonly buscarVariosFornecedoresService: BuscarVariosFornecedoresService,
   ) {}
 
   @Get()
@@ -19,16 +21,12 @@ export class BuscarFornecedorController {
     @Query() query: BuscarFornecedoresQueryDto,
   ): Promise<ResponseInterface<FornecedorDto[]>> {
     const fornecedores =
-      await this.buscarFornecedorService.executarVarios(query);
+      await this.buscarVariosFornecedoresService.execute(query);
 
     return {
       response: fornecedores.map(
         (fornecedor) =>
-          new FornecedorDto(
-            fornecedor.id,
-            fornecedor.nome,
-            fornecedor.cnpjCpf,
-          ),
+          new FornecedorDto(fornecedor.id, fornecedor.nome, fornecedor.cnpjCpf),
       ),
     };
   }
@@ -38,7 +36,7 @@ export class BuscarFornecedorController {
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<FornecedorDto>> {
-    const fornecedor = await this.buscarFornecedorService.executar(id);
+    const fornecedor = await this.buscarFornecedorService.execute(id);
 
     return {
       response: new FornecedorDto(

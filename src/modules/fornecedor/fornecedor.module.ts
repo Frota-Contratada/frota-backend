@@ -7,12 +7,14 @@ import { CriarFornecedorController } from './controllers/criar-fornecedor.contro
 import { BuscarFornecedorController } from './controllers/buscar-fornecedor.controller';
 import { CriarFornecedorService } from './services/criar-fornecedor.service';
 import { BuscarFornecedorService } from './services/buscar-fornecedor.service';
+import { BuscarVariosFornecedoresService } from './services/buscar-varios-fornecedores.service';
 
 @Module({
   imports: [PrismaModule, FilialModule],
   controllers: [CriarFornecedorController, BuscarFornecedorController],
   providers: [
     CriarFornecedorService,
+    BuscarVariosFornecedoresService,
     BuscarFornecedorService,
     {
       provide: FornecedorRepositoryContract,

@@ -9,7 +9,7 @@ import { FilialRepositoryContract } from '../repositories/filial-repository.cont
 export class AtualizarFilialService {
   constructor(private readonly filialRepository: FilialRepositoryContract) {}
 
-  async executar(
+  async execute(
     id: number,
     nome: string,
     enderecoData: {

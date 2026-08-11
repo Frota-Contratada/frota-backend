@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CriarFilialRequestDto } from './dtos/request/criar-filial-request.dto';
-import { EnderecoDto, FilialDto } from './dtos/response/filial.dto';
+import { FilialDto } from './dtos/response/filial.dto';
 import { CriarFilialService } from '../services/criar-filial.service';
 
 @ApiTags('Filial')
@@ -21,25 +21,6 @@ export class CriarFilialController {
       body.endereco,
     );
 
-    const enderecoDto = new EnderecoDto(
-      filial.endereco.logradouro,
-      filial.endereco.numero,
-      filial.endereco.bairro,
-      filial.endereco.cidade,
-      filial.endereco.uf,
-      filial.endereco.cep,
-      filial.endereco.latitude,
-      filial.endereco.longitude,
-      filial.endereco.complemento,
-    );
-
-    const response = new FilialDto(
-      filial.id,
-      filial.nome,
-      filial.cnpj,
-      enderecoDto,
-    );
-
-    return { response };
+    return { response: FilialDto.aPartirDoDominio(filial) };
   }
 }

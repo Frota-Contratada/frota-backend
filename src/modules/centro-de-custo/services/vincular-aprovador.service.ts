@@ -14,7 +14,7 @@ export class VincularAprovadorService {
     private readonly usuarioRepository: UsuarioRepositoryContract,
   ) {}
 
-  async executar(
+  async execute(
     usuarioId: number,
     filialId: number,
     centroCustoId: number,
