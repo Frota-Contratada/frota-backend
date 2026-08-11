@@ -48,6 +48,17 @@ export class PrismaUsuarioRepository extends UsuarioRepositoryContract {
   async atualizar(id: number, data: Usuario): Promise<Usuario> {
     throw new MetodoNaoImplementadoException();
   }
+  async atualizarFotoPerfil(
+    id: number,
+    caminhoFotoPerfil: string,
+  ): Promise<Usuario> {
+    return PrismaUsuarioMapper.toDomain(
+      await this.prismaService.usuario.update({
+        where: { nCdUsuario: id },
+        data: { cCaminhoFotoPerfil: caminhoFotoPerfil },
+      }),
+    );
+  }
   async deletar(id: number): Promise<void> {
     throw new MetodoNaoImplementadoException();
   }

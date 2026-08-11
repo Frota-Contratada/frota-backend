@@ -9,6 +9,7 @@ export class UsuarioAtualDto {
   cpf?: string;
   dataAtivacao: DateTime;
   dataDesativacao?: DateTime;
+  fotoPerfil?: string;
   perfis: UsuarioPerfilDto[];
 
   constructor(usuario: Usuario) {
@@ -18,8 +19,7 @@ export class UsuarioAtualDto {
     this.cpf = usuario.cpf;
     this.dataAtivacao = usuario.dataAtivacao;
     this.dataDesativacao = usuario.dataDesativacao;
-    this.perfis = usuario.perfis.map(
-      (perfil) => new UsuarioPerfilDto(perfil),
-    );
+    this.fotoPerfil = usuario.caminhoFotoPerfil;
+    this.perfis = usuario.perfis.map((perfil) => new UsuarioPerfilDto(perfil));
   }
 }

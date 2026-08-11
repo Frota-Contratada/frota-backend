@@ -295,6 +295,7 @@ model Usuario {
   nCdFilial              Decimal?                 @db.Decimal(10, 0)
   nCdFornecedor          Decimal?                 @db.Decimal(10, 0)
   cCdSeara               String?                  @db.VarChar(255)
+  cCaminhoFotoPerfil     String?                  @db.VarChar(255)
   cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
   cCargo                 String?                  @db.VarChar(100)
   cHashSenha             String?                  @db.VarChar(255)
