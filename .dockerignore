@@ -7,6 +7,9 @@ coverage
 # Pasta acidental de caminho absoluto (não faz parte do projeto)
 home
 
+# Arquivos enviados pelos usuários (montados via volume em runtime)
+storage
+
 # Git / editores / ferramentas
 .git
 .gitignore
