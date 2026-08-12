@@ -19,7 +19,7 @@ export class UsuarioAtualDto {
     this.cpf = usuario.cpf;
     this.dataAtivacao = usuario.dataAtivacao;
     this.dataDesativacao = usuario.dataDesativacao;
-    this.fotoPerfil = usuario.caminhoFotoPerfil;
+    this.fotoPerfil = usuario.fotoPerfil;
     this.perfis = usuario.perfis.map((perfil) => new UsuarioPerfilDto(perfil));
   }
 }

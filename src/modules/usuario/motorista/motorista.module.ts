@@ -18,9 +18,9 @@ import { StorageModule } from '@core/storage/storage.module';
 
 @Module({
   controllers: [
+    UsuarioAtualController,
     CriarMotoristaController,
     BuscarMotoristaController,
-    UsuarioAtualController,
     AtualizarFotoPerfilController,
   ],
   providers: [

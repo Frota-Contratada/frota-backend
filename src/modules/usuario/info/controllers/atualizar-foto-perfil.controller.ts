@@ -9,8 +9,9 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import type { ArquivoRecebidoInterface } from '@core/storage/interfaces/arquivo-recebido.interface';
 import { AtualizarFotoPerfilService } from '../services/atualizar-foto-perfil.service';
-import type { FotoPerfilArquivo } from '../services/atualizar-foto-perfil.service';
+import { AtualizarFotoPerfilRequestDto } from './dtos/request/atualizar-foto-perfil-request.dto';
 import { UsuarioAtualDto } from './dtos/response/usuario-atual.dto';
 
 @ApiTags('Usuário')
@@ -23,22 +24,11 @@ export class AtualizarFotoPerfilController {
 
   @Patch('me/foto')
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['foto'],
-      properties: {
-        foto: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
+  @ApiBody({ type: AtualizarFotoPerfilRequestDto })
   @UseInterceptors(FileInterceptor('foto'))
   async handle(
     @CurrentUser() currentUser: AuthenticatedUser,
-    @UploadedFile() arquivo?: FotoPerfilArquivo,
+    @UploadedFile() arquivo?: ArquivoRecebidoInterface,
   ): Promise<ResponseInterface<UsuarioAtualDto>> {
     const usuario = await this.atualizarFotoPerfilService.execute(
       currentUser.id,

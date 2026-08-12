@@ -12,5 +12,6 @@ export class Usuario {
     public perfis: UsuarioPerfil[] = [],
     public filialId?: number,
     public caminhoFotoPerfil?: string,
+    public fotoPerfil?: string,
   ) {}
 }

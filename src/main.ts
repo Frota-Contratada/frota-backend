@@ -8,7 +8,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 Settings.defaultZone = process.env.TZ ?? 'UTC';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: false });
 
   app.enableCors({
     origin: '*',
@@ -16,10 +16,19 @@ async function bootstrap() {
     allowedHeaders: '*',
   });
 
-  app.useGlobalPipes(new ZodValidationPipe())
+  app.useGlobalPipes(new ZodValidationPipe());
 
   const config = new DocumentBuilder()
     .setTitle('Backend Gestão de Frota Contratada')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Informe o access token JWT.',
+      },
+      'bearer',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
