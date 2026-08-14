@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { AdministradorNaoEncontradoException } from '../exceptions/administrador-nao-encontrado.exception';
 import { FilialNaoEncontradaException } from '../exceptions/filial-nao-encontrada.exception';
@@ -27,27 +28,41 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     nome?: string;
     cnpj?: string;
     endereco?: string;
-  }): Promise<Filial[]> {
-    const filiais = await this.prismaService.filial.findMany({
-      where: {
-        ...(filtros.cnpj ? { cCNPJ: { contains: filtros.cnpj } } : {}),
-        ...(filtros.nome ? { cNmFilial: { contains: filtros.nome } } : {}),
-        ...(filtros.endereco
-          ? {
-              Endereco: {
-                OR: [
-                  { cCidade: { contains: filtros.endereco } },
-                  { cBairro: { contains: filtros.endereco } },
-                ],
-              },
-            }
-          : {}),
-      },
-      include: { Endereco: true },
-      orderBy: { cNmFilial: 'asc' },
-    });
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Filial>> {
+    const where = {
+      ...(filtros.cnpj ? { cCNPJ: { contains: filtros.cnpj } } : {}),
+      ...(filtros.nome ? { cNmFilial: { contains: filtros.nome } } : {}),
+      ...(filtros.endereco
+        ? {
+            Endereco: {
+              OR: [
+                { cCidade: { contains: filtros.endereco } },
+                { cBairro: { contains: filtros.endereco } },
+              ],
+            },
+          }
+        : {}),
+    };
+    const skip = (filtros.page - 1) * filtros.limit;
 
-    return filiais.map((filial) => PrismaFilialMapper.toDomain(filial));
+    const [filiais, totalCount] = await Promise.all([
+      this.prismaService.filial.findMany({
+        where,
+        skip,
+        take: filtros.limit,
+        include: { Endereco: true },
+        orderBy: { cNmFilial: 'asc' },
+      }),
+      this.prismaService.filial.count({ where }),
+    ]);
+
+    return {
+      data: filiais.map((filial) => PrismaFilialMapper.toDomain(filial)),
+      totalCount,
+      hasNextPage: filtros.page * filtros.limit < totalCount,
+    };
   }
 
   async criar(filial: Filial): Promise<Filial> {

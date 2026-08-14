@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { basename, extname } from 'node:path';
+import { basename } from 'node:path';
 import { Readable } from 'node:stream';
 import { StorageServiceContract } from '@core/storage/contracts/storage-service.contract';
+import { MimeTypeService } from '@core/storage/services/mime-type.service';
 import { ContratoNaoEncontradoException } from '../exceptions/contrato-nao-encontrado.exception';
 import { ContratoRepositoryContract } from '../repositories/contrato-repository.contract';
 
@@ -16,6 +17,7 @@ export class VisualizarContratoService {
   constructor(
     private readonly contratoRepository: ContratoRepositoryContract,
     private readonly storageService: StorageServiceContract,
+    private readonly mimeTypeService: MimeTypeService,
   ) {}
 
   async execute(contratoId: number): Promise<DocumentoContrato> {
@@ -28,20 +30,7 @@ export class VisualizarContratoService {
     return {
       stream: await this.storageService.abrirStream(contrato.caminhoArquivo),
       nomeArquivo: basename(contrato.caminhoArquivo),
-      tipoMime: this.obterTipoMime(contrato.caminhoArquivo),
+      tipoMime: this.mimeTypeService.mimeType(contrato.caminhoArquivo),
     };
-  }
-
-  private obterTipoMime(chave: string): string {
-    const tiposMime: Record<string, string> = {
-      '.pdf': 'application/pdf',
-      '.doc': 'application/msword',
-      '.docx':
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    };
-
-    return (
-      tiposMime[extname(chave).toLowerCase()] ?? 'application/octet-stream'
-    );
   }
 }

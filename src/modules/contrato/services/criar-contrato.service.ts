@@ -4,6 +4,7 @@ import { StorageServiceContract } from '@core/storage/contracts/storage-service.
 import type { ArquivoRecebidoInterface } from '@core/storage/interfaces/arquivo-recebido.interface';
 import { ValidarArquivoService } from '@core/storage/services/validar-arquivo.service';
 import { Contrato } from '../domain/contrato';
+import { MimeTypeContratoEnum } from '../enums/mime-type-contrato.enum';
 import { FalhaAoRemoverArquivoContratoException } from '../exceptions/falha-ao-remover-arquivo-contrato.exception';
 import { ContratoRepositoryContract } from '../repositories/contrato-repository.contract';
 
@@ -21,11 +22,15 @@ export class CriarContratoService {
     dataVigenciaFim: Date | undefined,
     arquivo?: ArquivoRecebidoInterface,
   ): Promise<Contrato> {
-    this.validarArquivoService.validar(arquivo);
+    this.validarArquivoService.validar(
+      arquivo,
+      Object.values(MimeTypeContratoEnum),
+    );
 
     const arquivoSalvo = await this.storageService.salvar({
       conteudo: arquivo.buffer,
       nomeOriginal: arquivo.originalname,
+      mimeType: arquivo.mimetype,
       pasta: 'contratos',
     });
 

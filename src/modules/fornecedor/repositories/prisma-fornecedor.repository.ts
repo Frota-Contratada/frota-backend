@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { FornecedorRepositoryContract } from './fornecedor-repository.contract';
 import { Fornecedor } from '../domain/fornecedor';
 import { PrismaService } from '@core/prisma/services/prisma.service';
@@ -23,18 +24,34 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cnpjCpf?: string;
-  }): Promise<Fornecedor[]> {
-    const fornecedores = await this.prismaService.fornecedor.findMany({
-      where: {
-        ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
-        ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
-      },
-      orderBy: { cNmFornecedor: 'asc' },
-    });
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Fornecedor>> {
+    const where = {
+      ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
+      ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
+    };
+    const skip = (filtros.page - 1) * filtros.limit;
 
-    return fornecedores.map((fornecedor) =>
+    const [fornecedores, totalCount] = await Promise.all([
+      this.prismaService.fornecedor.findMany({
+        where,
+        skip,
+        take: filtros.limit,
+        orderBy: { cNmFornecedor: 'asc' },
+      }),
+      this.prismaService.fornecedor.count({ where }),
+    ]);
+
+    const data = fornecedores.map((fornecedor) =>
       PrismaFornecedorMapper.toDomain(fornecedor),
     );
+
+    return {
+      data,
+      totalCount,
+      hasNextPage: filtros.page * filtros.limit < totalCount,
+    };
   }
 
   async criar(fornecedor: Fornecedor): Promise<Fornecedor> {

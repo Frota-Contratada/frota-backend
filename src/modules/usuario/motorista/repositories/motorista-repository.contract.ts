@@ -1,3 +1,4 @@
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Motorista } from '../domain/motorista';
 
 export abstract class MotoristaRepositoryContract {
@@ -5,6 +6,8 @@ export abstract class MotoristaRepositoryContract {
   abstract buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
-  }): Promise<Motorista[]>;
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Motorista>>;
   abstract criar(motorista: Motorista): Promise<Motorista>;
 }

@@ -1,3 +1,4 @@
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Fornecedor } from '../domain/fornecedor';
 
 export abstract class FornecedorRepositoryContract {
@@ -5,7 +6,9 @@ export abstract class FornecedorRepositoryContract {
   abstract buscarVarios(filtros: {
     nome?: string;
     cnpjCpf?: string;
-  }): Promise<Fornecedor[]>;
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Fornecedor>>;
   abstract criar(fornecedor: Fornecedor): Promise<Fornecedor>;
   abstract existePorNomeNaFilial(
     nome: string,

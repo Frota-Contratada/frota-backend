@@ -1,3 +1,4 @@
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 
@@ -8,7 +9,9 @@ export abstract class FilialRepositoryContract {
     cnpj?: string;
     /** Busca pelo termo na cidade OU no bairro do endereço da filial. */
     endereco?: string;
-  }): Promise<Filial[]>;
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Filial>>;
   abstract criar(filial: Filial): Promise<Filial>;
   abstract atualizar(
     id: number,

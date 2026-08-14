@@ -10,6 +10,7 @@ import { StorageServiceContract } from '../contracts/storage-service.contract';
 import { ArquivoNaoEncontradoException } from '../exceptions/arquivo-nao-encontrado.exception';
 import { ChaveDeArquivoInvalidaException } from '../exceptions/chave-de-arquivo-invalida.exception';
 import { ArquivoSalvoInterface } from '../interfaces/arquivo-salvo.interface';
+import { MimeTypeService } from './mime-type.service';
 
 @Injectable()
 export class DiscoLocalStorageService
@@ -18,7 +19,10 @@ export class DiscoLocalStorageService
 {
   private readonly caminhoBase: string;
 
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly mimeTypeService: MimeTypeService,
+  ) {
     super();
 
     this.caminhoBase = resolve(
@@ -34,9 +38,13 @@ export class DiscoLocalStorageService
   async salvar(arquivo: {
     conteudo: Buffer;
     nomeOriginal: string;
+    mimeType: string;
     pasta: string;
   }): Promise<ArquivoSalvoInterface> {
-    const nomeArquivo = this.montarNomeArquivo(arquivo.nomeOriginal);
+    const nomeArquivo = this.montarNomeArquivo(
+      arquivo.nomeOriginal,
+      arquivo.mimeType,
+    );
     const chave = this.montarChave(arquivo.pasta, nomeArquivo);
 
     const caminhoAbsoluto = this.resolverCaminho(chave);
@@ -69,6 +77,13 @@ export class DiscoLocalStorageService
     }
   }
 
+  async lerComoDataUrl(chave: string): Promise<string> {
+    const mimeType = this.mimeTypeService.mimeType(chave);
+    const conteudo = await this.ler(chave);
+
+    return `data:${mimeType};base64,${conteudo.toString('base64')}`;
+  }
+
   async abrirStream(chave: string): Promise<Readable> {
     const caminho = this.resolverCaminho(chave);
 
@@ -87,10 +102,8 @@ export class DiscoLocalStorageService
     return this.existeNoDisco(this.resolverCaminho(chave));
   }
 
-  private montarNomeArquivo(nomeOriginal: string): string {
-    const extensao = extname(nomeOriginal)
-      .toLowerCase()
-      .replace(/[^a-z0-9.]/g, '');
+  private montarNomeArquivo(nomeOriginal: string, mimeType: string): string {
+    const extensao = this.mimeTypeService.extensao(mimeType);
 
     const nomeBase = this.sanitizar(
       nomeOriginal.slice(0, nomeOriginal.length - extname(nomeOriginal).length),

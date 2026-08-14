@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarMotoristaService } from '../services/buscar-motorista.service';
@@ -19,20 +20,24 @@ export class BuscarMotoristaController {
   @Get()
   async buscarVarios(
     @Query() query: BuscarMotoristasQueryDto,
-  ): Promise<ResponseInterface<MotoristaDto[]>> {
-    const motoristas = await this.buscarVariosMotoristasService.execute(query);
+  ): Promise<ResponseInterface<PaginatedResponseInterface<MotoristaDto>>> {
+    const resultado = await this.buscarVariosMotoristasService.execute(query);
 
     return {
-      response: motoristas.map(
-        (motorista) =>
-          new MotoristaDto(
-            motorista.id,
-            motorista.nome,
-            motorista.email,
-            motorista.cpf,
-            motorista.fornecedorId,
-          ),
-      ),
+      response: {
+        totalCount: resultado.totalCount,
+        hasNextPage: resultado.hasNextPage,
+        data: resultado.data.map(
+          (motorista) =>
+            new MotoristaDto(
+              motorista.id,
+              motorista.nome,
+              motorista.email,
+              motorista.cpf,
+              motorista.fornecedorId,
+            ),
+        ),
+      },
     };
   }
 

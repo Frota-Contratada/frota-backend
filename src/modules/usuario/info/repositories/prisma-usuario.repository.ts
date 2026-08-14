@@ -53,7 +53,7 @@ export class PrismaUsuarioRepository extends UsuarioRepositoryContract {
     caminhoFotoPerfil: string,
   ): Promise<Usuario> {
     return PrismaUsuarioMapper.toDomain(
-      await this.prismaService.usuario.update({
+      await this.prismaService.cliente.usuario.update({
         where: { nCdUsuario: id },
         data: { cCaminhoFotoPerfil: caminhoFotoPerfil },
       }),

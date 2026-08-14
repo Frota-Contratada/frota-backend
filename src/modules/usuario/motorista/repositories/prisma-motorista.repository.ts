@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { MotoristaRepositoryContract } from './motorista-repository.contract';
 import { Motorista } from '../domain/motorista';
 import { PrismaService } from '@core/prisma/services/prisma.service';
@@ -24,20 +25,36 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
-  }): Promise<Motorista[]> {
-    const motoristas = await this.prismaService.usuario.findMany({
-      where: {
-        nCdFornecedor: { not: null },
-        ...(filtros.nome ? { cNmUsuario: { contains: filtros.nome } } : {}),
-        ...(filtros.cpf ? { cCPF: { contains: filtros.cpf } } : {}),
-      },
-      orderBy: { cNmUsuario: 'asc' },
-    });
+    page: number;
+    limit: number;
+  }): Promise<PaginatedResponseInterface<Motorista>> {
+    const where = {
+      nCdFornecedor: { not: null },
+      ...(filtros.nome ? { cNmUsuario: { contains: filtros.nome } } : {}),
+      ...(filtros.cpf ? { cCPF: { contains: filtros.cpf } } : {}),
+    };
+    const skip = (filtros.page - 1) * filtros.limit;
 
-    return motoristas.flatMap((motorista) => {
+    const [motoristas, totalCount] = await Promise.all([
+      this.prismaService.usuario.findMany({
+        where,
+        skip,
+        take: filtros.limit,
+        orderBy: { cNmUsuario: 'asc' },
+      }),
+      this.prismaService.usuario.count({ where }),
+    ]);
+
+    const data = motoristas.flatMap((motorista) => {
       const motoristaDomain = PrismaMotoristaMapper.toDomain(motorista);
       return motoristaDomain ? [motoristaDomain] : [];
     });
+
+    return {
+      data,
+      totalCount,
+      hasNextPage: filtros.page * filtros.limit < totalCount,
+    };
   }
 
   async criar(motorista: Motorista): Promise<Motorista> {

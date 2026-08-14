@@ -10,36 +10,18 @@ import { FornecedorModule } from '@module/fornecedor/fornecedor.module';
 import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { AuthModule } from '@core/auth/auth.module';
-import { UsuarioAtualController } from '../info/controllers/usuario-atual.controller';
-import { UsuarioAtualService } from '../info/services/usuario-atual.service';
-import { AtualizarFotoPerfilController } from '../info/controllers/atualizar-foto-perfil.controller';
-import { AtualizarFotoPerfilService } from '../info/services/atualizar-foto-perfil.service';
-import { StorageModule } from '@core/storage/storage.module';
 
 @Module({
-  controllers: [
-    UsuarioAtualController,
-    CriarMotoristaController,
-    BuscarMotoristaController,
-    AtualizarFotoPerfilController,
-  ],
+  controllers: [CriarMotoristaController, BuscarMotoristaController],
   providers: [
     CriarMotoristaService,
     BuscarVariosMotoristasService,
     BuscarMotoristaService,
-    UsuarioAtualService,
-    AtualizarFotoPerfilService,
     {
       provide: MotoristaRepositoryContract,
       useClass: PrismaMotoristaRepository,
     },
   ],
-  imports: [
-    PrismaModule,
-    FornecedorModule,
-    UsuarioInfoModule,
-    AuthModule,
-    StorageModule,
-  ],
+  imports: [PrismaModule, FornecedorModule, UsuarioInfoModule, AuthModule],
 })
 export class MotoristaModule {}

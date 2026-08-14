@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarFornecedorService } from '../services/buscar-fornecedor.service';
@@ -19,15 +20,22 @@ export class BuscarFornecedorController {
   @Get()
   async buscarVarios(
     @Query() query: BuscarFornecedoresQueryDto,
-  ): Promise<ResponseInterface<FornecedorDto[]>> {
-    const fornecedores =
-      await this.buscarVariosFornecedoresService.execute(query);
+  ): Promise<ResponseInterface<PaginatedResponseInterface<FornecedorDto>>> {
+    const resultado = await this.buscarVariosFornecedoresService.execute(query);
 
     return {
-      response: fornecedores.map(
-        (fornecedor) =>
-          new FornecedorDto(fornecedor.id, fornecedor.nome, fornecedor.cnpjCpf),
-      ),
+      response: {
+        totalCount: resultado.totalCount,
+        hasNextPage: resultado.hasNextPage,
+        data: resultado.data.map(
+          (fornecedor) =>
+            new FornecedorDto(
+              fornecedor.id,
+              fornecedor.nome,
+              fornecedor.cnpjCpf,
+            ),
+        ),
+      },
     };
   }
 

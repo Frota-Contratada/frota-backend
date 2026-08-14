@@ -9,6 +9,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import { Transacional } from '@core/prisma/decorators/transacional.decorator';
 import type { ArquivoRecebidoInterface } from '@core/storage/interfaces/arquivo-recebido.interface';
 import { AtualizarFotoPerfilService } from '../services/atualizar-foto-perfil.service';
 import { AtualizarFotoPerfilRequestDto } from './dtos/request/atualizar-foto-perfil-request.dto';
@@ -26,6 +27,7 @@ export class AtualizarFotoPerfilController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: AtualizarFotoPerfilRequestDto })
   @UseInterceptors(FileInterceptor('foto'))
+  @Transacional()
   async handle(
     @CurrentUser() currentUser: AuthenticatedUser,
     @UploadedFile() arquivo?: ArquivoRecebidoInterface,
