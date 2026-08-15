@@ -1,21 +1,16 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@core/prisma/prisma.module';
-import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
-import { VincularAprovadorController } from './controllers/vincular-aprovador.controller';
-import { VincularAprovadorService } from './services/vincular-aprovador.service';
-import { AprovadorCentroCustoRepositoryContract } from './repositories/aprovador-centro-custo-repository.contract';
-import { PrismaAprovadorCentroCustoRepository } from './repositories/prisma-aprovador-centro-custo.repository';
+import { CentroCustoRepositoryContract } from './repositories/centro-custo-repository.contract';
+import { PrismaCentroCustoRepository } from './repositories/prisma-centro-custo.repository';
 
 @Module({
-  imports: [PrismaModule, UsuarioInfoModule],
-  controllers: [VincularAprovadorController],
+  imports: [PrismaModule],
   providers: [
-    VincularAprovadorService,
     {
-      provide: AprovadorCentroCustoRepositoryContract,
-      useClass: PrismaAprovadorCentroCustoRepository,
+      provide: CentroCustoRepositoryContract,
+      useClass: PrismaCentroCustoRepository,
     },
   ],
-  exports: [AprovadorCentroCustoRepositoryContract],
+  exports: [CentroCustoRepositoryContract],
 })
 export class CentroDeCustoModule {}

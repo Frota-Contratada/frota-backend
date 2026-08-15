@@ -1,4 +1,5 @@
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 
@@ -24,4 +25,9 @@ export abstract class FilialRepositoryContract {
   ): Promise<void>;
   abstract existePorNome(nome: string): Promise<boolean>;
   abstract existePorCnpj(cnpj: string): Promise<boolean>;
+  abstract existeUsuarioNaFilialComPerfil(
+    usuarioId: number,
+    filialId: number,
+    tipoPerfil: TipoPerfil,
+  ): Promise<boolean>;
 }

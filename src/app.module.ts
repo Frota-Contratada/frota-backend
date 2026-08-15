@@ -1,5 +1,6 @@
 import { AutenticacaoModule } from '@module/autenticacao/autenticacao.module';
 import { MotoristaModule } from '@module/usuario/motorista/motorista.module';
+import { ColaboradorModule } from '@module/usuario/colaborador/colaborador.module';
 import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { FornecedorModule } from '@module/fornecedor/fornecedor.module';
 import { FilialModule } from '@module/filial/filial.module';
@@ -19,6 +20,7 @@ import { RouterModule } from '@nestjs/core';
     AutenticacaoModule,
     UsuarioInfoModule,
     MotoristaModule,
+    ColaboradorModule,
     FornecedorModule,
     FilialModule,
     CentroDeCustoModule,
@@ -38,6 +40,10 @@ import { RouterModule } from '@nestjs/core';
           {
             path: 'motorista',
             module: MotoristaModule,
+          },
+          {
+            path: 'colaborador',
+            module: ColaboradorModule,
           },
         ],
       },

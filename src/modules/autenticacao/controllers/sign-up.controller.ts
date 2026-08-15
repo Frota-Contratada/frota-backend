@@ -13,7 +13,7 @@ export class SignUpController {
   @Post('/sign-up')
   @HttpCode(HttpStatus.NO_CONTENT)
   async handle(@Body() body: SignUpRequestDto): Promise<void> {
-    this.signUpService.execute(body.token, body.senha);
+    await this.signUpService.execute(body.token, body.senha);
     return;
   }
 }

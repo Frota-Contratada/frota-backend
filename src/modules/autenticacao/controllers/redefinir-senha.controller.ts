@@ -13,7 +13,7 @@ export class RedefinirSenhaController {
   @Post('/redefinir-senha')
   @HttpCode(HttpStatus.NO_CONTENT)
   async handle(@Body() body: SignUpRequestDto): Promise<void> {
-    this.redefinirSenhaService.execute(body.token, body.senha);
+    await this.redefinirSenhaService.execute(body.token, body.senha);
     return;
   }
 }

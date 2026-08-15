@@ -1,4 +1,7 @@
-import { Filial as PrismaFilial, Endereco as PrismaEndereco } from '@prisma/client';
+import {
+  Filial as PrismaFilial,
+  Endereco as PrismaEndereco,
+} from '@prisma/client';
 import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 import { DateTime } from 'luxon';

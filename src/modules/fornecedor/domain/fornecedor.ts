@@ -8,5 +8,6 @@ export class Fornecedor {
     public id: number,
     public caminhoArquivo?: string,
     public dataDesativacao?: DateTime,
+    public foto?: string,
   ) {}
 }

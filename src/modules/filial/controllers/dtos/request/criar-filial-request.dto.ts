@@ -15,9 +15,7 @@ const EnderecoSchema = z.object({
 
 export const CriarFilialRequestSchema = z.object({
   nome: z.string().nonempty({ message: 'Informe o nome da filial' }),
-  cnpj: z
-    .string()
-    .length(14, { message: 'Informe um CNPJ com 14 dígitos' }),
+  cnpj: z.string().length(14, { message: 'Informe um CNPJ com 14 dígitos' }),
   administradorId: z
     .number()
     .int()

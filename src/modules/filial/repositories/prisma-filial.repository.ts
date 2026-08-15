@@ -237,4 +237,30 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     });
     return resultado !== null;
   }
+
+  async existeUsuarioNaFilialComPerfil(
+    usuarioId: number,
+    filialId: number,
+    tipoPerfil: TipoPerfil,
+  ): Promise<boolean> {
+    const agora = new Date();
+
+    const resultado = await this.prismaService.usuario.findFirst({
+      where: {
+        nCdUsuario: usuarioId,
+        nCdFilial: filialId,
+        dDesativacao: null,
+        UsuarioPerfil: {
+          some: {
+            cTipoPerfil: tipoPerfil,
+            dInicioVigencia: { lte: agora },
+            OR: [{ dFimVigencia: null }, { dFimVigencia: { gt: agora } }],
+          },
+        },
+      },
+      select: { nCdUsuario: true },
+    });
+
+    return resultado !== null;
+  }
 }

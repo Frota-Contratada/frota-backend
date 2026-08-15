@@ -8,7 +8,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 Settings.defaultZone = process.env.TZ ?? 'UTC';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create(AppModule, {logger: ['error', 'warn', 'log', 'debug', 'verbose']});
 
   app.enableCors({
     origin: '*',

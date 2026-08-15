@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
-import { Fornecedor } from '../domain/fornecedor';
+import { FornecedorSummary } from '../domain/types/fornecedor-summary.type';
 import { FornecedorRepositoryContract } from '../repositories/fornecedor-repository.contract';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class BuscarVariosFornecedoresService {
     filialId?: number;
     page: number;
     limit: number;
-  }): Promise<PaginatedResponseInterface<Fornecedor>> {
+  }): Promise<PaginatedResponseInterface<FornecedorSummary>> {
     return this.fornecedorRepository.buscarVarios({
       nome: filtros.nome,
       cnpjCpf: filtros.cnpjCpf,

@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { StorageServiceContract } from '@core/storage/contracts/storage-service.contract';
 import { Fornecedor } from '../domain/fornecedor';
+import { FalhaAoCarregarFotoFornecedorException } from '../exceptions/falha-ao-carregar-foto-fornecedor.exception';
 import { FornecedorNaoEncontradoException } from '../exceptions/fornecedor-nao-encontrado.exception';
 import { FornecedorRepositoryContract } from '../repositories/fornecedor-repository.contract';
-import { Perfis } from '@core/auth/decorators/perfis.decorator';
-import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 
 @Injectable()
 export class BuscarFornecedorService {
   constructor(
     private readonly fornecedorRepository: FornecedorRepositoryContract,
+    private readonly storageService: StorageServiceContract,
   ) {}
 
   async execute(id: number): Promise<Fornecedor> {
@@ -16,6 +17,16 @@ export class BuscarFornecedorService {
 
     if (!fornecedor) {
       throw new FornecedorNaoEncontradoException(id);
+    }
+
+    if (fornecedor.caminhoArquivo) {
+      try {
+        fornecedor.foto = await this.storageService.lerComoDataUrl(
+          fornecedor.caminhoArquivo,
+        );
+      } catch {
+        throw new FalhaAoCarregarFotoFornecedorException();
+      }
     }
 
     return fornecedor;

@@ -13,7 +13,7 @@ export class EnviarPinEmailController {
   @Post('pin/enviar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async handle(@Body() body: EnviarPinEmailRequestDto): Promise<void> {
-    this.enviarPinEmailService.execute(body.email, body.tipoToken);
+    await this.enviarPinEmailService.execute(body.email, body.tipoToken);
     return;
   }
 }

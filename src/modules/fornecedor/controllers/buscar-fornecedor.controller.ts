@@ -25,6 +25,7 @@ export class BuscarFornecedorController {
         fornecedor.id,
         fornecedor.nome,
         fornecedor.cnpjCpf,
+        fornecedor.foto,
       ),
     };
   }

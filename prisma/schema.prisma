@@ -39,7 +39,7 @@ model CentroCusto {
   dDesativacao           DateTime?                @db.DateTime
   Filial                 Filial                   @relation(fields: [nCdFilial], references: [nCdFilial], onUpdate: NoAction, map: "FK_CentroCusto_Filial")
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
-  AprovadorCentroCusto   AprovadorCentroCusto[]
+  usuarios               Usuario[]
 
   @@id([nCdFilial, nCdCentroCusto], map: "PK_CentroCusto")
 }
@@ -294,6 +294,7 @@ model Usuario {
   cNmUsuario             String                   @db.VarChar(100)
   nCdFilial              Decimal?                 @db.Decimal(10, 0)
   nCdFornecedor          Decimal?                 @db.Decimal(10, 0)
+  nCdCentroCusto         Decimal?                 @db.Decimal(10, 0)
   cCdSeara               String?                  @db.VarChar(255)
   cCaminhoFotoPerfil     String?                  @db.VarChar(255)
   cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
@@ -307,13 +308,14 @@ model Usuario {
   Corrida                Corrida[]
   Solicitacao            Solicitacao[]
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
-  AprovadorCentroCusto   AprovadorCentroCusto?
+  CentroCusto            CentroCusto?             @relation(fields: [nCdFilial, nCdCentroCusto], references: [nCdFilial, nCdCentroCusto], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_CentroCusto")
   Filial                 Filial?                  @relation("UsuarioFilial", fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
   Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
   UsuarioPerfil          UsuarioPerfil[]
   PinUsuario             PinUsuario[]
 
   @@index([cEmail, cDisponivel], map: "IX_Usuario_LoginRumo")
+  @@index([nCdFilial, nCdCentroCusto], map: "IX_Usuario_CentroCusto")
 }
 
 model UsuarioPerfil {
@@ -340,15 +342,4 @@ model Veiculo {
 
   @@id([nCdFornecedor, nCdVeiculo], map: "PK_Veiculo")
   @@index([nCdFornecedor], map: "IX_Veiculo_nCdFornecedor")
-}
-
-model AprovadorCentroCusto {
-  nCdUsuario     Decimal     @id(map: "PK_AprovadorCentroCusto") @db.Decimal(10, 0)
-  nCdFilial      Decimal     @db.Decimal(10, 0)
-  nCdCentroCusto Decimal     @db.Decimal(10, 0)
-  dVinculo       DateTime    @default(now(), map: "DF_AprovadorCentroCusto_dVinculo") @db.DateTime
-  CentroCusto    CentroCusto @relation(fields: [nCdFilial, nCdCentroCusto], references: [nCdFilial, nCdCentroCusto], onUpdate: NoAction, map: "FK_AprovadorCentroCusto_CentroCusto")
-  Usuario        Usuario     @relation(fields: [nCdUsuario], references: [nCdUsuario], onUpdate: NoAction, map: "FK_AprovadorCentroCusto_Usuario")
-
-  @@index([nCdFilial, nCdCentroCusto], map: "IX_AprovadorCentroCusto_CentroCusto")
 }

@@ -9,6 +9,7 @@ import { BuscarFilialService } from './services/buscar-filial.service';
 import { BuscarVariasFiliaisService } from './services/buscar-varias-filiais.service';
 import { AtualizarFilialService } from './services/atualizar-filial.service';
 import { SubstituirAdministradoresService } from './services/substituir-administradores.service';
+import { ValidarUsuarioNaFilialService } from './services/validar-usuario-na-filial.service';
 import { FilialRepositoryContract } from './repositories/filial-repository.contract';
 import { PrismaFilialRepository } from './repositories/prisma-filial.repository';
 import { PrismaModule } from '@core/prisma/prisma.module';
@@ -29,11 +30,12 @@ import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
     BuscarFilialService,
     AtualizarFilialService,
     SubstituirAdministradoresService,
+    ValidarUsuarioNaFilialService,
     {
       provide: FilialRepositoryContract,
       useClass: PrismaFilialRepository,
     },
   ],
-  exports: [FilialRepositoryContract],
+  exports: [FilialRepositoryContract, ValidarUsuarioNaFilialService],
 })
 export class FilialModule {}

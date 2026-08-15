@@ -60,6 +60,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
       args:
         BACKEND_PORT: "${BACKEND_PORT}"
     env_file:
@@ -79,8 +80,13 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-    command: ["node", "dist/src/main.js"]
-    restart: unless-stopped
+    develop:
+      watch:
+        - path: ./resources/secretary-service/package.json
+          action: rebuild
+        - path: ./resources/secretary-service/src
+          target: /usr/src/app/src
+          action: sync
 
 volumes:
   sqlserver_data:

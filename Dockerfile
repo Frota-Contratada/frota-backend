@@ -26,6 +26,15 @@ RUN pnpm prisma generate
 RUN pnpm run build
 
 
+FROM base AS dev
+
+ENV NODE_ENV=development
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+CMD ["sh", "-c", "pnpm prisma generate && pnpm run start:dev"]
+
 FROM base AS runner
 
 ARG BACKEND_PORT=3000
