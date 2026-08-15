@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { TokenCacheServiceContract } from '@core/auth/contracts/token-cache-service.contract';
 import { TokenServiceContract } from '@core/auth/contracts/token-service.contract';
+import { AuthToken } from '@core/auth/types/auth-token';
 import { RefreshTokenPayload } from '@core/auth/types/refresh-token-payload';
 import { RefreshTokenInvalidoException } from '../exceptions/refresh-token-invalido.exception';
 import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
+import { GerarTokensService } from './gerar-tokens.service';
 
 @Injectable()
 export class RefreshTokenService {
@@ -11,13 +13,10 @@ export class RefreshTokenService {
     private readonly autenticacaoRepository: AutenticacaoRepositoryContract,
     private readonly tokenCacheService: TokenCacheServiceContract,
     private readonly tokenService: TokenServiceContract,
+    private readonly gerarTokensService: GerarTokensService,
   ) {}
 
-  async execute(refreshToken: string): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    validade: number;
-  }> {
+  async execute(refreshToken: string): Promise<AuthToken> {
     const valido = await this.tokenService.validarRefreshToken(refreshToken);
 
     if (!valido) {
@@ -45,31 +44,9 @@ export class RefreshTokenService {
       throw new RefreshTokenInvalidoException();
     }
 
-    const perfis = await this.autenticacaoRepository.buscarPerfisVigentes(
-      autenticacao.usuario.id,
-    );
-
-    const tokens = await this.tokenService.gerarTokens(
-      {
-        sub: autenticacao.usuario.id,
-        email: autenticacao.usuario.email,
-        plataforma: payload.plataforma,
-        perfis,
-      },
-      {
-        sub: autenticacao.usuario.id,
-        plataforma: payload.plataforma,
-        perfis,
-      },
-    );
-
-    await this.tokenCacheService.salvar(
-      autenticacao.usuario.id,
+    return this.gerarTokensService.execute(
+      autenticacao.usuario,
       payload.plataforma,
-      tokens.refreshToken,
-      tokens.validade,
     );
-
-    return tokens;
   }
 }

@@ -1,13 +1,10 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthenticatedUser } from '../types/authenticated-user';
 import { PERFIS_KEY } from '../decorators/perfis.decorator';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
+import { PerfilSemPermissaoException } from '../exceptions/perfil-sem-permissao.exception';
+import { UsuarioNaoAutenticadoException } from '../exceptions/usuario-nao-autenticado.exception';
 
 @Injectable()
 export class PerfilGuard implements CanActivate {
@@ -29,7 +26,7 @@ export class PerfilGuard implements CanActivate {
     const usuario = request.user;
 
     if (!usuario) {
-      throw new ForbiddenException('Usuário não autenticado.');
+      throw new UsuarioNaoAutenticadoException();
     }
 
     const possuiPerfil = usuario.perfis.some((perfil) =>
@@ -37,9 +34,7 @@ export class PerfilGuard implements CanActivate {
     );
 
     if (!possuiPerfil) {
-      throw new ForbiddenException(
-        'Usuário não possui perfil para acessar este recurso.',
-      );
+      throw new PerfilSemPermissaoException();
     }
 
     return true;

@@ -24,12 +24,16 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cnpjCpf?: string;
+    filialId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Fornecedor>> {
     const where = {
       ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
       ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
+      ...(filtros.filialId
+        ? { FilialFornecedor: { some: { nCdFilial: filtros.filialId } } }
+        : {}),
     };
     const skip = (filtros.page - 1) * filtros.limit;
 

@@ -5,13 +5,18 @@ import { PrismaModule } from '@core/prisma/prisma.module';
 import { FilialModule } from '@module/filial/filial.module';
 import { CriarFornecedorController } from './controllers/criar-fornecedor.controller';
 import { BuscarFornecedorController } from './controllers/buscar-fornecedor.controller';
+import { BuscarVariosFornecedoresController } from './controllers/buscar-varios-fornecedores.controller';
 import { CriarFornecedorService } from './services/criar-fornecedor.service';
 import { BuscarFornecedorService } from './services/buscar-fornecedor.service';
 import { BuscarVariosFornecedoresService } from './services/buscar-varios-fornecedores.service';
 
 @Module({
   imports: [PrismaModule, FilialModule],
-  controllers: [CriarFornecedorController, BuscarFornecedorController],
+  controllers: [
+    CriarFornecedorController,
+    BuscarVariosFornecedoresController,
+    BuscarFornecedorController,
+  ],
   providers: [
     CriarFornecedorService,
     BuscarVariosFornecedoresService,

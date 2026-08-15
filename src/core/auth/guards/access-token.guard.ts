@@ -1,12 +1,9 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '@common/decorators/public.decorator';
 import { TokenServiceContract } from '../contracts/token-service.contract';
+import { TokenDeAcessoInvalidoException } from '../exceptions/token-de-acesso-invalido.exception';
+import { TokenDeAcessoNaoInformadoException } from '../exceptions/token-de-acesso-nao-informado.exception';
 import { AccessTokenPayload } from '../types/access-token-payload';
 import { AuthenticatedUser } from '../types/authenticated-user';
 
@@ -34,14 +31,14 @@ export class AccessTokenGuard implements CanActivate {
     const authorization = request.headers.authorization;
 
     if (!authorization?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token de acesso não informado.');
+      throw new TokenDeAcessoNaoInformadoException();
     }
 
     const token = authorization.slice('Bearer '.length);
     const valido = await this.tokenService.validarAccessToken(token);
 
     if (!valido) {
-      throw new UnauthorizedException('Token de acesso inválido.');
+      throw new TokenDeAcessoInvalidoException();
     }
 
     const payload =
@@ -50,6 +47,8 @@ export class AccessTokenGuard implements CanActivate {
     request.user = {
       id: payload.sub,
       perfis: payload.perfis,
+      filialId: payload.filialId,
+      fornecedorId: payload.fornecedorId,
     };
 
     return true;

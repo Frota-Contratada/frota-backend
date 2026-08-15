@@ -12,12 +12,14 @@ export class BuscarVariosFornecedoresService {
   async execute(filtros: {
     nome?: string;
     cnpjCpf?: string;
+    filialId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Fornecedor>> {
     return this.fornecedorRepository.buscarVarios({
       nome: filtros.nome,
       cnpjCpf: filtros.cnpjCpf,
+      filialId: filtros.filialId,
       page: filtros.page,
       limit: filtros.limit,
     });

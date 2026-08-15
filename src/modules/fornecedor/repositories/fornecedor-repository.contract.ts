@@ -6,6 +6,7 @@ export abstract class FornecedorRepositoryContract {
   abstract buscarVarios(filtros: {
     nome?: string;
     cnpjCpf?: string;
+    filialId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Fornecedor>>;

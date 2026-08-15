@@ -11,6 +11,7 @@ export class Usuario {
     public dataDesativacao?: DateTime,
     public perfis: UsuarioPerfil[] = [],
     public filialId?: number,
+    public fornecedorId?: number,
     public caminhoFotoPerfil?: string,
     public fotoPerfil?: string,
   ) {}

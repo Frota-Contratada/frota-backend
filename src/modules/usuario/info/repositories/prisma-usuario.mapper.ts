@@ -25,6 +25,9 @@ export class PrismaUsuarioMapper {
         : DateTime.fromJSDate(entity.dDesativacao),
       [],
       entity.nCdFilial == null ? undefined : entity.nCdFilial.toNumber(),
+      entity.nCdFornecedor == null
+        ? undefined
+        : entity.nCdFornecedor.toNumber(),
       entity.cCaminhoFotoPerfil ?? undefined,
     );
   }
@@ -61,6 +64,9 @@ export class PrismaUsuarioMapper {
         : DateTime.fromJSDate(entity.dDesativacao),
       perfis,
       entity.nCdFilial == null ? undefined : entity.nCdFilial.toNumber(),
+      entity.nCdFornecedor == null
+        ? undefined
+        : entity.nCdFornecedor.toNumber(),
       entity.cCaminhoFotoPerfil ?? undefined,
     );
   }

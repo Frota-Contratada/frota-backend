@@ -20,6 +20,7 @@ import { RedefinirSenhaService } from './services/redefinir-senha.service';
 import { VerificarPrimeiroAcessoController } from './controllers/verificar-primeiro-acesso.controller';
 import { VerificarPrimeiroAcessoService } from './services/verificar-primeiro-acesso.service';
 import { EmailModule } from '@core/email/email.module';
+import { GerarTokensService } from './services/gerar-tokens.service';
 
 @Module({
   controllers: [
@@ -32,6 +33,7 @@ import { EmailModule } from '@core/email/email.module';
     VerificarPrimeiroAcessoController,
   ],
   providers: [
+    GerarTokensService,
     LoginService,
     RefreshTokenService,
     EnviarPinEmailService,

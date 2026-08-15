@@ -30,11 +30,16 @@ import { RouterModule } from '@nestjs/core';
       },
       {
         path: 'usuario',
-        module: UsuarioInfoModule,
-      },
-      {
-        path: 'usuario',
-        module: MotoristaModule,
+        children: [
+          {
+            path: 'info',
+            module: UsuarioInfoModule,
+          },
+          {
+            path: 'motorista',
+            module: MotoristaModule,
+          },
+        ],
       },
       {
         path: 'fornecedor',
