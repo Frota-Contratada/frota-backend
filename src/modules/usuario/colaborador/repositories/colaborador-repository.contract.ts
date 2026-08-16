@@ -6,6 +6,10 @@ import { ColaboradorSummary } from '../domain/types/colaborador-summary.type';
 
 export abstract class ColaboradorRepositoryContract {
   abstract buscar(id: number): Promise<Colaborador | null>;
+  abstract buscarPorCpfs(
+    cpfs: string[],
+    perfis?: TipoPerfil[],
+  ): Promise<Colaborador[]>;
   abstract buscarVarios(filtros: {
     nome?: string;
     cpf?: string;

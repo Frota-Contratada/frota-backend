@@ -31,6 +31,13 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
     filialId: number,
     centroCustoId: number,
   ): Promise<boolean> {
+    return (await this.buscarAprovadorId(filialId, centroCustoId)) !== null;
+  }
+
+  async buscarAprovadorId(
+    filialId: number,
+    centroCustoId: number,
+  ): Promise<number | null> {
     const agora = new Date();
 
     const aprovador = await this.prismaService.usuario.findFirst({
@@ -46,9 +53,10 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
           },
         },
       },
+      orderBy: { nCdUsuario: 'asc' },
       select: { nCdUsuario: true },
     });
 
-    return aprovador !== null;
+    return aprovador === null ? null : aprovador.nCdUsuario.toNumber();
   }
 }

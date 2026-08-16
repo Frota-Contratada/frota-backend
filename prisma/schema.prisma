@@ -232,6 +232,7 @@ model Solicitacao {
   cStatus                                           String                   @default("P", map: "DF_Solicitacao_cStatus") @db.Char(1)
   nCdMotivoCancelamento                             Decimal?                 @db.Decimal(10, 0)
   nCdMotivoSolicitacao                              Decimal                  @db.Decimal(10, 0)
+  nCdTpVeiculo                                      Decimal?                 @db.Decimal(10, 0)
   Corrida                                           Corrida[]
   Parada                                            Parada[]
   Endereco_Solicitacao_nCdEnderecoDestinoToEndereco Endereco                 @relation("Solicitacao_nCdEnderecoDestinoToEndereco", fields: [nCdEnderecoDestino], references: [nCdEndereco], onUpdate: NoAction, map: "FK_Solicitacao_Destino")
@@ -240,6 +241,7 @@ model Solicitacao {
   Motivo_Solicitacao_nCdMotivoSolicitacaoToMotivo   Motivo                   @relation("Solicitacao_nCdMotivoSolicitacaoToMotivo", fields: [nCdMotivoSolicitacao], references: [nCdMotivo], onUpdate: NoAction, map: "FK_Solicitacao_MotivoSolicitacao")
   Endereco_Solicitacao_nCdEnderecoOrigemToEndereco  Endereco                 @relation("Solicitacao_nCdEnderecoOrigemToEndereco", fields: [nCdEnderecoOrigem], references: [nCdEndereco], onUpdate: NoAction, map: "FK_Solicitacao_Origem")
   Usuario                                           Usuario                  @relation(fields: [nCdSolicitante], references: [nCdUsuario], onUpdate: NoAction, map: "FK_Solicitacao_Solicitante")
+  TipoVeiculo                                       TipoVeiculo?             @relation(fields: [nCdTpVeiculo], references: [nCdTpVeiculo], onDelete: NoAction, onUpdate: NoAction, map: "FK_Solicitacao_TipoVeiculo")
   SolicitacaoCentroCusto                            SolicitacaoCentroCusto[]
   SolicitacaoPassageiro                             SolicitacaoPassageiro[]
 
@@ -283,9 +285,10 @@ model TipoRegra {
 }
 
 model TipoVeiculo {
-  nCdTpVeiculo Decimal   @id(map: "PK_TipoVeiculo") @db.Decimal(10, 0)
-  cNmTpVeiculo String    @db.VarChar(100)
+  nCdTpVeiculo Decimal       @id(map: "PK_TipoVeiculo") @db.Decimal(10, 0)
+  cNmTpVeiculo String        @db.VarChar(100)
   iQntVeiculo  Int
+  Solicitacao  Solicitacao[]
   Veiculo      Veiculo[]
 }
 

@@ -9,4 +9,9 @@ export abstract class CentroCustoRepositoryContract {
     filialId: number,
     centroCustoId: number,
   ): Promise<boolean>;
+
+  abstract buscarAprovadorId(
+    filialId: number,
+    centroCustoId: number,
+  ): Promise<number | null>;
 }
