@@ -13,6 +13,7 @@ export const BuscarSolicitacoesQuerySchema = z.object({
   dataFim: dataIsoSchema(
     'Informe o fim do período em ISO 8601 válido',
   ).optional(),
+  historico: z.enum(['true', 'false']).default('false'),
   ordenacao: z.enum(OrdenacaoSolicitacao).default(OrdenacaoSolicitacao.RECENTE),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),

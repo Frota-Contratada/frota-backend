@@ -46,6 +46,7 @@ export class BuscarSolicitacaoController {
         ? DateTime.fromISO(query.dataInicio)
         : undefined,
       dataFim: query.dataFim ? DateTime.fromISO(query.dataFim) : undefined,
+      historico: query.historico === 'true',
       ordenacao: query.ordenacao,
       page: query.page,
       limit: query.limit,

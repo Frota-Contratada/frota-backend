@@ -167,16 +167,10 @@ export class PrismaSolicitacaoMapper {
   private static corridaToDomain(
     corridas: PrismaSolicitacaoCompleta['Corrida'],
   ): CorridaSolicitacao | undefined {
-    const relevantes = corridas
-      .filter(
-        (corrida) =>
-          PrismaSolicitacaoMapper.paraStatusCorrida(corrida.cStatus) !==
-          StatusCorrida.CANCELADA,
-      )
-      .sort(
-        (uma, outra) =>
-          outra.dInicioCorrida.getTime() - uma.dInicioCorrida.getTime(),
-      );
+    const relevantes = [...corridas].sort(
+      (uma, outra) =>
+        outra.dInicioCorrida.getTime() - uma.dInicioCorrida.getTime(),
+    );
 
     const corrida = relevantes.at(0);
 

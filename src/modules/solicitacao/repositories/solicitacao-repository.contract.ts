@@ -10,6 +10,7 @@ export interface FiltrosBuscarSolicitacoes {
   tipoCorridaId?: number;
   dataInicio?: DateTime;
   dataFim?: DateTime;
+  historico?: boolean;
   ordenacao: OrdenacaoSolicitacao;
   page: number;
   limit: number;

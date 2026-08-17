@@ -18,6 +18,7 @@ import { Endereco } from '../domain/endereco';
 import { Solicitacao } from '../domain/solicitacao';
 import { TipoCorrida } from '../domain/tipo-corrida';
 import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
+import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 
@@ -252,6 +253,22 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
         ? { nCdTipoCorrida: filtros.tipoCorridaId }
         : {}),
       ...(Object.keys(periodo).length > 0 ? { dCorrida: periodo } : {}),
+      ...(filtros.historico
+        ? {
+            OR: [
+              { cStatus: StatusSolicitacao.CANCELADA },
+              {
+                Corrida: {
+                  some: {
+                    cStatus: {
+                      in: [StatusCorrida.FINALIZADA, StatusCorrida.CANCELADA],
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
     };
   }
 
