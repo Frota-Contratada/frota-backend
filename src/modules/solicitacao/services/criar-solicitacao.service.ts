@@ -259,8 +259,6 @@ export class CriarSolicitacaoService {
       vistos.add(cpf);
     }
 
-    // Só colaboradores autorizados a usar o transporte corporativo podem
-    // embarcar, então exigimos um dos perfis de solicitante.
     const encontrados = await this.colaboradorRepository.buscarPorCpfs(
       cpfsAcompanhantes,
       [TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA],

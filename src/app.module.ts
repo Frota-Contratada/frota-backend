@@ -8,7 +8,8 @@ import { CentroDeCustoModule } from '@module/centro-de-custo/centro-de-custo.mod
 import { ContratoModule } from '@module/contrato/contrato.module';
 import { SolicitacaoModule } from '@module/solicitacao/solicitacao.module';
 import { RedisModule } from '@core/redis/redis.module';
-import { Module } from '@nestjs/common';
+import { LogRequisicaoMiddleware } from '@common/middlewares/log-requisicao.middleware';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RouterModule } from '@nestjs/core';
 
@@ -72,4 +73,8 @@ import { RouterModule } from '@nestjs/core';
     ]),
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(LogRequisicaoMiddleware).forRoutes('*');
+  }
+}

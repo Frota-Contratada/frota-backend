@@ -8,6 +8,7 @@ import { ColaboradorModule } from '@module/usuario/colaborador/colaborador.modul
 import { BuscarCatalogosController } from './controllers/buscar-catalogos.controller';
 import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-agendadas.controller';
 import { CriarSolicitacaoController } from './controllers/criar-solicitacao.controller';
+import { SimularSolicitacaoController } from './controllers/simular-solicitacao.controller';
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
 import { BuscarMotivosService } from './services/buscar-motivos.service';
@@ -19,6 +20,7 @@ import { BuscarViagensAgendadasService } from './services/buscar-viagens-agendad
 import { CalcularValorEstimadoService } from './services/calcular-valor-estimado.service';
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
+import { SimularSolicitacaoService } from './services/simular-solicitacao.service';
 import { SelecionarFornecedorService } from './services/selecionar-fornecedor.service';
 import { CatalogoSolicitacaoRepositoryContract } from './repositories/catalogo-solicitacao-repository.contract';
 import { ContratoPrecificacaoRepositoryContract } from './repositories/contrato-precificacao-repository.contract';
@@ -40,12 +42,14 @@ import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.r
   controllers: [
     BuscarCatalogosController,
     BuscarViagensAgendadasController,
+    SimularSolicitacaoController,
     CriarSolicitacaoController,
     CancelarSolicitacaoController,
     BuscarSolicitacaoController,
   ],
   providers: [
     CriarSolicitacaoService,
+    SimularSolicitacaoService,
     BuscarSolicitacaoService,
     BuscarVariasSolicitacoesService,
     BuscarViagensAgendadasService,

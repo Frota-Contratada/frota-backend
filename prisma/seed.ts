@@ -702,7 +702,7 @@ async function semearSolicitacoes() {
       id: 2,
       origem: PONTO.CASA,
       destino: PONTO.CLIENTE_CENTRO,
-      dataCorrida: nestaSemana(DateTime.now().weekday, DateTime.now().hour),
+      dataCorrida: nestaSemana(5, 14),
       tipoCorridaId: TIPO_CORRIDA.TAXI,
       tipoVeiculoId: TIPO_VEICULO.CARRO,
       motivoId: MOTIVO.VISITA_CLIENTE,
