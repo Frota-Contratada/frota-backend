@@ -237,9 +237,24 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     filtros: FiltrosBuscarSolicitacoes,
   ): Prisma.SolicitacaoWhereInput {
     const periodo: Prisma.DateTimeFilter = {};
+    const dataInicioInformada = filtros.dataInicio?.startOf('day');
 
-    if (filtros.dataInicio) {
-      periodo.gte = filtros.dataInicio.startOf('day').toJSDate();
+    if (filtros.historico) {
+      if (dataInicioInformada) {
+        periodo.gte = dataInicioInformada.toJSDate();
+      }
+    } else {
+      // A listagem normal mantém somente o dia anterior e as viagens futuras.
+      const inicioDaJanela = DateTime.now()
+        .minus({ days: 1 })
+        .startOf('day');
+      const dataInicio =
+        dataInicioInformada &&
+        dataInicioInformada.toMillis() > inicioDaJanela.toMillis()
+          ? dataInicioInformada
+          : inicioDaJanela;
+
+      periodo.gte = dataInicio.toJSDate();
     }
 
     if (filtros.dataFim) {
