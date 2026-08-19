@@ -53,6 +53,7 @@ export class JwtTokenService extends TokenServiceContract {
       accessToken,
       refreshToken,
       validade: this.accessExpiresIn,
+      validadeRefresh: this.refreshExpiresIn,
     };
   }
 
