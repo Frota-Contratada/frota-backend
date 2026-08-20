@@ -213,6 +213,7 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
       this.prismaService.corrida.findMany({
         where: {
           nCdMotorista: motoristaId,
+          cStatus: { not: StatusCorrida.CANCELADA },
           OR: [
             {
               cStatus: {

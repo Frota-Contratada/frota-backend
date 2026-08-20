@@ -29,6 +29,11 @@ export class PerfilGuard implements CanActivate {
       throw new UsuarioNaoAutenticadoException();
     }
 
+    const possuiPerfilMaster = usuario.perfis.includes(TipoPerfil.ADMIN_MASTER);
+    if (possuiPerfilMaster) {
+      return true;
+    }
+
     const possuiPerfil = usuario.perfis.some((perfil) =>
       perfisPermitidos.includes(perfil),
     );

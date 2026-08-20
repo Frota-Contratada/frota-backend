@@ -425,15 +425,11 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       ...(Object.keys(periodo).length > 0 ? { dCorrida: periodo } : {}),
       ...(filtros.historico
         ? {
-            OR: [
-              { cStatus: StatusSolicitacao.CANCELADA },
+            AND: [
+              { cStatus: { not: StatusSolicitacao.CANCELADA } },
               {
                 Corrida: {
-                  some: {
-                    cStatus: {
-                      in: [StatusCorrida.FINALIZADA, StatusCorrida.CANCELADA],
-                    },
-                  },
+                  some: { cStatus: StatusCorrida.FINALIZADA },
                 },
               },
             ],
