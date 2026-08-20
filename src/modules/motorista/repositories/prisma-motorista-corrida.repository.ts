@@ -6,6 +6,7 @@ import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 import {
   CorridaNaoEncontradaException,
   CorridaNaoPodeSerIniciadaException,
+  CorridaNaoPodeSerRecusadaException,
 } from '../exceptions';
 import { MotoristaCorrida, MotoristaPerfil } from '../domain/motorista-corrida';
 import { MotoristaCorridaRepositoryContract } from './motorista-corrida-repository.contract';
@@ -19,6 +20,10 @@ const INCLUDE_CORRIDA = {
     },
   },
   Veiculo: true,
+  RecusaCorrida: {
+    orderBy: { dRecusa: 'desc' },
+    take: 1,
+  },
 } satisfies Prisma.CorridaInclude;
 
 type PrismaMotoristaCorrida = Prisma.CorridaGetPayload<{
@@ -39,6 +44,7 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
     const corridas = await this.prismaService.corrida.findMany({
       where: {
         nCdMotorista: motoristaId,
+        cStatus: { not: StatusCorrida.CANCELADA },
         Solicitacao: {
           cStatus: 'A',
           dCorrida: {
@@ -129,6 +135,72 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
         take: 1,
       });
       return this.toDomain(iniciada, tipoIniciada?.cNmTipoCorrida ?? '');
+    });
+  }
+
+  async recusar(
+    corridaId: number,
+    motoristaId: number,
+    motivo: string,
+  ): Promise<MotoristaCorrida> {
+    return this.prismaService.$transaction(async (tx) => {
+      const atual = await tx.corrida.findFirst({
+        where: {
+          nCdCorrida: corridaId,
+          nCdMotorista: motoristaId,
+          cStatus: StatusCorrida.AGENDADA,
+        },
+        include: INCLUDE_CORRIDA,
+      });
+
+      if (atual == null) {
+        const corrida = await tx.corrida.findFirst({
+          where: { nCdCorrida: corridaId, nCdMotorista: motoristaId },
+          select: { cStatus: true },
+        });
+
+        if (corrida == null) {
+          throw new CorridaNaoEncontradaException(corridaId);
+        }
+
+        throw new CorridaNaoPodeSerRecusadaException();
+      }
+
+      const ultimaRecusa = await tx.recusaCorrida.aggregate({
+        _max: { nCdRecusaCorrida: true },
+      });
+      const recusaId =
+        (ultimaRecusa._max.nCdRecusaCorrida?.toNumber() ?? 0) + 1;
+
+      await tx.recusaCorrida.create({
+        data: {
+          nCdRecusaCorrida: recusaId,
+          nCdCorrida: corridaId,
+          nCdMotorista: motoristaId,
+          cMotivo: motivo.trim(),
+        },
+      });
+
+      await tx.corrida.update({
+        where: { nCdCorrida: corridaId },
+        data: { cStatus: StatusCorrida.CANCELADA },
+      });
+
+      const recusada = await tx.corrida.findUnique({
+        where: { nCdCorrida: corridaId },
+        include: INCLUDE_CORRIDA,
+      });
+
+      if (recusada == null) {
+        throw new CorridaNaoEncontradaException(corridaId);
+      }
+
+      const [tipo] = await tx.tipoCorrida.findMany({
+        where: { nCdTipoCorrida: recusada.Solicitacao.nCdTipoCorrida },
+        take: 1,
+      });
+
+      return this.toDomain(recusada, tipo?.cNmTipoCorrida ?? '');
     });
   }
 
@@ -239,6 +311,7 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
         : DateTime.fromJSDate(corrida.dFimCorrida),
       ehProxima,
       minutosRestantes,
+      corrida.RecusaCorrida.at(0)?.cMotivo,
     );
   }
 

@@ -20,11 +20,13 @@ import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-
 import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
 import { AcompanhanteDuplicadoException } from '../exceptions/acompanhante-duplicado.exception';
 import { AcompanhanteNaoEncontradoException } from '../exceptions/acompanhante-nao-encontrado.exception';
+import { CapacidadeVeiculoInsuficienteException } from '../exceptions/capacidade-veiculo-insuficiente.exception';
 import { CentroCustoDuplicadoException } from '../exceptions/centro-custo-duplicado.exception';
 import { DataCorridaInvalidaException } from '../exceptions/data-corrida-invalida.exception';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitanteNaoEncontradoException } from '../exceptions/solicitante-nao-encontrado.exception';
 import { SolicitanteSemFilialException } from '../exceptions/solicitante-sem-filial.exception';
+import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
 import { TipoCorridaNaoEncontradoException } from '../exceptions/tipo-corrida-nao-encontrado.exception';
 import { TipoVeiculoNaoEncontradoException } from '../exceptions/tipo-veiculo-nao-encontrado.exception';
 import { SelecionarFornecedorService } from './selecionar-fornecedor.service';
@@ -81,6 +83,15 @@ export class CriarSolicitacaoService {
 
     if (solicitante.filialId == null) {
       throw new SolicitanteSemFilialException(input.solicitanteId);
+    }
+
+    if (
+      await this.solicitacaoRepository.existeConflitoDeHorario(
+        input.solicitanteId,
+        input.dataCorrida,
+      )
+    ) {
+      throw new SolicitacaoHorarioDuplicadoException();
     }
 
     const filialId = solicitante.filialId;
@@ -140,6 +151,12 @@ export class CriarSolicitacaoService {
       input.cpfsAcompanhantes,
     );
 
+    this.validarCapacidade(
+      tipoVeiculo,
+      motivoSolicitacao.tipo,
+      passageiros.length,
+    );
+
     const solicitacao = new Solicitacao(
       solicitante.id,
       fornecedor.fornecedorId,
@@ -165,6 +182,26 @@ export class CriarSolicitacaoService {
     criada.duracaoEstimadaMinutos = rota.duracaoMinutos;
 
     return criada;
+  }
+
+  private validarCapacidade(
+    tipoVeiculo: TipoVeiculo | undefined,
+    tipoMotivo: TipoMotivo,
+    quantidadePassageiros: number,
+  ): void {
+    if (
+      tipoVeiculo == null ||
+      tipoMotivo === TipoMotivo.OBJETO_TRANSPORTADO ||
+      quantidadePassageiros <= tipoVeiculo.capacidadePassageiros
+    ) {
+      return;
+    }
+
+    throw new CapacidadeVeiculoInsuficienteException(
+      tipoVeiculo.nome,
+      tipoVeiculo.capacidadePassageiros,
+      quantidadePassageiros,
+    );
   }
 
   private async resolverTipoVeiculo(

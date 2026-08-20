@@ -38,6 +38,11 @@ export class MotoristaCorridaDto {
   @ApiPropertyOptional({ example: 18 })
   minutosRestantes?: number;
 
+  @ApiPropertyOptional({
+    example: 'Não consigo realizar o atendimento no horário informado.',
+  })
+  motivoRecusa?: string;
+
   constructor(corrida: MotoristaCorrida) {
     this.id = corrida.id;
     this.dataHoraPartida = corrida.dataHoraPartida.toISO() ?? '';
@@ -51,5 +56,6 @@ export class MotoristaCorridaDto {
     this.dataFim = corrida.dataFim?.toISO() ?? undefined;
     this.ehProxima = corrida.ehProxima;
     this.minutosRestantes = corrida.minutosRestantes;
+    this.motivoRecusa = corrida.motivoRecusa;
   }
 }

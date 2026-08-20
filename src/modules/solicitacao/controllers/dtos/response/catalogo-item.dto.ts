@@ -19,10 +19,21 @@ export class CatalogoItemDto {
   })
   tipo?: string;
 
-  constructor(id: number, nome: string, tipo?: string) {
+  @ApiPropertyOptional({
+    example: 4,
+  })
+  capacidadePassageiros?: number;
+
+  constructor(
+    id: number,
+    nome: string,
+    tipo?: string,
+    capacidadePassageiros?: number,
+  ) {
     this.id = id;
     this.nome = nome;
     this.tipo = tipo;
+    this.capacidadePassageiros = capacidadePassageiros;
   }
 
   static aPartirDoMotivo(motivo: Motivo): CatalogoItemDto {
@@ -34,6 +45,11 @@ export class CatalogoItemDto {
   }
 
   static aPartirDoTipoVeiculo(tipoVeiculo: TipoVeiculo): CatalogoItemDto {
-    return new CatalogoItemDto(tipoVeiculo.id, tipoVeiculo.nome);
+    return new CatalogoItemDto(
+      tipoVeiculo.id,
+      tipoVeiculo.nome,
+      undefined,
+      tipoVeiculo.capacidadePassageiros,
+    );
   }
 }

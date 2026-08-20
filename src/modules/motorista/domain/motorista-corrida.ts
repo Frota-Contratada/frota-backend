@@ -15,6 +15,7 @@ export class MotoristaCorrida {
     public dataFim?: DateTime,
     public ehProxima = false,
     public minutosRestantes?: number,
+    public motivoRecusa?: string,
   ) {}
 }
 
