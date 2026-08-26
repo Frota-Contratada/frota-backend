@@ -400,8 +400,7 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       if (dataInicioInformada) {
         periodo.gte = dataInicioInformada.toJSDate();
       }
-    } else {
-      // A listagem normal mantém somente o dia anterior e as viagens futuras.
+    } else if (!filtros.incluirAnteriores) {
       const inicioDaJanela = DateTime.now().minus({ days: 1 }).startOf('day');
       const dataInicio =
         dataInicioInformada &&

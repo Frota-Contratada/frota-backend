@@ -11,6 +11,7 @@ export interface FiltrosBuscarSolicitacoes {
   dataInicio?: DateTime;
   dataFim?: DateTime;
   historico?: boolean;
+  incluirAnteriores?: boolean;
   ordenacao: OrdenacaoSolicitacao;
   page: number;
   limit: number;
