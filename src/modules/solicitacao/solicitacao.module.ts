@@ -10,6 +10,7 @@ import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-a
 import { CriarSolicitacaoController } from './controllers/criar-solicitacao.controller';
 import { SimularSolicitacaoController } from './controllers/simular-solicitacao.controller';
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
+import { DecidirSolicitacaoFornecedorController } from './controllers/decidir-solicitacao-fornecedor.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
 import { BuscarMotivosService } from './services/buscar-motivos.service';
 import { BuscarSolicitacaoService } from './services/buscar-solicitacao.service';
@@ -19,6 +20,7 @@ import { BuscarVariasSolicitacoesService } from './services/buscar-varias-solici
 import { BuscarViagensAgendadasService } from './services/buscar-viagens-agendadas.service';
 import { CalcularValorEstimadoService } from './services/calcular-valor-estimado.service';
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
+import { DecidirSolicitacaoFornecedorService } from './services/decidir-solicitacao-fornecedor.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
 import { SimularSolicitacaoService } from './services/simular-solicitacao.service';
 import { SelecionarFornecedorService } from './services/selecionar-fornecedor.service';
@@ -45,6 +47,7 @@ import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.r
     SimularSolicitacaoController,
     CriarSolicitacaoController,
     CancelarSolicitacaoController,
+    DecidirSolicitacaoFornecedorController,
     BuscarSolicitacaoController,
   ],
   providers: [
@@ -54,6 +57,7 @@ import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.r
     BuscarVariasSolicitacoesService,
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
+    DecidirSolicitacaoFornecedorService,
     CalcularValorEstimadoService,
     SelecionarFornecedorService,
     BuscarMotivosService,

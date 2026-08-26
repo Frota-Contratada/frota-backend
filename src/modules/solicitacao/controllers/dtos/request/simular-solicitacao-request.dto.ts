@@ -9,6 +9,10 @@ export const SimularSolicitacaoRequestSchema = z.object({
   ),
   tipoCorridaId: z.number().int().positive(),
   tipoVeiculoId: z.number().int().positive().optional(),
+  cpfsAcompanhantes: z
+    .array(z.string().trim().length(11, { message: 'CPF deve ter 11 dígitos' }))
+    .max(10)
+    .default([]),
   origem: EnderecoRequestSchema,
   destino: EnderecoRequestSchema,
   paradas: z.array(EnderecoRequestSchema).max(10).default([]),

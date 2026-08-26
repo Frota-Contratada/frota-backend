@@ -92,12 +92,14 @@ export class PrismaSolicitacaoMapper {
             : new TipoVeiculo(
                 entity.TipoVeiculo.nCdTpVeiculo.toNumber(),
                 entity.TipoVeiculo.cNmTpVeiculo,
+                entity.TipoVeiculo.iQntVeiculo,
               ),
         solicitanteNome: entity.Usuario.cNmUsuario,
         fornecedorNome: entity.Fornecedor.cNmFornecedor,
         motivoCancelamento: PrismaSolicitacaoMapper.motivoToDomain(
           entity.Motivo_Solicitacao_nCdMotivoCancelamentoToMotivo,
         ),
+        motivoRecusaFornecedor: entity.cMotivoRecusaFornecedor ?? undefined,
         paradas: entity.Parada.map(
           (parada) =>
             new Parada(

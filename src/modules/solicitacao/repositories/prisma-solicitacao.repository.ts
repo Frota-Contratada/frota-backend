@@ -5,6 +5,7 @@ import { PaginatedResponseInterface } from '@common/interfaces/paginated-respons
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import {
   FiltrosBuscarSolicitacoes,
+  DecisaoFornecedor,
   SolicitacaoRepositoryContract,
 } from './solicitacao-repository.contract';
 import {
@@ -21,6 +22,9 @@ import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
 import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
+import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
+import { SolicitacaoNaoPodeSerDecididaPeloFornecedorException } from '../exceptions/solicitacao-nao-pode-ser-decidida-pelo-fornecedor.exception';
+import { MotoristaOuVeiculoIndisponivelException } from '../exceptions/motorista-ou-veiculo-indisponivel.exception';
 
 @Injectable()
 export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
@@ -28,8 +32,55 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     super();
   }
 
+  async existeConflitoDeHorario(
+    solicitanteId: number,
+    dataCorrida: DateTime,
+  ): Promise<boolean> {
+    const inicio = dataCorrida.startOf('minute').toJSDate();
+    const fim = dataCorrida.startOf('minute').plus({ minutes: 1 }).toJSDate();
+
+    const registro = await this.prismaService.solicitacao.findFirst({
+      where: {
+        nCdSolicitante: solicitanteId,
+        cStatus: {
+          in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+        },
+        dCorrida: {
+          gte: inicio,
+          lt: fim,
+        },
+      },
+      select: { nCdSolicitacao: true },
+    });
+
+    return registro != null;
+  }
+
   async criar(solicitacao: Solicitacao): Promise<Solicitacao> {
     const id = await this.prismaService.$transaction(async (tx) => {
+      const inicio = solicitacao.dataCorrida.startOf('minute').toJSDate();
+      const fim = solicitacao.dataCorrida
+        .startOf('minute')
+        .plus({ minutes: 1 })
+        .toJSDate();
+      const conflito = await tx.solicitacao.findFirst({
+        where: {
+          nCdSolicitante: solicitacao.solicitanteId,
+          cStatus: {
+            in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+          },
+          dCorrida: {
+            gte: inicio,
+            lt: fim,
+          },
+        },
+        select: { nCdSolicitacao: true },
+      });
+
+      if (conflito) {
+        throw new SolicitacaoHorarioDuplicadoException();
+      }
+
       const ultimoEndereco = await tx.endereco.aggregate({
         _max: { nCdEndereco: true },
       });
@@ -233,6 +284,112 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     return cancelada;
   }
 
+  async decidirPeloFornecedor(
+    id: number,
+    fornecedorId: number,
+    decisao: DecisaoFornecedor,
+  ): Promise<Solicitacao> {
+    await this.prismaService.$transaction(async (tx) => {
+      const solicitacao = await tx.solicitacao.findFirst({
+        where: { nCdSolicitacao: id, nCdFornecedor: fornecedorId },
+        include: { Corrida: true },
+      });
+
+      if (solicitacao == null) {
+        throw new SolicitacaoNaoEncontradaException(id);
+      }
+
+      const aguardandoDecisao = solicitacao.Corrida.some(
+        (corrida) =>
+          String(corrida.cStatus) === String(StatusCorrida.CANCELADA),
+      );
+
+      if (
+        String(solicitacao.cStatus) !== String(StatusSolicitacao.APROVADA) ||
+        !aguardandoDecisao
+      ) {
+        throw new SolicitacaoNaoPodeSerDecididaPeloFornecedorException(id);
+      }
+
+      if (decisao.decisao === 'RECUSAR') {
+        await tx.solicitacao.update({
+          where: { nCdSolicitacao: id },
+          data: {
+            cStatus: StatusSolicitacao.CANCELADA,
+            cMotivoRecusaFornecedor: decisao.motivo?.trim(),
+          },
+        });
+        return;
+      }
+
+      if (decisao.motoristaId == null || decisao.veiculoId == null) {
+        throw new MotoristaOuVeiculoIndisponivelException();
+      }
+
+      const motorista = await tx.usuario.findFirst({
+        where: {
+          nCdUsuario: decisao.motoristaId,
+          nCdFornecedor: fornecedorId,
+          cDisponivel: 'S',
+          dDesativacao: null,
+        },
+      });
+      const veiculo = await tx.veiculo.findFirst({
+        where: {
+          nCdFornecedor: fornecedorId,
+          nCdVeiculo: decisao.veiculoId,
+          dDesativacao: null,
+        },
+      });
+
+      if (motorista == null || veiculo == null) {
+        throw new MotoristaOuVeiculoIndisponivelException();
+      }
+
+      const corridaAtiva = await tx.corrida.findFirst({
+        where: {
+          nCdMotorista: decisao.motoristaId,
+          cStatus: { in: [StatusCorrida.AGENDADA, StatusCorrida.INICIADA] },
+        },
+        select: { nCdCorrida: true },
+      });
+
+      if (corridaAtiva != null) {
+        throw new MotoristaOuVeiculoIndisponivelException();
+      }
+
+      const ultimaCorrida = await tx.corrida.aggregate({
+        _max: { nCdCorrida: true },
+      });
+      const corridaId = (ultimaCorrida._max.nCdCorrida?.toNumber() ?? 0) + 1;
+
+      await tx.corrida.create({
+        data: {
+          nCdCorrida: corridaId,
+          nCdSolicitacao: id,
+          nCdMotorista: decisao.motoristaId,
+          nCdFornecedor: fornecedorId,
+          nCdVeiculo: decisao.veiculoId,
+          dInicioCorrida: solicitacao.dCorrida,
+          nKmPercorrido: 0,
+          nValorFinal: solicitacao.nValorEstimado,
+          cStatus: StatusCorrida.AGENDADA,
+        },
+      });
+
+      await tx.solicitacao.update({
+        where: { nCdSolicitacao: id },
+        data: { cMotivoRecusaFornecedor: null },
+      });
+    });
+
+    const atualizada = await this.buscar(id);
+    if (!atualizada) {
+      throw new SolicitacaoNaoEncontradaException(id);
+    }
+    return atualizada;
+  }
+
   private montarWhere(
     filtros: FiltrosBuscarSolicitacoes,
   ): Prisma.SolicitacaoWhereInput {
@@ -243,11 +400,8 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       if (dataInicioInformada) {
         periodo.gte = dataInicioInformada.toJSDate();
       }
-    } else {
-      // A listagem normal mantém somente o dia anterior e as viagens futuras.
-      const inicioDaJanela = DateTime.now()
-        .minus({ days: 1 })
-        .startOf('day');
+    } else if (!filtros.incluirAnteriores) {
+      const inicioDaJanela = DateTime.now().minus({ days: 1 }).startOf('day');
       const dataInicio =
         dataInicioInformada &&
         dataInicioInformada.toMillis() > inicioDaJanela.toMillis()
@@ -270,15 +424,11 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       ...(Object.keys(periodo).length > 0 ? { dCorrida: periodo } : {}),
       ...(filtros.historico
         ? {
-            OR: [
-              { cStatus: StatusSolicitacao.CANCELADA },
+            AND: [
+              { cStatus: { not: StatusSolicitacao.CANCELADA } },
               {
                 Corrida: {
-                  some: {
-                    cStatus: {
-                      in: [StatusCorrida.FINALIZADA, StatusCorrida.CANCELADA],
-                    },
-                  },
+                  some: { cStatus: StatusCorrida.FINALIZADA },
                 },
               },
             ],
