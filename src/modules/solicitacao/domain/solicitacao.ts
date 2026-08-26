@@ -19,6 +19,7 @@ export interface DetalhesSolicitacao {
   centrosCusto?: SolicitacaoCentroCusto[];
   passageiros?: SolicitacaoPassageiro[];
   motivoCancelamento?: Motivo;
+  motivoRecusaFornecedor?: string;
   duracaoEstimadaMinutos?: number;
   solicitanteNome?: string;
   fornecedorNome?: string;
@@ -34,6 +35,7 @@ export class Solicitacao {
   centrosCusto: SolicitacaoCentroCusto[];
   passageiros: SolicitacaoPassageiro[];
   motivoCancelamento?: Motivo;
+  motivoRecusaFornecedor?: string;
   duracaoEstimadaMinutos?: number;
   solicitanteNome?: string;
   fornecedorNome?: string;
@@ -59,6 +61,7 @@ export class Solicitacao {
     this.centrosCusto = detalhes.centrosCusto ?? [];
     this.passageiros = detalhes.passageiros ?? [];
     this.motivoCancelamento = detalhes.motivoCancelamento;
+    this.motivoRecusaFornecedor = detalhes.motivoRecusaFornecedor;
     this.duracaoEstimadaMinutos = detalhes.duracaoEstimadaMinutos;
     this.solicitanteNome = detalhes.solicitanteNome;
     this.fornecedorNome = detalhes.fornecedorNome;

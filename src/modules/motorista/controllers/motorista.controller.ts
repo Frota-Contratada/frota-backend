@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -11,7 +11,9 @@ import { BuscarCorridaService } from '../services/buscar-corrida.service';
 import { BuscarPerfilService } from '../services/buscar-perfil.service';
 import { BuscarViagensService } from '../services/buscar-viagens.service';
 import { IniciarCorridaService } from '../services/iniciar-corrida.service';
+import { RecusarCorridaService } from '../services/recusar-corrida.service';
 import { BuscarViagensQueryDto } from './dtos/request/buscar-viagens-query.dto';
+import { RecusarCorridaRequestDto } from './dtos/request/recusar-corrida-request.dto';
 import { MotoristaCorridaDto } from './dtos/response/motorista-corrida.dto';
 import { MotoristaPerfilDto } from './dtos/response/motorista-perfil.dto';
 
@@ -24,6 +26,7 @@ export class MotoristaController {
     private readonly buscarViagensService: BuscarViagensService,
     private readonly buscarCorridaService: BuscarCorridaService,
     private readonly iniciarCorridaService: IniciarCorridaService,
+    private readonly recusarCorridaService: RecusarCorridaService,
     private readonly buscarPerfilService: BuscarPerfilService,
   ) {}
 
@@ -69,6 +72,22 @@ export class MotoristaController {
     const corrida = await this.iniciarCorridaService.execute(
       corridaId,
       motoristaId,
+    );
+
+    return { response: new MotoristaCorridaDto(corrida) };
+  }
+
+  @Post('corridas/:id/recusar')
+  async recusarCorrida(
+    @CurrentUser('id') motoristaId: number,
+    @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
+    corridaId: number,
+    @Body() body: RecusarCorridaRequestDto,
+  ): Promise<ResponseInterface<MotoristaCorridaDto>> {
+    const corrida = await this.recusarCorridaService.execute(
+      corridaId,
+      motoristaId,
+      body.motivo,
     );
 
     return { response: new MotoristaCorridaDto(corrida) };

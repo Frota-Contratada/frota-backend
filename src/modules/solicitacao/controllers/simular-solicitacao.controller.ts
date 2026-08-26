@@ -36,6 +36,7 @@ export class SimularSolicitacaoController {
       dataCorrida: DateTime.fromISO(body.dataCorrida),
       tipoCorridaId: body.tipoCorridaId,
       tipoVeiculoId: body.tipoVeiculoId,
+      cpfsAcompanhantes: body.cpfsAcompanhantes,
       origem: body.origem,
       destino: body.destino,
       paradas: body.paradas,

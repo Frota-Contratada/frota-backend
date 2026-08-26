@@ -11,13 +11,25 @@ export interface FiltrosBuscarSolicitacoes {
   dataInicio?: DateTime;
   dataFim?: DateTime;
   historico?: boolean;
+  incluirAnteriores?: boolean;
   ordenacao: OrdenacaoSolicitacao;
   page: number;
   limit: number;
 }
 
+export interface DecisaoFornecedor {
+  decisao: 'REATRIBUIR' | 'RECUSAR';
+  motoristaId?: number;
+  veiculoId?: number;
+  motivo?: string;
+}
+
 export abstract class SolicitacaoRepositoryContract {
   abstract criar(solicitacao: Solicitacao): Promise<Solicitacao>;
+  abstract existeConflitoDeHorario(
+    solicitanteId: number,
+    dataCorrida: DateTime,
+  ): Promise<boolean>;
   abstract buscar(id: number): Promise<Solicitacao | null>;
   abstract buscarVarias(
     filtros: FiltrosBuscarSolicitacoes,
@@ -30,5 +42,10 @@ export abstract class SolicitacaoRepositoryContract {
   abstract cancelar(
     id: number,
     motivoCancelamentoId: number,
+  ): Promise<Solicitacao>;
+  abstract decidirPeloFornecedor(
+    id: number,
+    fornecedorId: number,
+    decisao: DecisaoFornecedor,
   ): Promise<Solicitacao>;
 }

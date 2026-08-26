@@ -18,5 +18,11 @@ export abstract class MotoristaCorridaRepositoryContract {
     motoristaId: number,
   ): Promise<MotoristaCorrida>;
 
+  abstract recusar(
+    corridaId: number,
+    motoristaId: number,
+    motivo: string,
+  ): Promise<MotoristaCorrida>;
+
   abstract buscarPerfil(motoristaId: number): Promise<MotoristaPerfil | null>;
 }

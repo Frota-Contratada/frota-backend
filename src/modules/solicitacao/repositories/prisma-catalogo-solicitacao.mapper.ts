@@ -45,7 +45,11 @@ export class PrismaCatalogoSolicitacaoMapper {
   ): TipoVeiculo | null {
     if (entity == null) return null;
 
-    return new TipoVeiculo(entity.nCdTpVeiculo.toNumber(), entity.cNmTpVeiculo);
+    return new TipoVeiculo(
+      entity.nCdTpVeiculo.toNumber(),
+      entity.cNmTpVeiculo,
+      entity.iQntVeiculo,
+    );
   }
 
   private static paraTipoMotivo(valor: string): TipoMotivo {

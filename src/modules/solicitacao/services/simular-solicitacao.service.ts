@@ -9,6 +9,9 @@ import { SolicitanteSemFilialException } from '../exceptions/solicitante-sem-fil
 import { TipoCorridaNaoEncontradoException } from '../exceptions/tipo-corrida-nao-encontrado.exception';
 import { TipoVeiculoNaoEncontradoException } from '../exceptions/tipo-veiculo-nao-encontrado.exception';
 import { EnderecoInput } from './criar-solicitacao.service';
+import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
+import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
+import { CapacidadeVeiculoInsuficienteException } from '../exceptions/capacidade-veiculo-insuficiente.exception';
 import { SelecionarFornecedorService } from './selecionar-fornecedor.service';
 
 export interface SimularSolicitacaoInput {
@@ -16,6 +19,7 @@ export interface SimularSolicitacaoInput {
   dataCorrida: DateTime;
   tipoCorridaId: number;
   tipoVeiculoId?: number;
+  cpfsAcompanhantes: string[];
   origem: EnderecoInput;
   destino: EnderecoInput;
   paradas: EnderecoInput[];
@@ -25,6 +29,7 @@ export interface SimularSolicitacaoInput {
 export class SimularSolicitacaoService {
   constructor(
     private readonly catalogoRepository: CatalogoSolicitacaoRepositoryContract,
+    private readonly solicitacaoRepository: SolicitacaoRepositoryContract,
     private readonly usuarioRepository: UsuarioRepositoryContract,
     private readonly rotaService: RotaServiceContract,
     private readonly selecionarFornecedorService: SelecionarFornecedorService,
@@ -43,6 +48,15 @@ export class SimularSolicitacaoService {
       throw new SolicitanteSemFilialException(input.solicitanteId);
     }
 
+    if (
+      await this.solicitacaoRepository.existeConflitoDeHorario(
+        input.solicitanteId,
+        input.dataCorrida,
+      )
+    ) {
+      throw new SolicitacaoHorarioDuplicadoException();
+    }
+
     const tipoCorrida = await this.catalogoRepository.buscarTipoCorrida(
       input.tipoCorridaId,
     );
@@ -51,13 +65,27 @@ export class SimularSolicitacaoService {
       throw new TipoCorridaNaoEncontradoException(input.tipoCorridaId);
     }
 
-    if (input.tipoVeiculoId != null) {
-      const tipoVeiculo = await this.catalogoRepository.buscarTipoVeiculo(
-        input.tipoVeiculoId,
-      );
+    const tipoVeiculo =
+      input.tipoVeiculoId == null
+        ? null
+        : await this.catalogoRepository.buscarTipoVeiculo(input.tipoVeiculoId);
 
-      if (!tipoVeiculo) {
-        throw new TipoVeiculoNaoEncontradoException(input.tipoVeiculoId);
+    if (input.tipoVeiculoId != null && tipoVeiculo == null) {
+      throw new TipoVeiculoNaoEncontradoException(input.tipoVeiculoId);
+    }
+
+    if (
+      tipoVeiculo != null &&
+      !tipoCorrida.nome.toLowerCase().includes('objeto')
+    ) {
+      const quantidadePassageiros = 1 + input.cpfsAcompanhantes.length;
+
+      if (quantidadePassageiros > tipoVeiculo.capacidadePassageiros) {
+        throw new CapacidadeVeiculoInsuficienteException(
+          tipoVeiculo.nome,
+          tipoVeiculo.capacidadePassageiros,
+          quantidadePassageiros,
+        );
       }
     }
 

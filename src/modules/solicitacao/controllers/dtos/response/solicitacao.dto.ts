@@ -241,6 +241,13 @@ export class SolicitacaoDto {
   })
   motivoReprovacao?: CatalogoItemDto;
 
+  @ApiPropertyOptional({
+    description:
+      'Motivo informado pelo administrador do fornecedor ao recusar a corrida.',
+    example: 'Não há motorista disponível para a data solicitada.',
+  })
+  motivoRecusaFornecedor?: string;
+
   @ApiProperty({ type: () => [SolicitacaoCentroCustoDto] })
   centrosCusto: SolicitacaoCentroCustoDto[];
 
@@ -297,6 +304,7 @@ export class SolicitacaoDto {
     this.motivoReprovacao = solicitacao.motivoReprovacao
       ? CatalogoItemDto.aPartirDoMotivo(solicitacao.motivoReprovacao)
       : undefined;
+    this.motivoRecusaFornecedor = solicitacao.motivoRecusaFornecedor;
     this.centrosCusto = solicitacao.centrosCusto.map(
       (rateio) => new SolicitacaoCentroCustoDto(rateio),
     );

@@ -7,6 +7,7 @@ import { BuscarCorridaService } from './services/buscar-corrida.service';
 import { BuscarPerfilService } from './services/buscar-perfil.service';
 import { BuscarViagensService } from './services/buscar-viagens.service';
 import { IniciarCorridaService } from './services/iniciar-corrida.service';
+import { RecusarCorridaService } from './services/recusar-corrida.service';
 import { MotoristaCorridaRepositoryContract } from './repositories/motorista-corrida-repository.contract';
 import { PrismaMotoristaCorridaRepository } from './repositories/prisma-motorista-corrida.repository';
 import { TrackingModule } from '@module/tracking/tracking.module';
@@ -19,6 +20,7 @@ import { TrackingModule } from '@module/tracking/tracking.module';
     BuscarPerfilService,
     BuscarViagensService,
     IniciarCorridaService,
+    RecusarCorridaService,
     {
       provide: MotoristaCorridaRepositoryContract,
       useClass: PrismaMotoristaCorridaRepository,
