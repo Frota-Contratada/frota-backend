@@ -9,9 +9,10 @@ import { BuscarViagensService } from './services/buscar-viagens.service';
 import { IniciarCorridaService } from './services/iniciar-corrida.service';
 import { MotoristaCorridaRepositoryContract } from './repositories/motorista-corrida-repository.contract';
 import { PrismaMotoristaCorridaRepository } from './repositories/prisma-motorista-corrida.repository';
+import { TrackingModule } from '@module/tracking/tracking.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, StorageModule],
+  imports: [PrismaModule, AuthModule, StorageModule, TrackingModule],
   controllers: [MotoristaController],
   providers: [
     BuscarCorridaService,

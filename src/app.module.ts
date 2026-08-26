@@ -13,6 +13,7 @@ import { LogRequisicaoMiddleware } from '@common/middlewares/log-requisicao.midd
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RouterModule } from '@nestjs/core';
+import { TrackingModule } from '@module/tracking/tracking.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RouterModule } from '@nestjs/core';
     CentroDeCustoModule,
     ContratoModule,
     SolicitacaoModule,
+    TrackingModule,
     RouterModule.register([
       {
         path: 'autenticacao',
@@ -75,6 +77,10 @@ import { RouterModule } from '@nestjs/core';
       {
         path: 'solicitacoes',
         module: SolicitacaoModule,
+      },
+      {
+        path: 'corridas',
+        module: TrackingModule,
       },
     ]),
   ],

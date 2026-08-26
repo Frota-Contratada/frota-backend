@@ -69,24 +69,100 @@ model Contrato {
 }
 
 model Corrida {
-  nCdCorrida     Decimal          @id(map: "PK_Corrida") @db.Decimal(10, 0)
-  nCdSolicitacao Decimal          @db.Decimal(10, 0)
-  nCdMotorista   Decimal          @db.Decimal(10, 0)
-  nCdFornecedor  Decimal          @db.Decimal(10, 0)
-  nCdVeiculo     Decimal          @db.Decimal(10, 0)
-  dInicioCorrida DateTime         @db.DateTime
-  dFimCorrida    DateTime?        @db.DateTime
-  nKmPercorrido  Decimal          @db.Decimal(18, 2)
-  nValorFinal    Decimal          @db.Decimal(18, 2)
-  cStatus        String           @default("I", map: "DF_Corrida_cStatus") @db.Char(1)
-  Usuario        Usuario          @relation(fields: [nCdMotorista], references: [nCdUsuario], onUpdate: NoAction, map: "FK_Corrida_Motorista")
-  Solicitacao    Solicitacao      @relation(fields: [nCdSolicitacao], references: [nCdSolicitacao], onUpdate: NoAction, map: "FK_Corrida_Solicitacao")
-  Veiculo        Veiculo          @relation(fields: [nCdFornecedor, nCdVeiculo], references: [nCdFornecedor, nCdVeiculo], onUpdate: NoAction, map: "FK_Corrida_Veiculo")
-  DespesaCorrida DespesaCorrida[]
-  RegraCorrida   RegraCorrida[]
+  nCdCorrida             Decimal                  @id(map: "PK_Corrida") @db.Decimal(10, 0)
+  nCdSolicitacao         Decimal                  @db.Decimal(10, 0)
+  nCdMotorista           Decimal                  @db.Decimal(10, 0)
+  nCdFornecedor          Decimal                  @db.Decimal(10, 0)
+  nCdVeiculo             Decimal                  @db.Decimal(10, 0)
+  dInicioCorrida         DateTime                 @db.DateTime
+  dFimCorrida            DateTime?                @db.DateTime
+  nKmPercorrido          Decimal                  @db.Decimal(18, 2)
+  nValorFinal            Decimal                  @db.Decimal(18, 2)
+  cStatus                String                   @default("I", map: "DF_Corrida_cStatus") @db.Char(1)
+  Usuario                Usuario                  @relation(fields: [nCdMotorista], references: [nCdUsuario], onUpdate: NoAction, map: "FK_Corrida_Motorista")
+  Solicitacao            Solicitacao              @relation(fields: [nCdSolicitacao], references: [nCdSolicitacao], onUpdate: NoAction, map: "FK_Corrida_Solicitacao")
+  Veiculo                Veiculo                  @relation(fields: [nCdFornecedor, nCdVeiculo], references: [nCdFornecedor, nCdVeiculo], onUpdate: NoAction, map: "FK_Corrida_Veiculo")
+  DespesaCorrida         DespesaCorrida[]
+  RegraCorrida           RegraCorrida[]
+  CorridaRota            CorridaRota[]
+  CorridaPosicao         CorridaPosicao[]
+  CorridaEspera          CorridaEspera[]
+  CorridaParadaProgresso CorridaParadaProgresso[]
+  ComandoIdempotente     ComandoIdempotente[]
 
   @@index([dInicioCorrida(sort: Desc), cStatus], map: "IX_Corrida_FiltroDash")
   @@index([nCdSolicitacao], map: "IX_Corrida_nCdSolicitacao")
+}
+
+model CorridaRota {
+  nCdCorridaRota BigInt   @id(map: "PK_CorridaRota") @default(autoincrement())
+  nCdCorrida     Decimal  @db.Decimal(10, 0)
+  iVersao        Int
+  cRouteId       String   @db.VarChar(36)
+  cPayload       String   @db.NVarChar(Max)
+  dCalculada     DateTime @default(now()) @db.DateTime2
+  Corrida        Corrida  @relation(fields: [nCdCorrida], references: [nCdCorrida], onDelete: Cascade, onUpdate: NoAction, map: "FK_CorridaRota_Corrida")
+
+  @@unique([nCdCorrida, iVersao], map: "UK_CorridaRota_CorridaVersao")
+  @@unique([cRouteId], map: "UK_CorridaRota_RouteId")
+  @@index([nCdCorrida, dCalculada(sort: Desc)], map: "IX_CorridaRota_Ultima")
+}
+
+model CorridaPosicao {
+  nCdCorridaPosicao BigInt   @id(map: "PK_CorridaPosicao") @default(autoincrement())
+  nCdCorrida        Decimal  @db.Decimal(10, 0)
+  cOrigem           String   @db.Char(1)
+  nCdUsuario        Decimal? @db.Decimal(10, 0)
+  nLatitude         Decimal  @db.Decimal(10, 7)
+  nLongitude        Decimal  @db.Decimal(10, 7)
+  nAccuracy         Decimal  @db.Decimal(10, 3)
+  nSpeed            Decimal  @db.Decimal(10, 3)
+  nHeading          Decimal  @db.Decimal(6, 3)
+  dPosicao          DateTime @db.DateTime2
+  dRecebida         DateTime @default(now()) @db.DateTime2
+  Corrida           Corrida  @relation(fields: [nCdCorrida], references: [nCdCorrida], onDelete: Cascade, onUpdate: NoAction, map: "FK_CorridaPosicao_Corrida")
+  Usuario           Usuario? @relation(fields: [nCdUsuario], references: [nCdUsuario], onDelete: NoAction, onUpdate: NoAction, map: "FK_CorridaPosicao_Usuario")
+
+  @@unique([nCdCorrida, cOrigem, nCdUsuario, dPosicao], map: "UK_CorridaPosicao_Deduplicacao")
+  @@index([nCdCorrida, dPosicao(sort: Desc)], map: "IX_CorridaPosicao_Historico")
+  @@index([nCdCorrida, cOrigem, nCdUsuario, dPosicao(sort: Desc)], map: "IX_CorridaPosicao_Ultima")
+}
+
+model CorridaEspera {
+  nCdCorridaEspera BigInt    @id(map: "PK_CorridaEspera") @default(autoincrement())
+  nCdCorrida       Decimal   @db.Decimal(10, 0)
+  dInicio          DateTime  @db.DateTime2
+  dFim             DateTime? @db.DateTime2
+  Corrida          Corrida   @relation(fields: [nCdCorrida], references: [nCdCorrida], onDelete: Cascade, onUpdate: NoAction, map: "FK_CorridaEspera_Corrida")
+
+  @@index([nCdCorrida, dInicio(sort: Desc)], map: "IX_CorridaEspera_Ultima")
+  @@index([nCdCorrida, dFim], map: "IX_CorridaEspera_Ativa")
+}
+
+model CorridaParadaProgresso {
+  nCdCorrida Decimal  @db.Decimal(10, 0)
+  iOrdem     Int
+  nCdUsuario Decimal  @db.Decimal(10, 0)
+  dConcluida DateTime @default(now()) @db.DateTime2
+  Corrida    Corrida  @relation(fields: [nCdCorrida], references: [nCdCorrida], onDelete: Cascade, onUpdate: NoAction, map: "FK_CorridaParadaProgresso_Corrida")
+
+  @@id([nCdCorrida, iOrdem], map: "PK_CorridaParadaProgresso")
+  @@index([nCdCorrida, dConcluida], map: "IX_CorridaParadaProgresso_Consulta")
+}
+
+model ComandoIdempotente {
+  nCdComandoIdempotente BigInt   @id(map: "PK_ComandoIdempotente") @default(autoincrement())
+  nCdCorrida            Decimal  @db.Decimal(10, 0)
+  cChave                String   @db.VarChar(36)
+  cTipo                 String   @db.VarChar(30)
+  cEstado               String   @db.VarChar(15)
+  cResultado            String?  @db.NVarChar(Max)
+  dCriacao              DateTime @default(now()) @db.DateTime2
+  dAtualizacao          DateTime @updatedAt @db.DateTime2
+  Corrida               Corrida  @relation(fields: [nCdCorrida], references: [nCdCorrida], onDelete: Cascade, onUpdate: NoAction, map: "FK_ComandoIdempotente_Corrida")
+
+  @@unique([nCdCorrida, cChave], map: "UK_ComandoIdempotente_CorridaChave")
+  @@index([nCdCorrida, dCriacao(sort: Desc)], map: "IX_ComandoIdempotente_Consulta")
 }
 
 model DespesaCorrida {
@@ -316,6 +392,7 @@ model Usuario {
   Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
   UsuarioPerfil          UsuarioPerfil[]
   PinUsuario             PinUsuario[]
+  CorridaPosicao         CorridaPosicao[]
 
   @@index([cEmail, cDisponivel], map: "IX_Usuario_LoginRumo")
   @@index([nCdFilial, nCdCentroCusto], map: "IX_Usuario_CentroCusto")
