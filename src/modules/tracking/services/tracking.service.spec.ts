@@ -45,6 +45,64 @@ describe('TrackingService', () => {
   const driver = { id: 10, perfis: [TipoPerfil.MOTORISTA] };
   const passenger = { id: 30, perfis: [TipoPerfil.SOLICITANTE] };
 
+  it('permite ao solicitante acessar o tracking pelo ID da corrida iniciada', async () => {
+    const route = {
+      routeId: '971d6d62-69c8-4cc3-b8fb-37f12192c3b6',
+      version: 1,
+      calculatedAt: '2026-08-24T12:00:00.000Z',
+      origin: {
+        id: '100',
+        sequence: 0,
+        kind: 'origin',
+        label: 'Rua A',
+        lat: -23.55,
+        lng: -46.63,
+      },
+      stops: [],
+      destination: {
+        id: '101',
+        sequence: 1,
+        kind: 'destination',
+        label: 'Rua B',
+        lat: -23.56,
+        lng: -46.64,
+      },
+      coordinates: [
+        { lat: -23.55, lng: -46.63 },
+        { lat: -23.56, lng: -46.64 },
+      ],
+      distanceMeters: 1000,
+      durationSeconds: 100,
+      trafficDelaySeconds: 0,
+      trafficSections: [],
+      instructions: [],
+    };
+    const findTrip = jest.fn().mockResolvedValue(trip);
+    const prisma = {
+      corrida: { findUnique: findTrip },
+      corridaRota: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({ cPayload: JSON.stringify(route) }),
+      },
+      corridaPosicao: { findFirst: jest.fn().mockResolvedValue(null) },
+      corridaEspera: { findFirst: jest.fn().mockResolvedValue(null) },
+    };
+    const service = new TrackingService(
+      prisma as never,
+      {} as never,
+      {} as never,
+    );
+
+    await expect(service.snapshot(1, passenger)).resolves.toMatchObject({
+      tripStatus: 'in_progress',
+      route: { routeId: route.routeId },
+    });
+    expect(findTrip).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { nCdCorrida: 1 } }),
+    );
+  });
+
   it('impede passageiro de recalcular e não chama o TomTom', async () => {
     const prisma = {
       corrida: { findUnique: jest.fn().mockResolvedValue(trip) },

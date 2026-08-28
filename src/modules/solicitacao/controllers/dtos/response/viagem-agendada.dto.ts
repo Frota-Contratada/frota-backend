@@ -6,6 +6,13 @@ export class ViagemAgendadaDto {
   @ApiProperty({ example: 1 })
   solicitacaoId: number;
 
+  @ApiPropertyOptional({
+    description:
+      'ID real da corrida, disponível após a atribuição do motorista.',
+    example: '1',
+  })
+  corridaId?: string;
+
   @ApiProperty({
     format: 'date-time',
     example: '2026-08-18T09:30:00.000-03:00',
@@ -49,6 +56,7 @@ export class ViagemAgendadaDto {
 
   constructor(solicitacao: Solicitacao) {
     this.solicitacaoId = solicitacao.id;
+    this.corridaId = solicitacao.corrida?.id.toString();
     this.dataHoraPartida = solicitacao.dataCorrida.toISO() ?? '';
     this.dataChegadaEstimada =
       solicitacao.dataChegadaEstimada?.toISO() ?? undefined;
