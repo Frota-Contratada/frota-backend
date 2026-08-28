@@ -30,7 +30,6 @@ async function bootstrap() {
   app.enableCors({
     origin: corsOrigin,
     methods: '*',
-    allowedHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key', 'ngrok-skip-browser-warning'],
   });
 
   if (process.env.REDIS_URL) {
@@ -45,7 +44,6 @@ async function bootstrap() {
           cors: {
             origin: corsOrigin,
             methods: ['GET', 'POST'],
-            allowedHeaders: ['Authorization'],
           },
         }) as Server;
         server.adapter(createAdapter(pubClient, subClient));
