@@ -11,12 +11,16 @@ export class PrismaService
   private readonly transacaoStorage =
     new AsyncLocalStorage<Prisma.TransactionClient>();
 
+  private instanciaPublica?: PrismaClient;
+
   constructor() {
     const adapter = new PrismaMssql(process.env.DATABASE_URL!);
     super({ adapter });
   }
 
   async onModuleInit() {
+    this.instanciaPublica = this;
+
     await this.$connect();
   }
 
@@ -25,7 +29,11 @@ export class PrismaService
   }
 
   get cliente(): Prisma.TransactionClient {
-    return this.transacaoStorage.getStore() ?? this;
+    return (
+      this.transacaoStorage.getStore() ??
+      (this.instanciaPublica as Prisma.TransactionClient | undefined) ??
+      this
+    );
   }
 
   async executarEmTransacao<T>(operacao: () => Promise<T>): Promise<T> {

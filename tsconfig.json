@@ -27,5 +27,10 @@
       "@module/*": ["./src/modules/*"],
       "@integration/*": ["./src/integrations/*"],
     }
+  },
+  "watchOptions": {
+    "watchFile": "dynamicPriorityPolling",
+    "watchDirectory": "dynamicPriorityPolling",
+    "fallbackPolling": "dynamicPriority"
   }
 }

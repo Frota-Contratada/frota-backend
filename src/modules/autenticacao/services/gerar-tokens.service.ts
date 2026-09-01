@@ -40,7 +40,7 @@ export class GerarTokensService {
       usuario.id,
       plataforma,
       tokens.refreshToken,
-      tokens.validade,
+      tokens.validadeRefresh,
     );
 
     return tokens;

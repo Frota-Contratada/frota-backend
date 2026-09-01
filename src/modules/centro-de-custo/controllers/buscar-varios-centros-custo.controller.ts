@@ -11,7 +11,7 @@ import { CentroCusto } from '../domain/centro-custo';
 import { BuscarVariosCentrosCustoService } from '../services/buscar-varios-centros-custo.service';
 import { BuscarCentrosCustoAdminQueryDto } from './dtos/request/buscar-centros-custo-admin-query.dto';
 import { BuscarCentrosCustoQueryDto } from './dtos/request/buscar-centros-custo-query.dto';
-import { CentroCustoDto } from './dtos/response/centro-custo.dto';
+import { CentroCustoAdminDto } from './dtos/response/centro-custo-admin.dto';
 
 @ApiTags('Centro de Custo')
 @ApiBearerAuth()
@@ -30,7 +30,9 @@ export class BuscarVariosCentrosCustoController {
   })
   async buscarVarios(
     @Query() query: BuscarCentrosCustoAdminQueryDto,
-  ): Promise<ResponseInterface<PaginatedResponseInterface<CentroCustoDto>>> {
+  ): Promise<
+    ResponseInterface<PaginatedResponseInterface<CentroCustoAdminDto>>
+  > {
     const resultado = await this.buscarVariosCentrosCustoService.execute(query);
 
     return { response: this.montarResponse(resultado) };
@@ -46,7 +48,9 @@ export class BuscarVariosCentrosCustoController {
   async buscarVariosDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarCentrosCustoQueryDto,
-  ): Promise<ResponseInterface<PaginatedResponseInterface<CentroCustoDto>>> {
+  ): Promise<
+    ResponseInterface<PaginatedResponseInterface<CentroCustoAdminDto>>
+  > {
     if (!filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
@@ -61,12 +65,12 @@ export class BuscarVariosCentrosCustoController {
 
   private montarResponse(
     resultado: PaginatedResponseInterface<CentroCusto>,
-  ): PaginatedResponseInterface<CentroCustoDto> {
+  ): PaginatedResponseInterface<CentroCustoAdminDto> {
     return {
       totalCount: resultado.totalCount,
       hasNextPage: resultado.hasNextPage,
       data: resultado.data.map(
-        (centroCusto) => new CentroCustoDto(centroCusto),
+        (centroCusto) => new CentroCustoAdminDto(centroCusto),
       ),
     };
   }

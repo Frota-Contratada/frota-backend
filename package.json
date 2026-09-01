@@ -29,7 +29,10 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.0.1",
     "@nestjs/swagger": "^11.4.4",
+    "@nestjs/websockets": "^11.0.1",
+    "@socket.io/redis-adapter": "^8.3.0",
     "@prisma/adapter-mssql": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "argon2": "^0.44.0",
@@ -40,6 +43,7 @@
     "nodemailer": "^9.0.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },
@@ -81,6 +85,12 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@common/(.*)$": "<rootDir>/common/$1",
+      "^@core/(.*)$": "<rootDir>/core/$1",
+      "^@module/(.*)$": "<rootDir>/modules/$1",
+      "^@integration/(.*)$": "<rootDir>/integrations/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

@@ -62,6 +62,39 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
     );
   }
 
+  async buscarPorCpfs(
+    cpfs: string[],
+    perfis?: TipoPerfil[],
+  ): Promise<Colaborador[]> {
+    if (cpfs.length === 0) return [];
+
+    const agora = new Date();
+    const perfilVigente = {
+      dInicioVigencia: { lte: agora },
+      OR: [{ dFimVigencia: null }, { dFimVigencia: { gt: agora } }],
+    };
+
+    const colaboradores = await this.prismaService.usuario.findMany({
+      where: {
+        cCPF: { in: cpfs },
+        dDesativacao: null,
+        ...this.filtroDeColaborador(),
+        ...(perfis && perfis.length > 0
+          ? {
+              UsuarioPerfil: {
+                some: { cTipoPerfil: { in: perfis }, ...perfilVigente },
+              },
+            }
+          : {}),
+      },
+      include: { UsuarioPerfil: { where: perfilVigente } },
+    });
+
+    return colaboradores.map((colaborador) =>
+      PrismaColaboradorMapper.toDomain(colaborador),
+    );
+  }
+
   async atualizarCentroCusto(id: number, centroCustoId: number): Promise<void> {
     await this.prismaService.cliente.usuario.update({
       where: { nCdUsuario: id },

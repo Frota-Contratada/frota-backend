@@ -13,7 +13,10 @@ export class TransacaoInterceptor implements NestInterceptor {
     private readonly transactionManager: TransactionManagerContract,
   ) {}
 
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<unknown> {
     return from(
       this.transactionManager.executarEmTransacao(() =>
         firstValueFrom(next.handle(), { defaultValue: undefined }),
