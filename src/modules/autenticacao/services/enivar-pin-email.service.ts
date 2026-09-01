@@ -4,6 +4,7 @@ import { EmailServiceContract } from '@core/email/contracts/email-service.contra
 import { TipoToken } from '../enums/tipo-token.enum';
 import { PinRepositoryContract } from '../repositories/pin/pin-repository.contract';
 import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
+import { Autenticacao } from '../domain/autenticacao';
 import {
   EMAIL_TEMPLATES_AUTENTICACAO,
   EmailTemplateAutenticacaoCampos,
@@ -25,7 +26,7 @@ export class EnviarPinEmailService {
       return;
     }
 
-    if (autenticacao.senha && tipoToken === TipoToken.SIGN_UP) {
+    if (!this.tipoTokenCompativelComEstadoDaConta(autenticacao, tipoToken)) {
       return;
     }
 
@@ -59,6 +60,22 @@ export class EnviarPinEmailService {
       case TipoToken.REDEFINIR_SENHA:
         await this.enviarEmail(tipoToken, email, campos);
         break;
+    }
+  }
+
+  private tipoTokenCompativelComEstadoDaConta(
+    autenticacao: Autenticacao,
+    tipoToken: TipoToken,
+  ): boolean {
+    const primeiroAcessoPendente = !autenticacao.senha;
+
+    switch (tipoToken) {
+      case TipoToken.SIGN_UP:
+        return primeiroAcessoPendente;
+      case TipoToken.REDEFINIR_SENHA:
+        return !primeiroAcessoPendente;
+      default:
+        return false;
     }
   }
 
