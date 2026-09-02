@@ -12,11 +12,13 @@ import { SimularSolicitacaoController } from './controllers/simular-solicitacao.
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
 import { DecidirSolicitacaoFornecedorController } from './controllers/decidir-solicitacao-fornecedor.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
+import { BuscarSolicitacoesAprovadorController } from './controllers/buscar-solicitacoes-aprovador.controller';
 import { BuscarMotivosService } from './services/buscar-motivos.service';
 import { BuscarSolicitacaoService } from './services/buscar-solicitacao.service';
 import { BuscarTiposCorridaService } from './services/buscar-tipos-corrida.service';
 import { BuscarTiposVeiculoService } from './services/buscar-tipos-veiculo.service';
 import { BuscarVariasSolicitacoesService } from './services/buscar-varias-solicitacoes.service';
+import { BuscarSolicitacoesParaAprovacaoService } from './services/buscar-solicitacoes-para-aprovacao.service';
 import { BuscarViagensAgendadasService } from './services/buscar-viagens-agendadas.service';
 import { CalcularValorEstimadoService } from './services/calcular-valor-estimado.service';
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
@@ -48,6 +50,7 @@ import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.r
     CriarSolicitacaoController,
     CancelarSolicitacaoController,
     DecidirSolicitacaoFornecedorController,
+    BuscarSolicitacoesAprovadorController,
     BuscarSolicitacaoController,
   ],
   providers: [
@@ -55,6 +58,7 @@ import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.r
     SimularSolicitacaoService,
     BuscarSolicitacaoService,
     BuscarVariasSolicitacoesService,
+    BuscarSolicitacoesParaAprovacaoService,
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
     DecidirSolicitacaoFornecedorService,
