@@ -12,14 +12,12 @@ import {
   TrackingPosition,
   TrackingSnapshot,
 } from '../domain/tracking.types';
-import {
-  IdempotencyEmProcessamentoException,
-  IdempotencyKeyInvalidaException,
-  ParadaTrackingNaoEncontradaException,
-  CorridaTrackingInativaException,
-  TrackingAcessoNegadoException,
-  TrackingCorridaNaoEncontradaException,
-} from '../exceptions/tracking.exceptions';
+import { CorridaTrackingInativaException } from '../exceptions/corrida-tracking-inativa.exception';
+import { IdempotencyEmProcessamentoException } from '../exceptions/idempotency-em-processamento.exception';
+import { IdempotencyKeyInvalidaException } from '../exceptions/idempotency-key-invalida.exception';
+import { ParadaTrackingNaoEncontradaException } from '../exceptions/parada-tracking-nao-encontrada.exception';
+import { TrackingAcessoNegadoException } from '../exceptions/tracking-acesso-negado.exception';
+import { TrackingCorridaNaoEncontradaException } from '../exceptions/tracking-corrida-nao-encontrada.exception';
 import { TomTomRouteService } from './tomtom-route.service';
 import { TrackingEventsService } from './tracking-events.service';
 

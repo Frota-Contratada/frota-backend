@@ -16,6 +16,10 @@ const INCLUDE_CORRIDA = {
     include: {
       Endereco_Solicitacao_nCdEnderecoOrigemToEndereco: true,
       Endereco_Solicitacao_nCdEnderecoDestinoToEndereco: true,
+      Parada: {
+        include: { Endereco: true },
+        orderBy: { iOrdem: 'asc' },
+      },
       Usuario: true,
     },
   },
@@ -302,6 +306,12 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
       this.formatarEndereco(
         corrida.Solicitacao.Endereco_Solicitacao_nCdEnderecoDestinoToEndereco,
       ),
+      corrida.Solicitacao.Parada.map((parada) => ({
+        ordem: parada.iOrdem,
+        endereco: this.formatarEndereco(parada.Endereco),
+        latitude: parada.Endereco.nLatitude.toNumber(),
+        longitude: parada.Endereco.nLongitude.toNumber(),
+      })),
       corrida.Solicitacao.Usuario.cNmUsuario,
       corrida.Solicitacao.nValorEstimado.toNumber(),
       tipoCorrida,

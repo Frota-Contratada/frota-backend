@@ -1,4 +1,4 @@
-import { TrackingPositionSchema } from './tracking-request.dto';
+import { TrackingPositionSchema } from './tracking-position-request.dto';
 
 describe('TrackingPositionSchema', () => {
   const base = {
