@@ -1,6 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MotoristaCorrida } from '../../../domain/motorista-corrida';
 
+class MotoristaCorridaParadaDto {
+  @ApiProperty({ example: 1 })
+  ordem: number;
+
+  @ApiProperty({ example: 'Rua Paraná, 100 - Centro' })
+  endereco: string;
+
+  @ApiProperty({ example: -23.3045 })
+  latitude: number;
+
+  @ApiProperty({ example: -51.1696 })
+  longitude: number;
+}
+
 export class MotoristaCorridaDto {
   @ApiProperty({ example: 1 })
   id: number;
@@ -13,6 +27,9 @@ export class MotoristaCorridaDto {
 
   @ApiProperty({ example: 'Avenida Santos Dumont, 100 - Aeroporto' })
   destino: string;
+
+  @ApiProperty({ type: () => [MotoristaCorridaParadaDto] })
+  paradas: MotoristaCorridaParadaDto[];
 
   @ApiProperty({ example: 'Ana Beatriz Ramos' })
   nomePassageiro: string;
@@ -48,6 +65,7 @@ export class MotoristaCorridaDto {
     this.dataHoraPartida = corrida.dataHoraPartida.toISO() ?? '';
     this.origem = corrida.origem;
     this.destino = corrida.destino;
+    this.paradas = corrida.paradas;
     this.nomePassageiro = corrida.nomePassageiro;
     this.valorEstimado = corrida.valorEstimado;
     this.tipoCorrida = corrida.tipoCorrida;

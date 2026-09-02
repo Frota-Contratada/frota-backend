@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
-import { TrackingAcessoNegadoException } from '../exceptions/tracking.exceptions';
+import { TrackingAcessoNegadoException } from '../exceptions/tracking-acesso-negado.exception';
 import { TrackingService } from './tracking.service';
 
 const decimal = (value: number) => new Prisma.Decimal(value);

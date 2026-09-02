@@ -3,10 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { CanonicalRoute, RouteWaypoint } from '../domain/tracking.types';
-import {
-  TomTomFalhaException,
-  TomTomTimeoutException,
-} from '../exceptions/tracking.exceptions';
+import { TomTomFalhaException } from '../exceptions/tomtom-falha.exception';
+import { TomTomTimeoutException } from '../exceptions/tomtom-timeout.exception';
 
 const TomTomResponseSchema = z.object({
   routes: z
