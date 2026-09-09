@@ -16,6 +16,7 @@ import {
   PrismaSolicitacaoMapper,
 } from './prisma-solicitacao.mapper';
 import { Endereco } from '../domain/endereco';
+import { RespostaPergunta } from '../domain/resposta-pergunta-solicitacao';
 import { Solicitacao } from '../domain/solicitacao';
 import { TipoCorrida } from '../domain/tipo-corrida';
 import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
@@ -145,6 +146,7 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
           nCdTpVeiculo: solicitacao.tipoVeiculo?.id ?? null,
           nCdEnderecoOrigem: origemId,
           nCdEnderecoDestino: destinoId,
+          nCdRotaFixa: solicitacao.rotaFixaId ?? null,
           nValorEstimado: solicitacao.valorEstimado,
           cStatus: solicitacao.status,
           nCdMotivoSolicitacao: solicitacao.motivoSolicitacao.id,
@@ -179,6 +181,17 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
           data: solicitacao.passageiros.map((passageiro) => ({
             nCdSolicitacao: solicitacaoId,
             cCPF: passageiro.cpf,
+          })),
+        });
+      }
+
+      if (solicitacao.respostasPerguntas.length > 0) {
+        await tx.solicitacaoResposta.createMany({
+          data: solicitacao.respostasPerguntas.map((resposta) => ({
+            nCdSolicitacao: solicitacaoId,
+            nCdContrato: solicitacao.contratoId,
+            nCdPergunta: resposta.perguntaId,
+            cResposta: resposta.resposta === RespostaPergunta.SIM ? 'S' : 'N',
           })),
         });
       }

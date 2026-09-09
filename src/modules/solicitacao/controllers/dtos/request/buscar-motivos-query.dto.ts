@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
-import { TipoMotivo } from '../../../enums/tipo-motivo.enum';
+import { TipoMotivo } from '@module/motivo/enums/tipo-motivo.enum';
 
 export const BuscarMotivosQuerySchema = z.object({
   tipo: z.enum(TipoMotivo).optional(),

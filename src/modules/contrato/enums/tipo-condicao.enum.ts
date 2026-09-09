@@ -1,14 +1,8 @@
 /**
- * Tipos de condição de uma regra, persistidos em CondicaoRegra.cTipoCondicao.
- * O conteúdo de CondicaoRegra.cValor é serializado conforme o tipo.
- * Todas as condições de uma mesma regra precisam ser satisfeitas (AND);
- * dentro de uma condição de lista, basta um item bater (OR).
+ * Tipo persistido em CondicaoRegra.cTipoCondicao. A condição agora é um
+ * agregado único por regra; os critérios escalares ficam em cValor e as
+ * rotas/pergunta são persistidas nas respectivas tabelas de vínculo.
  */
 export enum TipoCondicao {
-  DIAS_SEMANA = 'dias-semana',
-  PERIODO = 'periodo',
-  ROTA_FIXA = 'rota-fixa',
-  TIPO_VEICULO = 'tipo-veiculo',
-  TIPO_CORRIDA = 'tipo-corrida',
-  OUTRO = 'outro',
+  COMPLETA = 'CONDICAO_COMPLETA',
 }

@@ -4,9 +4,14 @@ import { DateTime } from 'luxon';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { Contrato } from '../domain/contrato';
+import { Regra } from '../domain/regra';
 import { ContratoBigNumbers } from '../domain/types/contrato-big-numbers.type';
 import { ContratoSummary } from '../domain/types/contrato-summary.type';
+import { SituacaoContrato } from '../enums/situacao-contrato.enum';
 import { DIAS_PARA_VENCER_EM_BREVE } from '../enums/status-contrato.enum';
+import { TIPO_REGRA_ID } from '../enums/tipo-regra.enum';
+import { ContratoNaoEditavelException } from '../exceptions/contrato-nao-editavel.exception';
+import { ContratoNaoEncontradoException } from '../exceptions/contrato-nao-encontrado.exception';
 import { ContratoRepositoryContract } from './contrato-repository.contract';
 import {
   CONTRATO_VINCULO_SELECT,
@@ -29,7 +34,9 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
 
     return {
       ...(filtros.filialId ? { nCdFilial: filtros.filialId } : {}),
-      ...(filtros.fornecedorId ? { nCdFornecedor: filtros.fornecedorId } : {}),
+      ...(filtros.fornecedorId
+        ? { nCdFornecedor: filtros.fornecedorId }
+        : {}),
     };
   }
 
@@ -86,6 +93,221 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
         where: { nCdContrato: id },
       }),
     );
+  }
+
+  async substituirRegras(contratoId: number, regras: Regra[]): Promise<void> {
+    await this.prismaService.$transaction(async (tx) => {
+      const contrato = await tx.contrato.findUnique({
+        where: { nCdContrato: contratoId },
+        select: { cSituacao: true },
+      });
+
+      if (!contrato) {
+        throw new ContratoNaoEncontradoException(contratoId);
+      }
+
+      if (contrato.cSituacao !== SituacaoContrato.RASCUNHO) {
+        throw new ContratoNaoEditavelException(contratoId);
+      }
+
+      const condicoesAnteriores = await tx.condicaoRegra.findMany({
+        where: { nCdContrato: contratoId },
+        select: {
+          CondicaoRegraRotaFixa: {
+            select: {
+              nCdRota: true,
+              RotaFixa: {
+                select: {
+                  nCdEnderecoOrigem: true,
+                  nCdEnderecoDestino: true,
+                },
+              },
+            },
+          },
+          CondicaoRegraOutro: { select: { nCdPergunta: true } },
+        },
+      });
+
+      const rotasAnteriores = condicoesAnteriores.flatMap((condicao) =>
+        condicao.CondicaoRegraRotaFixa.map((vinculo) => vinculo.RotaFixa),
+      );
+      const rotaIds = [
+        ...new Set(
+          condicoesAnteriores.flatMap((condicao) =>
+            condicao.CondicaoRegraRotaFixa.map((vinculo) =>
+              vinculo.nCdRota.toNumber(),
+            ),
+          ),
+        ),
+      ];
+      const enderecoIds = [
+        ...new Set(
+          rotasAnteriores.flatMap((rota) => [
+            rota.nCdEnderecoOrigem.toNumber(),
+            rota.nCdEnderecoDestino.toNumber(),
+          ]),
+        ),
+      ];
+      const perguntaIds = [
+        ...new Set(
+          condicoesAnteriores
+            .map((condicao) => condicao.CondicaoRegraOutro?.nCdPergunta)
+            .filter((id): id is NonNullable<typeof id> => id != null)
+            .map((id) => id.toNumber()),
+        ),
+      ];
+
+      await tx.condicaoRegraRotaFixa.deleteMany({
+        where: { nCdContrato: contratoId },
+      });
+      await tx.condicaoRegraOutro.deleteMany({
+        where: { nCdContrato: contratoId },
+      });
+      await tx.condicaoRegra.deleteMany({
+        where: { nCdContrato: contratoId },
+      });
+      await tx.regra.deleteMany({ where: { nCdContrato: contratoId } });
+
+      if (rotaIds.length > 0) {
+        await tx.rotaFixa.deleteMany({
+          where: { nCdContrato: contratoId, nCdRota: { in: rotaIds } },
+        });
+      }
+
+      if (enderecoIds.length > 0) {
+        await tx.endereco.deleteMany({
+          where: { nCdEndereco: { in: enderecoIds } },
+        });
+      }
+
+      if (perguntaIds.length > 0) {
+        await tx.perguntaContrato.deleteMany({
+          where: { nCdContrato: contratoId, nCdPergunta: { in: perguntaIds } },
+        });
+      }
+
+      const [ultimaRota, ultimaPergunta, ultimoEndereco] = await Promise.all([
+        tx.rotaFixa.aggregate({
+          where: { nCdContrato: contratoId },
+          _max: { nCdRota: true },
+        }),
+        tx.perguntaContrato.aggregate({
+          where: { nCdContrato: contratoId },
+          _max: { nCdPergunta: true },
+        }),
+        tx.endereco.aggregate({ _max: { nCdEndereco: true } }),
+      ]);
+
+      let proximaRotaId = (ultimaRota._max.nCdRota?.toNumber() ?? 0) + 1;
+      let proximaPerguntaId =
+        (ultimaPergunta._max.nCdPergunta?.toNumber() ?? 0) + 1;
+      let proximoEnderecoId =
+        (ultimoEndereco._max.nCdEndereco?.toNumber() ?? 0) + 1;
+
+      for (const [indice, regra] of regras.entries()) {
+        const regraId = indice + 1;
+        const condicaoId = 1;
+
+        await tx.regra.create({
+          data: {
+            nCdContrato: contratoId,
+            nCdRegra: regraId,
+            iPrioridade: regra.prioridade,
+            nCdTipoRegra: TIPO_REGRA_ID[regra.tipo],
+            nValorKm: regra.valorKm ?? null,
+            nValorFixo: regra.valorFixo ?? null,
+            nPercentual: regra.percentual ?? null,
+          },
+        });
+
+        await tx.condicaoRegra.create({
+          data: {
+            nCdContrato: contratoId,
+            nCdRegra: regraId,
+            nCdCondicao: condicaoId,
+            cTipoCondicao: 'CONDICAO_COMPLETA',
+            cValor: JSON.stringify({
+              diasSemana: regra.condicao.diasSemana,
+              periodos: regra.condicao.periodos,
+              tipoVeiculoIds: regra.condicao.tipoVeiculoIds,
+              tipoCorridaIds: regra.condicao.tipoCorridaIds,
+              aplicaOutroQuando: 'SIM',
+            }),
+          },
+        });
+
+        for (const rota of regra.condicao.rotasFixas) {
+          const enderecoOrigemId = proximoEnderecoId++;
+          const enderecoDestinoId = proximoEnderecoId++;
+          const rotaId = proximaRotaId++;
+
+          await tx.endereco.create({
+            data: {
+              nCdEndereco: enderecoOrigemId,
+              cEndereco: rota.origem.logradouro,
+              cNumero: rota.origem.numero,
+              cComplemento: rota.origem.complemento ?? null,
+              cBairro: rota.origem.bairro,
+              cCidade: rota.origem.cidade,
+              cUf: rota.origem.uf,
+              cCEP: rota.origem.cep,
+              nLatitude: rota.origem.latitude,
+              nLongitude: rota.origem.longitude,
+            },
+          });
+
+          await tx.endereco.create({
+            data: {
+              nCdEndereco: enderecoDestinoId,
+              cEndereco: rota.destino.logradouro,
+              cNumero: rota.destino.numero,
+              cComplemento: rota.destino.complemento ?? null,
+              cBairro: rota.destino.bairro,
+              cCidade: rota.destino.cidade,
+              cUf: rota.destino.uf,
+              cCEP: rota.destino.cep,
+              nLatitude: rota.destino.latitude,
+              nLongitude: rota.destino.longitude,
+            },
+          });
+
+          await tx.rotaFixa.create({
+            data: {
+              nCdContrato: contratoId,
+              nCdRota: rotaId,
+              nCdEnderecoOrigem: enderecoOrigemId,
+              nCdEnderecoDestino: enderecoDestinoId,
+            },
+          });
+
+          await tx.condicaoRegraRotaFixa.create({
+            data: {
+              nCdContrato: contratoId,
+              nCdRegra: regraId,
+              nCdCondicao: condicaoId,
+              nCdRota: rotaId,
+            },
+          });
+        }
+
+        const perguntaId = proximaPerguntaId++;
+        await tx.perguntaContrato.create({
+          data: {
+            nCdContrato: contratoId,
+            nCdPergunta: perguntaId,
+            cPergunta: regra.condicao.outro.pergunta,
+          },
+        });
+        await tx.condicaoRegraOutro.create({
+          data: {
+            nCdContrato: contratoId,
+            nCdRegra: regraId,
+            nCdCondicao: condicaoId,
+            nCdPergunta: perguntaId,
+          },
+        });
+      }
+    });
   }
 
   async buscarVarios(filtros: {

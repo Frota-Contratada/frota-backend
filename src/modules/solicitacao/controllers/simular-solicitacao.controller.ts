@@ -40,6 +40,7 @@ export class SimularSolicitacaoController {
       origem: body.origem,
       destino: body.destino,
       paradas: body.paradas,
+      respostasPerguntas: body.respostasPerguntas,
     });
 
     return { response: SimulacaoSolicitacaoDto.aPartirDoDominio(simulacao) };

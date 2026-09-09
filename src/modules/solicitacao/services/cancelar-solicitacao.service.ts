@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { NotificacoesService } from '@module/notificacoes/services/notificacoes.service';
 import { Solicitacao } from '../domain/solicitacao';
-import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
-import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoDeOutroSolicitanteException } from '../exceptions/solicitacao-de-outro-solicitante.exception';
 import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
+import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
+import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
 
 @Injectable()
 export class CancelarSolicitacaoService {
   constructor(
     private readonly solicitacaoRepository: SolicitacaoRepositoryContract,
     private readonly catalogoRepository: CatalogoSolicitacaoRepositoryContract,
+    private readonly notificacoes: NotificacoesService,
   ) {}
 
   async execute(
@@ -40,6 +42,12 @@ export class CancelarSolicitacaoService {
       throw new MotivoNaoEncontradoException(motivoCancelamentoId);
     }
 
-    return this.solicitacaoRepository.cancelar(id, motivoCancelamentoId);
+    const cancelada = await this.solicitacaoRepository.cancelar(
+      id,
+      motivoCancelamentoId,
+    );
+    await this.notificacoes.cancelarDaSolicitacao(id);
+
+    return cancelada;
   }
 }

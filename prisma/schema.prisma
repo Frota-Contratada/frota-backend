@@ -45,14 +45,41 @@ model CentroCusto {
 }
 
 model CondicaoRegra {
-  nCdContrato   Decimal @db.Decimal(10, 0)
-  nCdRegra      Decimal @db.Decimal(10, 0)
-  nCdCondicao   Decimal @db.Decimal(10, 0)
-  cTipoCondicao String  @db.VarChar(50)
-  cValor        String  @db.NVarChar(Max)
-  Regra         Regra   @relation(fields: [nCdContrato, nCdRegra], references: [nCdContrato, nCdRegra], onUpdate: NoAction, map: "FK_CondicaoRegra_Regra")
+  nCdContrato           Decimal                 @db.Decimal(10, 0)
+  nCdRegra              Decimal                 @db.Decimal(10, 0)
+  nCdCondicao           Decimal                 @db.Decimal(10, 0)
+  cTipoCondicao         String                  @db.VarChar(50)
+  cValor                String                  @db.NVarChar(Max)
+  Regra                 Regra                   @relation(fields: [nCdContrato, nCdRegra], references: [nCdContrato, nCdRegra], onUpdate: NoAction, map: "FK_CondicaoRegra_Regra")
+  CondicaoRegraRotaFixa CondicaoRegraRotaFixa[]
+  CondicaoRegraOutro    CondicaoRegraOutro?
 
   @@id([nCdContrato, nCdRegra, nCdCondicao], map: "PK_CondicaoRegra")
+  @@unique([nCdContrato, nCdRegra], map: "UK_CondicaoRegra_Regra")
+}
+
+model CondicaoRegraRotaFixa {
+  nCdContrato   Decimal       @db.Decimal(10, 0)
+  nCdRegra      Decimal       @db.Decimal(10, 0)
+  nCdCondicao   Decimal       @db.Decimal(10, 0)
+  nCdRota       Decimal       @db.Decimal(10, 0)
+  CondicaoRegra CondicaoRegra @relation(fields: [nCdContrato, nCdRegra, nCdCondicao], references: [nCdContrato, nCdRegra, nCdCondicao], onDelete: Cascade, onUpdate: NoAction, map: "FK_CondicaoRegraRotaFixa_CondicaoRegra")
+  RotaFixa      RotaFixa      @relation(fields: [nCdContrato, nCdRota], references: [nCdContrato, nCdRota], onDelete: NoAction, onUpdate: NoAction, map: "FK_CondicaoRegraRotaFixa_RotaFixa")
+
+  @@id([nCdContrato, nCdRegra, nCdCondicao, nCdRota], map: "PK_CondicaoRegraRotaFixa")
+  @@index([nCdContrato, nCdRota], map: "IX_CondicaoRegraRotaFixa_Rota")
+}
+
+model CondicaoRegraOutro {
+  nCdContrato      Decimal          @db.Decimal(10, 0)
+  nCdRegra         Decimal          @db.Decimal(10, 0)
+  nCdCondicao      Decimal          @db.Decimal(10, 0)
+  nCdPergunta      Decimal          @db.Decimal(10, 0)
+  CondicaoRegra    CondicaoRegra    @relation(fields: [nCdContrato, nCdRegra, nCdCondicao], references: [nCdContrato, nCdRegra, nCdCondicao], onDelete: Cascade, onUpdate: NoAction, map: "FK_CondicaoRegraOutro_CondicaoRegra")
+  PerguntaContrato PerguntaContrato @relation(fields: [nCdContrato, nCdPergunta], references: [nCdContrato, nCdPergunta], onDelete: NoAction, onUpdate: NoAction, map: "FK_CondicaoRegraOutro_PerguntaContrato")
+
+  @@id([nCdContrato, nCdRegra, nCdCondicao], map: "PK_CondicaoRegraOutro")
+  @@index([nCdContrato, nCdPergunta], map: "IX_CondicaoRegraOutro_Pergunta")
 }
 
 model Contrato {
@@ -295,16 +322,16 @@ model Permissao {
 }
 
 model Regra {
-  nCdContrato   Decimal         @db.Decimal(10, 0)
-  nCdRegra      Decimal         @db.Decimal(10, 0)
+  nCdContrato   Decimal        @db.Decimal(10, 0)
+  nCdRegra      Decimal        @db.Decimal(10, 0)
   iPrioridade   Int
-  nCdTipoRegra  Decimal         @db.Decimal(10, 0)
-  nValorKm      Decimal?        @db.Decimal(18, 2)
-  nValorFixo    Decimal?        @db.Decimal(18, 2)
-  nPercentual   Decimal?        @db.Decimal(5, 2)
-  CondicaoRegra CondicaoRegra[]
-  TipoRegra     TipoRegra       @relation(fields: [nCdTipoRegra], references: [nCdTipoRegra], onUpdate: NoAction, map: "FK_ContratoRegra_TipoRegra")
-  Contrato      Contrato        @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_Regra_Contrato")
+  nCdTipoRegra  Decimal        @db.Decimal(10, 0)
+  nValorKm      Decimal?       @db.Decimal(18, 2)
+  nValorFixo    Decimal?       @db.Decimal(18, 2)
+  nPercentual   Decimal?       @db.Decimal(5, 2)
+  CondicaoRegra CondicaoRegra?
+  TipoRegra     TipoRegra      @relation(fields: [nCdTipoRegra], references: [nCdTipoRegra], onUpdate: NoAction, map: "FK_ContratoRegra_TipoRegra")
+  Contrato      Contrato       @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_Regra_Contrato")
   RegraCorrida  RegraCorrida[]
 
   @@id([nCdContrato, nCdRegra], map: "PK_Regra")
@@ -460,15 +487,15 @@ model Veiculo {
 }
 
 model RotaFixa {
-  nCdContrato        Decimal       @db.Decimal(10, 0)
-  nCdRota            Decimal       @db.Decimal(10, 0)
-  cNmRota            String        @db.VarChar(100)
-  nCdEnderecoOrigem  Decimal       @db.Decimal(10, 0)
-  nCdEnderecoDestino Decimal       @db.Decimal(10, 0)
-  Contrato           Contrato      @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_RotaFixa_Contrato")
-  EnderecoDestino    Endereco      @relation("RotaFixaDestino", fields: [nCdEnderecoDestino], references: [nCdEndereco], onUpdate: NoAction, map: "FK_RotaFixa_Destino")
-  EnderecoOrigem     Endereco      @relation("RotaFixaOrigem", fields: [nCdEnderecoOrigem], references: [nCdEndereco], onUpdate: NoAction, map: "FK_RotaFixa_Origem")
-  Solicitacao        Solicitacao[]
+  nCdContrato           Decimal                 @db.Decimal(10, 0)
+  nCdRota               Decimal                 @db.Decimal(10, 0)
+  nCdEnderecoOrigem     Decimal                 @db.Decimal(10, 0)
+  nCdEnderecoDestino    Decimal                 @db.Decimal(10, 0)
+  Contrato              Contrato                @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_RotaFixa_Contrato")
+  EnderecoDestino       Endereco                @relation("RotaFixaDestino", fields: [nCdEnderecoDestino], references: [nCdEndereco], onUpdate: NoAction, map: "FK_RotaFixa_Destino")
+  EnderecoOrigem        Endereco                @relation("RotaFixaOrigem", fields: [nCdEnderecoOrigem], references: [nCdEndereco], onUpdate: NoAction, map: "FK_RotaFixa_Origem")
+  Solicitacao           Solicitacao[]
+  CondicaoRegraRotaFixa CondicaoRegraRotaFixa[]
 
   @@id([nCdContrato, nCdRota], map: "PK_RotaFixa")
 }
@@ -479,6 +506,7 @@ model PerguntaContrato {
   cPergunta           String                @db.VarChar(255)
   Contrato            Contrato              @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_PerguntaContrato_Contrato")
   SolicitacaoResposta SolicitacaoResposta[]
+  CondicaoRegraOutro  CondicaoRegraOutro[]
 
   @@id([nCdContrato, nCdPergunta], map: "PK_PerguntaContrato")
 }

@@ -1,57 +1,35 @@
+import { Endereco } from '../../filial/domain/endereco';
 import { DiaSemana } from '../enums/dia-semana.enum';
 import { Periodo } from '../enums/periodo.enum';
-import { TipoCondicao } from '../enums/tipo-condicao.enum';
+
+export class CondicaoRotaFixa {
+  constructor(
+    public origem: Endereco,
+    public destino: Endereco,
+    public id: number = 0,
+  ) {}
+}
 
 /**
- * Cada condição corresponde a uma linha de CondicaoRegra.
- * O campo `tipo` discrimina a união, então o motor de precificação consegue
- * fazer switch exaustivo sobre ela.
- * O `id` é o nCdCondicao, sequencial dentro da regra.
+ * Pergunta obrigatória da condição. A regra é aplicável somente quando a
+ * resposta da solicitação para essa pergunta for SIM.
  */
-type CondicaoIdentidade = {
-  id: number;
-};
-
-export type CondicaoDiasSemana = {
-  tipo: TipoCondicao.DIAS_SEMANA;
-  diasSemana: DiaSemana[];
-};
-
-export type CondicaoPeriodo = {
-  tipo: TipoCondicao.PERIODO;
-  periodos: Periodo[];
-};
-
-export type CondicaoRotaFixa = {
-  tipo: TipoCondicao.ROTA_FIXA;
-  rotaFixaIds: number[];
-};
-
-export type CondicaoTipoVeiculo = {
-  tipo: TipoCondicao.TIPO_VEICULO;
-  tipoVeiculoIds: number[];
-};
-
-export type CondicaoTipoCorrida = {
-  tipo: TipoCondicao.TIPO_CORRIDA;
-  tipoCorridaIds: number[];
-};
+export class CondicaoOutro {
+  constructor(public pergunta: string, public id: number = 0) {}
+}
 
 /**
- * Pergunta de sim/não respondida pelo solicitante. A condição é satisfeita
- * quando a resposta é "sim".
+ * Uma regra possui exatamente uma condição completa. Os critérios preenchidos
+ * são combinados com AND; os itens de cada lista são alternativas (OR).
  */
-export type CondicaoOutro = {
-  tipo: TipoCondicao.OUTRO;
-  perguntaId: number;
-};
-
-export type CondicaoValor =
-  | CondicaoDiasSemana
-  | CondicaoPeriodo
-  | CondicaoRotaFixa
-  | CondicaoTipoVeiculo
-  | CondicaoTipoCorrida
-  | CondicaoOutro;
-
-export type CondicaoRegra = CondicaoIdentidade & CondicaoValor;
+export class CondicaoRegra {
+  constructor(
+    public id: number,
+    public diasSemana: DiaSemana[],
+    public periodos: Periodo[],
+    public rotasFixas: CondicaoRotaFixa[],
+    public tipoVeiculoIds: number[],
+    public tipoCorridaIds: number[],
+    public outro: CondicaoOutro,
+  ) {}
+}

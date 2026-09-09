@@ -1,14 +1,13 @@
 import { DateTime } from 'luxon';
 
 export enum Periodo {
-  MATUTINO = 'matutino',
-  VESPERTINO = 'vespertino',
-  NOTURNO = 'noturno',
+  MATUTINO = 'MATUTINO',
+  VESPERTINO = 'VESPERTINO',
+  NOTURNO = 'NOTURNO',
 }
 
 /**
- * Faixas em horas cheias, com início e fim inclusivos.
- * NOTURNO cruza a meia-noite (18h de um dia até 5h do dia seguinte).
+ * Faixas em horas inteiras. NOTURNO cruza a meia-noite, das 18h às 5h59.
  */
 export const FAIXA_HORARIA_PERIODO: Record<
   Periodo,
@@ -19,10 +18,6 @@ export const FAIXA_HORARIA_PERIODO: Record<
   [Periodo.NOTURNO]: { horaInicio: 18, horaFim: 5 },
 };
 
-/**
- * Resolve o período de um instante. Use a data de início da corrida no valor
- * final e a data prevista da corrida na estimativa.
- */
 export function resolverPeriodo(momento: DateTime): Periodo {
   const hora = momento.hour;
 

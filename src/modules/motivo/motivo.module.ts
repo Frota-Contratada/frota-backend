@@ -37,6 +37,10 @@ import { ValidarMotivoDaFilialService } from './services/validar-motivo-da-filia
       useClass: PrismaMotivoRepository,
     },
   ],
-  exports: [MotivoRepositoryContract, BuscarMotivoService],
+  exports: [
+    MotivoRepositoryContract,
+    BuscarMotivoService,
+    BuscarVariosMotivosService,
+  ],
 })
 export class MotivoModule {}

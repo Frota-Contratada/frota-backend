@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { ContratoPrecificacaoRepositoryContract } from './contrato-precificacao-repository.contract';
-import { PrismaContratoPrecificacaoMapper } from './prisma-contrato-precificacao.mapper';
+import {
+  INCLUDE_REGRA_PRECIFICACAO,
+  PrismaContratoPrecificacaoMapper,
+} from './prisma-contrato-precificacao.mapper';
 import { ContratoPrecificacao } from '../domain/contrato-precificacao';
 
 @Injectable()
@@ -32,9 +35,7 @@ export class PrismaContratoPrecificacaoRepository extends ContratoPrecificacaoRe
         Fornecedor: true,
         Contrato: {
           include: {
-            Regra: {
-              include: { CondicaoRegra: true, TipoRegra: true },
-            },
+            Regra: { include: INCLUDE_REGRA_PRECIFICACAO },
           },
         },
       },

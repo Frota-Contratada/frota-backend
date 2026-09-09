@@ -15,6 +15,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RouterModule } from '@nestjs/core';
 import { TrackingModule } from '@module/tracking/tracking.module';
+import { NotificacoesModule } from '@module/notificacoes/notificacoes.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TrackingModule } from '@module/tracking/tracking.module';
     ContratoModule,
     MotivoModule,
     SolicitacaoModule,
+    NotificacoesModule,
     TrackingModule,
     RouterModule.register([
       {
@@ -83,6 +85,10 @@ import { TrackingModule } from '@module/tracking/tracking.module';
       {
         path: 'solicitacoes',
         module: SolicitacaoModule,
+      },
+      {
+        path: 'notificacoes',
+        module: NotificacoesModule,
       },
       {
         path: 'corridas',

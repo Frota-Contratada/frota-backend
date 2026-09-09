@@ -11,6 +11,10 @@ import { CentroCustoSemAprovadorException } from '@module/centro-de-custo/except
 import { Endereco } from '../domain/endereco';
 import { Motivo } from '../domain/motivo';
 import { Parada } from '../domain/parada';
+import {
+  RespostaPerguntaPrecificacao,
+  RespostaPerguntaSolicitacao,
+} from '../domain/resposta-pergunta-solicitacao';
 import { Solicitacao } from '../domain/solicitacao';
 import { SolicitacaoCentroCusto } from '../domain/solicitacao-centro-custo';
 import { SolicitacaoPassageiro } from '../domain/solicitacao-passageiro';
@@ -54,6 +58,7 @@ export interface CriarSolicitacaoInput {
   paradas: EnderecoInput[];
   centrosCustoIds: number[];
   cpfsAcompanhantes: string[];
+  respostasPerguntas: RespostaPerguntaPrecificacao[];
 }
 
 @Injectable()
@@ -137,6 +142,9 @@ export class CriarSolicitacaoService {
         tipoCorridaId: tipoCorrida.id,
         tipoVeiculoId: tipoVeiculo?.id,
         quantidadeParadas: paradas.length,
+        origem,
+        destino,
+        respostasPerguntas: input.respostasPerguntas,
       },
     );
 
@@ -157,6 +165,16 @@ export class CriarSolicitacaoService {
       passageiros.length,
     );
 
+    const respostasDoContrato = input.respostasPerguntas
+      .filter((resposta) => resposta.contratoId === fornecedor.contratoId)
+      .map(
+        (resposta) =>
+          new RespostaPerguntaSolicitacao(
+            resposta.perguntaId,
+            resposta.resposta,
+          ),
+      );
+
     const solicitacao = new Solicitacao(
       solicitante.id,
       fornecedor.fornecedorId,
@@ -173,6 +191,8 @@ export class CriarSolicitacaoService {
         paradas,
         centrosCusto,
         passageiros,
+        rotaFixaId: fornecedor.rotaFixaId,
+        respostasPerguntas: respostasDoContrato,
         duracaoEstimadaMinutos: rota.duracaoMinutos,
         solicitanteNome: solicitante.nome,
         fornecedorNome: fornecedor.fornecedorNome,

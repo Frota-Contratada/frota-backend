@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { RotaServiceContract } from '@core/rota/contracts/rota-service.contract';
 import { UsuarioRepositoryContract } from '@module/usuario/info/repositories/usuario-repository.contract';
+import { RespostaPerguntaPrecificacao } from '../domain/resposta-pergunta-solicitacao';
 import { SimulacaoSolicitacao } from '../domain/simulacao-solicitacao';
 import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
 import { SolicitanteNaoEncontradoException } from '../exceptions/solicitante-nao-encontrado.exception';
@@ -23,6 +24,7 @@ export interface SimularSolicitacaoInput {
   origem: EnderecoInput;
   destino: EnderecoInput;
   paradas: EnderecoInput[];
+  respostasPerguntas: RespostaPerguntaPrecificacao[];
 }
 
 @Injectable()
@@ -104,6 +106,9 @@ export class SimularSolicitacaoService {
         tipoCorridaId: tipoCorrida.id,
         tipoVeiculoId: input.tipoVeiculoId,
         quantidadeParadas: input.paradas.length,
+        origem: input.origem,
+        destino: input.destino,
+        respostasPerguntas: input.respostasPerguntas,
       },
     );
 

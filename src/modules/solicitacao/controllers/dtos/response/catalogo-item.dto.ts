@@ -1,8 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Motivo } from '../../../domain/motivo';
+import { TipoMotivo } from '@module/motivo/enums/tipo-motivo.enum';
 import { TipoCorrida } from '../../../domain/tipo-corrida';
 import { TipoVeiculo } from '../../../domain/tipo-veiculo';
-import { TipoMotivo } from '../../../enums/tipo-motivo.enum';
+
+type MotivoParaCatalogo = {
+  id: number;
+  nome: string;
+  tipo: string;
+};
 
 export class CatalogoItemDto {
   @ApiProperty({ example: 1 })
@@ -36,7 +41,7 @@ export class CatalogoItemDto {
     this.capacidadePassageiros = capacidadePassageiros;
   }
 
-  static aPartirDoMotivo(motivo: Motivo): CatalogoItemDto {
+  static aPartirDoMotivo(motivo: MotivoParaCatalogo): CatalogoItemDto {
     return new CatalogoItemDto(motivo.id, motivo.nome, motivo.tipo);
   }
 

@@ -1,7 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 import { dataIsoSchema } from './data-iso.schema';
-import { EnderecoRequestSchema } from './criar-solicitacao-request.dto';
+import {
+  EnderecoRequestSchema,
+  RespostaPerguntaRequestSchema,
+} from './criar-solicitacao-request.dto';
 
 export const SimularSolicitacaoRequestSchema = z.object({
   dataCorrida: dataIsoSchema(
@@ -16,6 +19,10 @@ export const SimularSolicitacaoRequestSchema = z.object({
   origem: EnderecoRequestSchema,
   destino: EnderecoRequestSchema,
   paradas: z.array(EnderecoRequestSchema).max(10).default([]),
+  respostasPerguntas: z
+    .array(RespostaPerguntaRequestSchema)
+    .max(50)
+    .default([]),
 });
 
 export class SimularSolicitacaoRequestDto extends createZodDto(

@@ -5,6 +5,7 @@ import { CorridaSolicitacao } from './corrida-solicitacao';
 import { Endereco } from './endereco';
 import { Motivo } from './motivo';
 import { Parada } from './parada';
+import { RespostaPerguntaSolicitacao } from './resposta-pergunta-solicitacao';
 import { SolicitacaoCentroCusto } from './solicitacao-centro-custo';
 import { SolicitacaoPassageiro } from './solicitacao-passageiro';
 import { TipoCorrida } from './tipo-corrida';
@@ -18,6 +19,8 @@ export interface DetalhesSolicitacao {
   paradas?: Parada[];
   centrosCusto?: SolicitacaoCentroCusto[];
   passageiros?: SolicitacaoPassageiro[];
+  rotaFixaId?: number;
+  respostasPerguntas?: RespostaPerguntaSolicitacao[];
   motivoCancelamento?: Motivo;
   motivoRecusaFornecedor?: string;
   duracaoEstimadaMinutos?: number;
@@ -34,6 +37,8 @@ export class Solicitacao {
   paradas: Parada[];
   centrosCusto: SolicitacaoCentroCusto[];
   passageiros: SolicitacaoPassageiro[];
+  rotaFixaId?: number;
+  respostasPerguntas: RespostaPerguntaSolicitacao[];
   motivoCancelamento?: Motivo;
   motivoRecusaFornecedor?: string;
   duracaoEstimadaMinutos?: number;
@@ -61,6 +66,8 @@ export class Solicitacao {
     this.paradas = detalhes.paradas ?? [];
     this.centrosCusto = detalhes.centrosCusto ?? [];
     this.passageiros = detalhes.passageiros ?? [];
+    this.rotaFixaId = detalhes.rotaFixaId;
+    this.respostasPerguntas = detalhes.respostasPerguntas ?? [];
     this.motivoCancelamento = detalhes.motivoCancelamento;
     this.motivoRecusaFornecedor = detalhes.motivoRecusaFornecedor;
     this.duracaoEstimadaMinutos = detalhes.duracaoEstimadaMinutos;

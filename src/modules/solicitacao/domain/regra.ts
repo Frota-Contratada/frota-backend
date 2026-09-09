@@ -6,7 +6,7 @@ export class Regra {
     public id: number,
     public prioridade: number,
     public tipoRegraId: number,
-    public condicoes: CondicaoRegra[] = [],
+    public condicao: CondicaoRegra | undefined,
     public valorFixo?: number,
     public valorKm?: number,
     public percentual?: number,

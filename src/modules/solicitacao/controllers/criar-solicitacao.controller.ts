@@ -45,6 +45,7 @@ export class CriarSolicitacaoController {
       paradas: body.paradas,
       centrosCustoIds: body.centrosCustoIds,
       cpfsAcompanhantes: body.cpfsAcompanhantes,
+      respostasPerguntas: body.respostasPerguntas,
     });
 
     return { response: SolicitacaoDto.aPartirDoDominio(solicitacao) };

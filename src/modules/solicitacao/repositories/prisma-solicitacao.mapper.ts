@@ -4,6 +4,10 @@ import { CorridaSolicitacao } from '../domain/corrida-solicitacao';
 import { Endereco } from '../domain/endereco';
 import { Motivo } from '../domain/motivo';
 import { Parada } from '../domain/parada';
+import {
+  RespostaPergunta,
+  RespostaPerguntaSolicitacao,
+} from '../domain/resposta-pergunta-solicitacao';
 import { Solicitacao } from '../domain/solicitacao';
 import { SolicitacaoCentroCusto } from '../domain/solicitacao-centro-custo';
 import { SolicitacaoPassageiro } from '../domain/solicitacao-passageiro';
@@ -24,6 +28,7 @@ export const INCLUDE_SOLICITACAO = {
   Fornecedor: true,
   Parada: { include: { Endereco: true } },
   SolicitacaoPassageiro: true,
+  SolicitacaoResposta: true,
   SolicitacaoCentroCusto: {
     include: { CentroCusto: true, Motivo: true, Usuario: true },
   },
@@ -97,6 +102,16 @@ export class PrismaSolicitacaoMapper {
               ),
         solicitanteNome: entity.Usuario.cNmUsuario,
         fornecedorNome: entity.Fornecedor.cNmFornecedor,
+        rotaFixaId: entity.nCdRotaFixa?.toNumber(),
+        respostasPerguntas: entity.SolicitacaoResposta.map(
+          (resposta) =>
+            new RespostaPerguntaSolicitacao(
+              resposta.nCdPergunta.toNumber(),
+              resposta.cResposta.trim().toUpperCase() === 'S'
+                ? RespostaPergunta.SIM
+                : RespostaPergunta.NAO,
+            ),
+        ),
         motivoCancelamento: PrismaSolicitacaoMapper.motivoToDomain(
           entity.Motivo_Solicitacao_nCdMotivoCancelamentoToMotivo,
         ),

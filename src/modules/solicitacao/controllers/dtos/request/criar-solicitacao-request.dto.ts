@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
+import { RespostaPergunta } from '../../../domain/resposta-pergunta-solicitacao';
 import { dataIsoSchema } from './data-iso.schema';
 
 export const EnderecoRequestSchema = z.object({
@@ -22,25 +23,54 @@ export const EnderecoRequestSchema = z.object({
   complemento: z.string().trim().min(1).max(100).optional(),
 });
 
-export const CriarSolicitacaoRequestSchema = z.object({
-  dataCorrida: dataIsoSchema(
-    'Informe a data da corrida em formato ISO 8601 válido',
-  ),
-  tipoCorridaId: z.number().int().positive(),
-  tipoVeiculoId: z.number().int().positive().optional(),
-  motivoSolicitacaoId: z.number().int().positive(),
-  origem: EnderecoRequestSchema,
-  destino: EnderecoRequestSchema,
-  paradas: z.array(EnderecoRequestSchema).max(10).default([]),
-  centrosCustoIds: z
-    .array(z.number().int().positive())
-    .min(1, { message: 'Informe ao menos um centro de custo' })
-    .max(10),
-  cpfsAcompanhantes: z
-    .array(z.string().trim().length(11, { message: 'CPF deve ter 11 dígitos' }))
-    .max(10)
-    .default([]),
+export const RespostaPerguntaRequestSchema = z.object({
+  contratoId: z.number().int().positive(),
+  perguntaId: z.number().int().positive(),
+  resposta: z.enum(RespostaPergunta),
 });
+
+export const CriarSolicitacaoRequestSchema = z
+  .object({
+    dataCorrida: dataIsoSchema(
+      'Informe a data da corrida em formato ISO 8601 válido',
+    ),
+    tipoCorridaId: z.number().int().positive(),
+    tipoVeiculoId: z.number().int().positive().optional(),
+    motivoSolicitacaoId: z.number().int().positive(),
+    origem: EnderecoRequestSchema,
+    destino: EnderecoRequestSchema,
+    paradas: z.array(EnderecoRequestSchema).max(10).default([]),
+    centrosCustoIds: z
+      .array(z.number().int().positive())
+      .min(1, { message: 'Informe ao menos um centro de custo' })
+      .max(10),
+    cpfsAcompanhantes: z
+      .array(
+        z.string().trim().length(11, { message: 'CPF deve ter 11 dígitos' }),
+      )
+      .max(10)
+      .default([]),
+    respostasPerguntas: z
+      .array(RespostaPerguntaRequestSchema)
+      .max(50)
+      .default([]),
+  })
+  .superRefine((body, ctx) => {
+    const vistas = new Set<string>();
+
+    body.respostasPerguntas.forEach((resposta, indice) => {
+      const chave = `${resposta.contratoId}:${resposta.perguntaId}`;
+      if (vistas.has(chave)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['respostasPerguntas', indice],
+          message:
+            'Cada pergunta de contrato deve possuir somente uma resposta.',
+        });
+      }
+      vistas.add(chave);
+    });
+  });
 
 export class CriarSolicitacaoRequestDto extends createZodDto(
   CriarSolicitacaoRequestSchema,

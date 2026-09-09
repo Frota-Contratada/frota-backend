@@ -1,8 +1,11 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ApiRespostaListaDe } from '@common/decorators/api-resposta.decorator';
-import { BuscarMotivosService } from '../services/buscar-motivos.service';
+import { BuscarVariosMotivosService } from '@module/motivo/services/buscar-varios-motivos.service';
+import { TipoVinculo } from '@module/autenticacao/enums/tipo-vinculo.enum';
+import { VinculoDoUsuarioAusenteException } from '@module/autenticacao/exceptions/vinculo-do-usuario-ausente.exception';
 import { BuscarTiposCorridaService } from '../services/buscar-tipos-corrida.service';
 import { BuscarTiposVeiculoService } from '../services/buscar-tipos-veiculo.service';
 import { BuscarMotivosQueryDto } from './dtos/request/buscar-motivos-query.dto';
@@ -13,25 +16,35 @@ import { CatalogoItemDto } from './dtos/response/catalogo-item.dto';
 @Controller()
 export class BuscarCatalogosController {
   constructor(
-    private readonly buscarMotivosService: BuscarMotivosService,
+    private readonly buscarVariosMotivosService: BuscarVariosMotivosService,
     private readonly buscarTiposCorridaService: BuscarTiposCorridaService,
     private readonly buscarTiposVeiculoService: BuscarTiposVeiculoService,
   ) {}
 
   @Get('motivos')
   @ApiOperation({
-    summary: 'Lista motivos',
+    summary: 'Lista os motivos disponíveis para a filial do usuário',
     description:
-      'Filtre por tipo para obter os motivos de corrida (1), de cancelamento (2), de recusa (3) ou os objetos transportáveis (4).',
+      'Retorna os motivos ativos da filial do usuário autenticado somados aos motivos globais. Filtre por tipo: solicitacao, cancelamento ou recusa.',
   })
   @ApiRespostaListaDe(CatalogoItemDto)
   async buscarMotivos(
+    @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarMotivosQueryDto,
   ): Promise<ResponseInterface<CatalogoItemDto[]>> {
-    const motivos = await this.buscarMotivosService.execute(query.tipo);
+    if (!filialId) {
+      throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
+    }
+
+    const resultado = await this.buscarVariosMotivosService.execute({
+      filialId,
+      tipo: query.tipo,
+      page: 1,
+      limit: 100,
+    });
 
     return {
-      response: motivos.map((motivo) =>
+      response: resultado.data.map((motivo) =>
         CatalogoItemDto.aPartirDoMotivo(motivo),
       ),
     };

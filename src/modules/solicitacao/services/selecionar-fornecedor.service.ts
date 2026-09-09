@@ -11,6 +11,7 @@ export interface FornecedorSelecionado {
   fornecedorNome: string;
   contratoId: number;
   valorEstimado: number;
+  rotaFixaId: number;
 }
 
 @Injectable()
@@ -32,15 +33,24 @@ export class SelecionarFornecedorService {
       );
 
     const precificados = candidatos
-      .map((contrato) => ({
-        fornecedorId: contrato.fornecedorId,
-        fornecedorNome: contrato.fornecedorNome,
-        contratoId: contrato.contratoId,
-        valorEstimado: this.calcularValorEstimadoService.execute(
+      .flatMap((contrato) => {
+        const resultado = this.calcularValorEstimadoService.avaliar(
           contrato,
           contexto,
-        ),
-      }))
+        );
+
+        return resultado == null
+          ? []
+          : [
+              {
+                fornecedorId: contrato.fornecedorId,
+                fornecedorNome: contrato.fornecedorNome,
+                contratoId: contrato.contratoId,
+                valorEstimado: resultado.valorEstimado,
+                rotaFixaId: resultado.rotaFixaId,
+              },
+            ];
+      })
       .sort((um, outro) => um.valorEstimado - outro.valorEstimado);
 
     const escolhido = precificados.at(0);

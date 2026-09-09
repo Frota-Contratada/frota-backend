@@ -357,10 +357,9 @@ async function semearCatalogos() {
   }
 
   const tiposRegra = [
-    { id: 1, nome: 'Bandeirada' },
-    { id: 2, nome: 'Valor por quilômetro' },
-    { id: 3, nome: 'Adicional noturno' },
-    { id: 4, nome: 'Adicional por parada' },
+    { id: 1, nome: 'VALOR_KM' },
+    { id: 2, nome: 'VALOR_FIXO' },
+    { id: 3, nome: 'PERCENTUAL' },
   ];
 
   for (const tipo of tiposRegra) {
@@ -627,10 +626,9 @@ async function semearContratos() {
     }
 
     const regras = [
-      { id: 1, prioridade: 1, tipoRegraId: 1, valorFixo: contrato.bandeirada },
-      { id: 2, prioridade: 2, tipoRegraId: 2, valorKm: contrato.valorKm },
+      { id: 1, prioridade: 1, tipoRegraId: 2, valorFixo: contrato.bandeirada },
+      { id: 2, prioridade: 2, tipoRegraId: 1, valorKm: contrato.valorKm },
       { id: 3, prioridade: 3, tipoRegraId: 3, percentual: 20 },
-      { id: 4, prioridade: 4, tipoRegraId: 4, valorFixo: 5 },
     ];
 
     for (const regra of regras) {
@@ -643,6 +641,7 @@ async function semearContratos() {
         },
         update: {
           iPrioridade: regra.prioridade,
+          nCdTipoRegra: regra.tipoRegraId,
           nValorFixo: regra.valorFixo ?? null,
           nValorKm: regra.valorKm ?? null,
           nPercentual: regra.percentual ?? null,
@@ -661,7 +660,6 @@ async function semearContratos() {
 
     const condicoes = [
       { regraId: 3, id: 1, tipo: 'hora-inicio', valor: '22:00' },
-      { regraId: 4, id: 1, tipo: 'quantidade-minima-paradas', valor: '1' },
     ];
 
     for (const condicao of condicoes) {
