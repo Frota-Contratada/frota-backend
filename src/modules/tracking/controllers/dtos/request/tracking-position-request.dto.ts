@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
-import { TRACKING_MAX_FUTURE_SKEW_MS } from '../../domain/tracking.types';
+import { TRACKING_MAX_FUTURE_SKEW_MS } from '../../../domain/tracking.types';
 
 export const TrackingPositionSchema = z.object({
   lat: z.number().finite().min(-90).max(90),
@@ -20,16 +20,6 @@ export const TrackingPositionSchema = z.object({
     ),
 });
 
-export const PositionsBatchSchema = z.object({
-  positions: z.array(TrackingPositionSchema).min(1).max(100),
-});
-
-export const RerouteSchema = z.object({
-  position: TrackingPositionSchema,
-});
-
-export class TrackingPositionDto extends createZodDto(TrackingPositionSchema) {}
-
-export class PositionsBatchDto extends createZodDto(PositionsBatchSchema) {}
-
-export class RerouteDto extends createZodDto(RerouteSchema) {}
+export class TrackingPositionRequestDto extends createZodDto(
+  TrackingPositionSchema,
+) {}

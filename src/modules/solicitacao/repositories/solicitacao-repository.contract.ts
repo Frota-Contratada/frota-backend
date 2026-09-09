@@ -17,6 +17,16 @@ export interface FiltrosBuscarSolicitacoes {
   limit: number;
 }
 
+export interface FiltrosBuscarSolicitacoesParaAprovacao {
+  aprovadorId: number;
+  tipoCorridaId?: number;
+  dataInicio?: DateTime;
+  dataFim?: DateTime;
+  ordenacao: OrdenacaoSolicitacao;
+  page: number;
+  limit: number;
+}
+
 export interface DecisaoFornecedor {
   decisao: 'REATRIBUIR' | 'RECUSAR';
   motoristaId?: number;
@@ -33,6 +43,9 @@ export abstract class SolicitacaoRepositoryContract {
   abstract buscar(id: number): Promise<Solicitacao | null>;
   abstract buscarVarias(
     filtros: FiltrosBuscarSolicitacoes,
+  ): Promise<PaginatedResponseInterface<Solicitacao>>;
+  abstract buscarPendentesParaAprovacao(
+    filtros: FiltrosBuscarSolicitacoesParaAprovacao,
   ): Promise<PaginatedResponseInterface<Solicitacao>>;
   abstract buscarAgendadasPorPeriodo(filtros: {
     solicitanteId: number;
