@@ -1,12 +1,22 @@
 import { DateTime } from 'luxon';
 import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 
+export class MotoristaCorridaParada {
+  constructor(
+    public ordem: number,
+    public endereco: string,
+    public latitude: number,
+    public longitude: number,
+  ) {}
+}
+
 export class MotoristaCorrida {
   constructor(
     public id: number,
     public dataHoraPartida: DateTime,
     public origem: string,
     public destino: string,
+    public paradas: MotoristaCorridaParada[],
     public nomePassageiro: string,
     public valorEstimado: number,
     public tipoCorrida: string,

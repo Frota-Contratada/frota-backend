@@ -12,14 +12,19 @@ export class BuscarSolicitacaoService {
     private readonly rotaService: RotaServiceContract,
   ) {}
 
-  async execute(id: number, solicitanteId?: number): Promise<Solicitacao> {
+  async execute(id: number, usuarioId?: number): Promise<Solicitacao> {
     const solicitacao = await this.solicitacaoRepository.buscar(id);
 
     if (!solicitacao) {
       throw new SolicitacaoNaoEncontradaException(id);
     }
 
-    if (solicitanteId != null && solicitacao.solicitanteId !== solicitanteId) {
+    const usuarioEhSolicitante = solicitacao.solicitanteId === usuarioId;
+    const usuarioEhAprovador = solicitacao.centrosCusto.some(
+      (centroCusto) => centroCusto.aprovadorId === usuarioId,
+    );
+
+    if (usuarioId != null && !usuarioEhSolicitante && !usuarioEhAprovador) {
       throw new SolicitacaoDeOutroSolicitanteException(id);
     }
 

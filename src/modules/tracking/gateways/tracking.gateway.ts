@@ -14,7 +14,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
-import { TrackingPositionSchema } from '../controllers/dtos/tracking-request.dto';
+import { TrackingPositionSchema } from '../controllers/dtos/request/tracking-position-request.dto';
 import { TrackingService } from '../services/tracking.service';
 import { TrackingEventsService } from '../services/tracking-events.service';
 

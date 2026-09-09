@@ -65,7 +65,11 @@ export class BuscarSolicitacaoController {
   }
 
   @Get(':id')
-  @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
+  @Perfis(
+    TipoPerfil.SOLICITANTE,
+    TipoPerfil.SOLICITANTE_EMERGENCIA,
+    TipoPerfil.APROVADOR,
+  )
   @ApiOperation({
     summary: 'Detalha uma solicitação',
     description:
@@ -73,13 +77,13 @@ export class BuscarSolicitacaoController {
   })
   @ApiRespostaDe(SolicitacaoDto)
   async buscar(
-    @CurrentUser('id') solicitanteId: number,
+    @CurrentUser('id') usuarioId: number,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<SolicitacaoDto>> {
     const solicitacao = await this.buscarSolicitacaoService.execute(
       id,
-      solicitanteId,
+      usuarioId,
     );
 
     return { response: SolicitacaoDto.aPartirDoDominio(solicitacao) };

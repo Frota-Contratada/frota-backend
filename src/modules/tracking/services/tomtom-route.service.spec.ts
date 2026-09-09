@@ -1,9 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { TomTomRouteService } from './tomtom-route.service';
-import {
-  TomTomFalhaException,
-  TomTomTimeoutException,
-} from '../exceptions/tracking.exceptions';
+import { TomTomFalhaException } from '../exceptions/tomtom-falha.exception';
+import { TomTomTimeoutException } from '../exceptions/tomtom-timeout.exception';
 
 describe('TomTomRouteService', () => {
   const origin = {

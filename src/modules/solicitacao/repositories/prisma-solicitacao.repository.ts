@@ -5,6 +5,7 @@ import { PaginatedResponseInterface } from '@common/interfaces/paginated-respons
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import {
   FiltrosBuscarSolicitacoes,
+  FiltrosBuscarSolicitacoesParaAprovacao,
   DecisaoFornecedor,
   SolicitacaoRepositoryContract,
 } from './solicitacao-repository.contract';
@@ -21,6 +22,7 @@ import { TipoCorrida } from '../domain/tipo-corrida';
 import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
 import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
+import { StatusAprovacao } from '../enums/status-aprovacao.enum';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
 import { SolicitacaoNaoPodeSerDecididaPeloFornecedorException } from '../exceptions/solicitacao-nao-pode-ser-decidida-pelo-fornecedor.exception';
@@ -211,6 +213,57 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     filtros: FiltrosBuscarSolicitacoes,
   ): Promise<PaginatedResponseInterface<Solicitacao>> {
     const where = this.montarWhere(filtros);
+    const skip = (filtros.page - 1) * filtros.limit;
+
+    const [registros, totalCount] = await Promise.all([
+      this.prismaService.solicitacao.findMany({
+        where,
+        skip,
+        take: filtros.limit,
+        include: INCLUDE_SOLICITACAO,
+        orderBy: {
+          dCorrida:
+            filtros.ordenacao === OrdenacaoSolicitacao.ANTIGA ? 'asc' : 'desc',
+        },
+      }),
+      this.prismaService.solicitacao.count({ where }),
+    ]);
+
+    const contexto = await this.montarContexto(registros);
+
+    return {
+      data: registros.map((registro) =>
+        PrismaSolicitacaoMapper.toDomain(registro, contexto),
+      ),
+      totalCount,
+      hasNextPage: filtros.page * filtros.limit < totalCount,
+    };
+  }
+
+  async buscarPendentesParaAprovacao(
+    filtros: FiltrosBuscarSolicitacoesParaAprovacao,
+  ): Promise<PaginatedResponseInterface<Solicitacao>> {
+    const periodo: Prisma.DateTimeFilter = {};
+    if (filtros.dataInicio) {
+      periodo.gte = filtros.dataInicio.startOf('day').toJSDate();
+    }
+    if (filtros.dataFim) {
+      periodo.lte = filtros.dataFim.endOf('day').toJSDate();
+    }
+
+    const where: Prisma.SolicitacaoWhereInput = {
+      cStatus: StatusSolicitacao.PENDENTE,
+      ...(filtros.tipoCorridaId != null
+        ? { nCdTipoCorrida: filtros.tipoCorridaId }
+        : {}),
+      ...(Object.keys(periodo).length > 0 ? { dCorrida: periodo } : {}),
+      SolicitacaoCentroCusto: {
+        some: {
+          nCdAprovador: filtros.aprovadorId,
+          cStatusAprovacao: StatusAprovacao.PENDENTE,
+        },
+      },
+    };
     const skip = (filtros.page - 1) * filtros.limit;
 
     const [registros, totalCount] = await Promise.all([
