@@ -3,16 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import {
   AgendamentoNotificacao,
-  Notificacao,
   StatusAgendamentoNotificacao,
 } from '../domain/notificacao';
-import { NotificacoesEventsService } from '../gateways/notificacoes-events.service';
-import { NotificacoesQueueContract } from '../queue/notificacoes-queue.contract';
+import { NotificacaoQueueContract } from '../queue/notificacao-queue.contract';
 import { NotificacaoRepositoryContract } from '../repositories/notificacao-repository.contract';
 import {
   ContextoLembreteViagem,
   LembreteViagemNotificacao,
 } from '../templates/lembrete-viagem.notificacao';
+import { CancelarNotificacoesDaSolicitacaoService } from './cancelar-notificacoes-da-solicitacao.service';
 
 export interface AgendarLembreteDaSolicitacaoInput {
   solicitacaoId: number;
@@ -22,25 +21,23 @@ export interface AgendarLembreteDaSolicitacaoInput {
 }
 
 @Injectable()
-export class NotificacoesService {
+export class AgendarLembreteDaSolicitacaoService {
   private readonly templateLembreteViagem = new LembreteViagemNotificacao();
   private readonly ttlEmMs: number;
   private readonly antecedenciaEmMs: number;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly notificacoes: NotificacaoRepositoryContract,
-    private readonly queue: NotificacoesQueueContract,
-    private readonly events: NotificacoesEventsService,
+    private readonly notificacaoRepository: NotificacaoRepositoryContract,
+    private readonly notificacaoQueue: NotificacaoQueueContract,
+    private readonly cancelarNotificacoesDaSolicitacao: CancelarNotificacoesDaSolicitacaoService,
   ) {
     this.ttlEmMs = this.valorPositivo('NOTIFICACOES_TTL_DIAS', 30) * 86_400_000;
     this.antecedenciaEmMs =
       this.valorPositivo('NOTIFICACOES_ANTECEDENCIA_MINUTOS', 120) * 60_000;
   }
 
-  async agendarLembreteDaSolicitacao(
-    input: AgendarLembreteDaSolicitacaoInput,
-  ): Promise<void> {
+  async execute(input: AgendarLembreteDaSolicitacaoInput): Promise<void> {
     if (!Number.isInteger(input.solicitacaoId) || input.solicitacaoId <= 0) {
       throw new BadRequestException('Solicitação inválida para agendamento.');
     }
@@ -48,7 +45,7 @@ export class NotificacoesService {
       throw new BadRequestException('A data da corrida é inválida.');
     }
 
-    await this.cancelarDaSolicitacao(input.solicitacaoId);
+    await this.cancelarNotificacoesDaSolicitacao.execute(input.solicitacaoId);
 
     if (input.dataCorrida.getTime() <= Date.now()) return;
 
@@ -81,54 +78,18 @@ export class NotificacoesService {
       status: StatusAgendamentoNotificacao.AGENDADA,
     };
 
-    await this.notificacoes.salvarAgendamento(agendamento);
+    await this.notificacaoRepository.salvarAgendamento(agendamento);
 
     try {
-      await this.queue.enfileirar({
+      await this.notificacaoQueue.enfileirar({
         agendamentoId: agendamento.id,
         jobId: agendamento.jobId,
         atrasoEmMs: dispararEm.getTime() - agora,
       });
     } catch (error) {
-      await this.notificacoes.cancelarAgendamento(agendamento.id);
+      await this.notificacaoRepository.cancelarAgendamento(agendamento.id);
       throw error;
     }
-  }
-
-  async cancelarDaSolicitacao(solicitacaoId: number): Promise<void> {
-    const agendamentos =
-      await this.notificacoes.listarAgendamentosDaSolicitacao(solicitacaoId);
-
-    for (const agendamento of agendamentos) {
-      const cancelado = await this.notificacoes.cancelarAgendamento(
-        agendamento.id,
-      );
-      if (!cancelado) continue;
-
-      await Promise.all([
-        this.queue.cancelar(cancelado.jobId),
-        this.notificacoes.removerNotificacoesDoAgendamento(cancelado),
-      ]);
-
-      for (const notificacao of cancelado.notificacoes) {
-        this.events.publicarRemovida(notificacao.usuarioId, notificacao.id);
-      }
-    }
-  }
-
-  listarPorUsuario(usuarioId: number): Promise<Notificacao[]> {
-    return this.notificacoes.listarPorUsuario(usuarioId, 50);
-  }
-
-  contarNaoLidas(usuarioId: number): Promise<number> {
-    return this.notificacoes.contarNaoLidas(usuarioId);
-  }
-
-  marcarComoLida(
-    usuarioId: number,
-    notificacaoId: string,
-  ): Promise<Notificacao | null> {
-    return this.notificacoes.marcarComoLida(usuarioId, notificacaoId);
   }
 
   private valorPositivo(chave: string, padrao: number): number {

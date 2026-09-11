@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotificacoesService } from '@module/notificacoes/services/notificacoes.service';
+import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { Solicitacao } from '../domain/solicitacao';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoDeOutroSolicitanteException } from '../exceptions/solicitacao-de-outro-solicitante.exception';
@@ -13,7 +13,7 @@ export class CancelarSolicitacaoService {
   constructor(
     private readonly solicitacaoRepository: SolicitacaoRepositoryContract,
     private readonly catalogoRepository: CatalogoSolicitacaoRepositoryContract,
-    private readonly notificacoes: NotificacoesService,
+    private readonly cancelarNotificacoesDaSolicitacao: CancelarNotificacoesDaSolicitacaoService,
   ) {}
 
   async execute(
@@ -46,7 +46,7 @@ export class CancelarSolicitacaoService {
       id,
       motivoCancelamentoId,
     );
-    await this.notificacoes.cancelarDaSolicitacao(id);
+    await this.cancelarNotificacoesDaSolicitacao.execute(id);
 
     return cancelada;
   }

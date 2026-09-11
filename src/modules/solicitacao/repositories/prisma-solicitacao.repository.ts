@@ -7,6 +7,7 @@ import {
   FiltrosBuscarSolicitacoes,
   FiltrosBuscarSolicitacoesParaAprovacao,
   DecisaoFornecedor,
+  RegraCorridaInput,
   SolicitacaoRepositoryContract,
 } from './solicitacao-repository.contract';
 import {
@@ -24,6 +25,7 @@ import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
 import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { StatusAprovacao } from '../enums/status-aprovacao.enum';
+import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
 import { SolicitacaoNaoPodeSerDecididaPeloFornecedorException } from '../exceptions/solicitacao-nao-pode-ser-decidida-pelo-fornecedor.exception';
@@ -334,13 +336,23 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     id: number,
     motivoCancelamentoId: number,
   ): Promise<Solicitacao> {
-    await this.prismaService.solicitacao.update({
-      where: { nCdSolicitacao: id },
+    const resultado = await this.prismaService.solicitacao.updateMany({
+      where: {
+        nCdSolicitacao: id,
+        cStatus: {
+          in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+        },
+        Corrida: { none: {} },
+      },
       data: {
         cStatus: StatusSolicitacao.CANCELADA,
         nCdMotivoCancelamento: motivoCancelamentoId,
       },
     });
+
+    if (resultado.count === 0) {
+      throw new SolicitacaoNaoCancelavelException(id);
+    }
 
     const cancelada = await this.buscar(id);
 
@@ -351,11 +363,154 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     return cancelada;
   }
 
+  async criarCorrida(
+    id: number,
+    fornecedorId: number,
+    motoristaId: number,
+    veiculoId: number,
+    regras: RegraCorridaInput[],
+  ): Promise<Solicitacao> {
+    await this.prismaService.$transaction(
+      async (tx) => {
+        const solicitacao = await tx.solicitacao.findFirst({
+          where: { nCdSolicitacao: id, nCdFornecedor: fornecedorId },
+          include: { Corrida: true },
+        });
+
+        if (solicitacao == null) {
+          throw new SolicitacaoNaoEncontradaException(id);
+        }
+
+        const existemCorridasNaoCanceladas = solicitacao.Corrida.some(
+          (corrida) => corrida.cStatus !== StatusCorrida.CANCELADA,
+        );
+
+        if (
+          solicitacao.cStatus !== StatusSolicitacao.APROVADA ||
+          existemCorridasNaoCanceladas
+        ) {
+          throw new SolicitacaoNaoPodeSerDecididaPeloFornecedorException(id);
+        }
+
+        const motorista = await tx.usuario.findFirst({
+          where: {
+            nCdUsuario: motoristaId,
+            nCdFornecedor: fornecedorId,
+            cDisponivel: 'S',
+            dAtivacao: { lte: solicitacao.dCorrida },
+            dDesativacao: null,
+          },
+        });
+        const veiculo = await tx.veiculo.findFirst({
+          where: {
+            nCdFornecedor: fornecedorId,
+            nCdVeiculo: veiculoId,
+            dAtivacao: { lte: solicitacao.dCorrida },
+            dDesativacao: null,
+            ...(solicitacao.nCdTpVeiculo == null
+              ? {}
+              : { nCdTpVeiculo: solicitacao.nCdTpVeiculo }),
+          },
+        });
+
+        if (motorista == null || veiculo == null) {
+          throw new MotoristaOuVeiculoIndisponivelException();
+        }
+
+        const inicio = new Date(solicitacao.dCorrida);
+        inicio.setSeconds(0, 0);
+        const fim = new Date(inicio);
+        fim.setMinutes(fim.getMinutes() + 1);
+
+        const recursoOcupado = await tx.corrida.findFirst({
+          where: {
+            cStatus: { not: StatusCorrida.CANCELADA },
+            dInicioCorrida: { gte: inicio, lt: fim },
+            OR: [
+              { nCdMotorista: motoristaId },
+              { nCdFornecedor: fornecedorId, nCdVeiculo: veiculoId },
+            ],
+          },
+          select: { nCdCorrida: true },
+        });
+
+        if (recursoOcupado != null) {
+          throw new MotoristaOuVeiculoIndisponivelException();
+        }
+
+        const solicitacaoReservada = await tx.solicitacao.updateMany({
+          where: {
+            nCdSolicitacao: id,
+            nCdFornecedor: fornecedorId,
+            cStatus: StatusSolicitacao.APROVADA,
+            Corrida: { none: { cStatus: { not: StatusCorrida.CANCELADA } } },
+          },
+          data: { cMotivoRecusaFornecedor: null },
+        });
+
+        if (solicitacaoReservada.count === 0) {
+          throw new SolicitacaoNaoPodeSerDecididaPeloFornecedorException(id);
+        }
+
+        const ultimaCorrida = await tx.corrida.aggregate({
+          _max: { nCdCorrida: true },
+        });
+        const corridaId = (ultimaCorrida._max.nCdCorrida?.toNumber() ?? 0) + 1;
+
+        await tx.corrida.create({
+          data: {
+            nCdCorrida: corridaId,
+            nCdSolicitacao: id,
+            nCdMotorista: motoristaId,
+            nCdFornecedor: fornecedorId,
+            nCdVeiculo: veiculoId,
+            dInicioCorrida: solicitacao.dCorrida,
+            nKmPercorrido: 0,
+            nValorFinal: solicitacao.nValorEstimado,
+            cStatus: StatusCorrida.AGENDADA,
+          },
+        });
+
+        if (regras.length > 0) {
+          await tx.regraCorrida.createMany({
+            data: regras.map((regra) => ({
+              nCdCorrida: corridaId,
+              nCdContrato: regra.contratoId,
+              nCdRegra: regra.regraId,
+              nValorCobrado: regra.valorCobrado,
+            })),
+          });
+        }
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+
+    const atualizada = await this.buscar(id);
+    if (!atualizada) {
+      throw new SolicitacaoNaoEncontradaException(id);
+    }
+    return atualizada;
+  }
+
   async decidirPeloFornecedor(
     id: number,
     fornecedorId: number,
     decisao: DecisaoFornecedor,
   ): Promise<Solicitacao> {
+    if (decisao.decisao === 'REATRIBUIR') {
+      if (decisao.motoristaId == null || decisao.veiculoId == null) {
+        throw new MotoristaOuVeiculoIndisponivelException();
+      }
+
+      return this.criarCorrida(
+        id,
+        fornecedorId,
+        decisao.motoristaId,
+        decisao.veiculoId,
+        [],
+      );
+    }
+
     await this.prismaService.$transaction(async (tx) => {
       const solicitacao = await tx.solicitacao.findFirst({
         where: { nCdSolicitacao: id, nCdFornecedor: fornecedorId },
@@ -366,87 +521,42 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
         throw new SolicitacaoNaoEncontradaException(id);
       }
 
-      const aguardandoDecisao = solicitacao.Corrida.some(
-        (corrida) =>
-          String(corrida.cStatus) === String(StatusCorrida.CANCELADA),
-      );
+      const aguardandoDecisao =
+        solicitacao.Corrida.length > 0 &&
+        solicitacao.Corrida.every(
+          (corrida) => corrida.cStatus === StatusCorrida.CANCELADA,
+        );
 
       if (
-        String(solicitacao.cStatus) !== String(StatusSolicitacao.APROVADA) ||
+        solicitacao.cStatus !== StatusSolicitacao.APROVADA ||
         !aguardandoDecisao
       ) {
         throw new SolicitacaoNaoPodeSerDecididaPeloFornecedorException(id);
       }
 
-      if (decisao.decisao === 'RECUSAR') {
-        await tx.solicitacao.update({
-          where: { nCdSolicitacao: id },
-          data: {
-            cStatus: StatusSolicitacao.CANCELADA,
-            cMotivoRecusaFornecedor: decisao.motivo?.trim(),
-          },
-        });
-        return;
-      }
-
-      if (decisao.motoristaId == null || decisao.veiculoId == null) {
-        throw new MotoristaOuVeiculoIndisponivelException();
-      }
-
-      const motorista = await tx.usuario.findFirst({
+      const solicitacaoReservada = await tx.solicitacao.updateMany({
         where: {
-          nCdUsuario: decisao.motoristaId,
-          nCdFornecedor: fornecedorId,
-          cDisponivel: 'S',
-          dDesativacao: null,
-        },
-      });
-      const veiculo = await tx.veiculo.findFirst({
-        where: {
-          nCdFornecedor: fornecedorId,
-          nCdVeiculo: decisao.veiculoId,
-          dDesativacao: null,
-        },
-      });
-
-      if (motorista == null || veiculo == null) {
-        throw new MotoristaOuVeiculoIndisponivelException();
-      }
-
-      const corridaAtiva = await tx.corrida.findFirst({
-        where: {
-          nCdMotorista: decisao.motoristaId,
-          cStatus: { in: [StatusCorrida.AGENDADA, StatusCorrida.INICIADA] },
-        },
-        select: { nCdCorrida: true },
-      });
-
-      if (corridaAtiva != null) {
-        throw new MotoristaOuVeiculoIndisponivelException();
-      }
-
-      const ultimaCorrida = await tx.corrida.aggregate({
-        _max: { nCdCorrida: true },
-      });
-      const corridaId = (ultimaCorrida._max.nCdCorrida?.toNumber() ?? 0) + 1;
-
-      await tx.corrida.create({
-        data: {
-          nCdCorrida: corridaId,
           nCdSolicitacao: id,
-          nCdMotorista: decisao.motoristaId,
           nCdFornecedor: fornecedorId,
-          nCdVeiculo: decisao.veiculoId,
-          dInicioCorrida: solicitacao.dCorrida,
-          nKmPercorrido: 0,
-          nValorFinal: solicitacao.nValorEstimado,
-          cStatus: StatusCorrida.AGENDADA,
+          cStatus: StatusSolicitacao.APROVADA,
+          Corrida: {
+            some: { cStatus: StatusCorrida.CANCELADA },
+            none: { cStatus: { not: StatusCorrida.CANCELADA } },
+          },
         },
+        data: { cMotivoRecusaFornecedor: null },
       });
+
+      if (solicitacaoReservada.count === 0) {
+        throw new SolicitacaoNaoPodeSerDecididaPeloFornecedorException(id);
+      }
 
       await tx.solicitacao.update({
         where: { nCdSolicitacao: id },
-        data: { cMotivoRecusaFornecedor: null },
+        data: {
+          cStatus: StatusSolicitacao.CANCELADA,
+          cMotivoRecusaFornecedor: decisao.motivo?.trim(),
+        },
       });
     });
 

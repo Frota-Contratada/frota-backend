@@ -26,9 +26,15 @@ export interface ContextoPrecificacao {
   respostasPerguntas: RespostaPerguntaPrecificacao[];
 }
 
+export interface RegraAplicada {
+  regraId: number;
+  valorCobrado: number;
+}
+
 export interface ResultadoPrecificacao {
   valorEstimado: number;
   rotaFixaId: number;
+  regrasAplicadas: RegraAplicada[];
 }
 
 @Injectable()
@@ -60,24 +66,34 @@ export class CalcularValorEstimadoService {
     }
 
     let valor = 0;
+    const regrasAplicadas: RegraAplicada[] = [];
 
     for (const { regra } of regrasAplicaveis) {
+      let valorCobrado = 0;
+
       if (regra.valorFixo != null) {
-        valor += regra.valorFixo;
+        valorCobrado += regra.valorFixo;
       }
 
       if (regra.valorKm != null) {
-        valor += regra.valorKm * contexto.distanciaKm;
+        valorCobrado += regra.valorKm * contexto.distanciaKm;
       }
 
       if (regra.percentual != null) {
-        valor += valor * (regra.percentual / 100);
+        valorCobrado += valor * (regra.percentual / 100);
       }
+
+      valor += valorCobrado;
+      regrasAplicadas.push({
+        regraId: regra.id,
+        valorCobrado: Math.round(valorCobrado * 100) / 100,
+      });
     }
 
     return {
       valorEstimado: Math.round(valor * 100) / 100,
       rotaFixaId: regrasAplicaveis[0].rotaFixaId,
+      regrasAplicadas,
     };
   }
 

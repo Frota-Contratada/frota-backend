@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import { Notificacao } from '../domain/notificacao';
 
 @Injectable()
-export class NotificacoesEventsService {
+export class NotificacaoEventsService {
   private server?: Server;
 
   attach(server: Server): void {

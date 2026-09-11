@@ -1,3 +1,4 @@
+import { BullMqQueueFactory } from '@core/queue/bullmq-queue.factory';
 import {
   Injectable,
   Logger,
@@ -5,44 +6,43 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ConnectionOptions, Queue, Worker } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
 import { ProcessarNotificacaoWorker } from './processar-notificacao.worker';
 import {
   EnfileirarNotificacaoInput,
   JobEntregarNotificacao,
-  NotificacoesQueueContract,
-} from './notificacoes-queue.contract';
+  NotificacaoQueueContract,
+} from './notificacao-queue.contract';
 
 const NOME_FILA = 'entregas';
 const PREFIXO_FILA = 'bull:notificacoes';
 
 @Injectable()
-export class BullMqNotificacoesQueue
-  extends NotificacoesQueueContract
+export class BullMqNotificacaoQueue
+  extends NotificacaoQueueContract
   implements OnModuleInit, OnModuleDestroy
 {
-  private readonly logger = new Logger(BullMqNotificacoesQueue.name);
+  private readonly logger = new Logger(BullMqNotificacaoQueue.name);
   private queue?: Queue<JobEntregarNotificacao>;
   private worker?: Worker<JobEntregarNotificacao>;
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly queueFactory: BullMqQueueFactory,
     private readonly processarNotificacao: ProcessarNotificacaoWorker,
   ) {
     super();
   }
 
   onModuleInit(): void {
-    const connection = this.criarConexao();
-    this.queue = new Queue<JobEntregarNotificacao>(NOME_FILA, {
-      connection,
-      prefix: PREFIXO_FILA,
-    });
-    this.worker = new Worker<JobEntregarNotificacao>(
+    this.queue = this.queueFactory.criarFila<JobEntregarNotificacao>(
+      NOME_FILA,
+      { prefix: PREFIXO_FILA },
+    );
+    this.worker = this.queueFactory.criarWorker<JobEntregarNotificacao>(
       NOME_FILA,
       async (job) => this.processarNotificacao.executar(job.data),
       {
-        connection,
         prefix: PREFIXO_FILA,
         concurrency: this.valorPositivo('NOTIFICACOES_WORKER_CONCURRENCY', 5),
       },
@@ -90,27 +90,6 @@ export class BullMqNotificacoesQueue
     }
 
     return this.queue;
-  }
-
-  private criarConexao(): ConnectionOptions {
-    const redisUrl = new URL(
-      this.configService.getOrThrow<string>('REDIS_URL'),
-    );
-    const db = Number.parseInt(redisUrl.pathname.slice(1), 10);
-
-    return {
-      host: redisUrl.hostname,
-      port: Number.parseInt(redisUrl.port || '6379', 10),
-      username: redisUrl.username
-        ? decodeURIComponent(redisUrl.username)
-        : undefined,
-      password:
-        this.configService.get<string>('REDIS_PASSWORD') ||
-        (redisUrl.password ? decodeURIComponent(redisUrl.password) : undefined),
-      db: Number.isInteger(db) ? db : undefined,
-      tls: redisUrl.protocol === 'rediss:' ? {} : undefined,
-      maxRetriesPerRequest: null,
-    };
   }
 
   private valorPositivo(chave: string, padrao: number): number {

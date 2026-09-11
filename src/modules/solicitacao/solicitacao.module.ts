@@ -4,8 +4,9 @@ import { PrismaModule } from '@core/prisma/prisma.module';
 import { RotaModule } from '@core/rota/rota.module';
 import { CentroDeCustoModule } from '@module/centro-de-custo/centro-de-custo.module';
 import { MotivoModule } from '@module/motivo/motivo.module';
-import { NotificacoesModule } from '@module/notificacoes/notificacoes.module';
+import { NotificacaoModule } from '@module/notificacao/notificacao.module';
 import { ColaboradorModule } from '@module/usuario/colaborador/colaborador.module';
+import { TrackingModule } from '@module/tracking/tracking.module';
 import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { BuscarCatalogosController } from './controllers/buscar-catalogos.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
@@ -13,9 +14,7 @@ import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-a
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
 import { CriarSolicitacaoController } from './controllers/criar-solicitacao.controller';
 import { DecidirSolicitacaoFornecedorController } from './controllers/decidir-solicitacao-fornecedor.controller';
-import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
 import { BuscarSolicitacoesAprovadorController } from './controllers/buscar-solicitacoes-aprovador.controller';
-import { BuscarMotivosService } from './services/buscar-motivos.service';
 import { SimularSolicitacaoController } from './controllers/simular-solicitacao.controller';
 import { CatalogoSolicitacaoRepositoryContract } from './repositories/catalogo-solicitacao-repository.contract';
 import { ContratoPrecificacaoRepositoryContract } from './repositories/contrato-precificacao-repository.contract';
@@ -31,6 +30,7 @@ import { BuscarSolicitacoesParaAprovacaoService } from './services/buscar-solici
 import { BuscarViagensAgendadasService } from './services/buscar-viagens-agendadas.service';
 import { CalcularValorEstimadoService } from './services/calcular-valor-estimado.service';
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
+import { CriarCorridaService } from './services/criar-corrida.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
 import { DecidirSolicitacaoFornecedorService } from './services/decidir-solicitacao-fornecedor.service';
 import { SelecionarFornecedorService } from './services/selecionar-fornecedor.service';
@@ -45,7 +45,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     ColaboradorModule,
     CentroDeCustoModule,
     MotivoModule,
-    NotificacoesModule,
+    NotificacaoModule,
+    TrackingModule,
   ],
   controllers: [
     BuscarCatalogosController,
@@ -66,6 +67,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
     DecidirSolicitacaoFornecedorService,
+    CriarCorridaService,
     CalcularValorEstimadoService,
     SelecionarFornecedorService,
     BuscarTiposCorridaService,

@@ -8,7 +8,7 @@ export interface EnfileirarNotificacaoInput {
   atrasoEmMs: number;
 }
 
-export abstract class NotificacoesQueueContract {
+export abstract class NotificacaoQueueContract {
   abstract enfileirar(input: EnfileirarNotificacaoInput): Promise<void>;
   abstract cancelar(jobId: string): Promise<void>;
 }

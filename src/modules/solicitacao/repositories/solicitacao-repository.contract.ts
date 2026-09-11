@@ -34,6 +34,12 @@ export interface DecisaoFornecedor {
   motivo?: string;
 }
 
+export interface RegraCorridaInput {
+  contratoId: number;
+  regraId: number;
+  valorCobrado: number;
+}
+
 export abstract class SolicitacaoRepositoryContract {
   abstract criar(solicitacao: Solicitacao): Promise<Solicitacao>;
   abstract existeConflitoDeHorario(
@@ -55,6 +61,13 @@ export abstract class SolicitacaoRepositoryContract {
   abstract cancelar(
     id: number,
     motivoCancelamentoId: number,
+  ): Promise<Solicitacao>;
+  abstract criarCorrida(
+    id: number,
+    fornecedorId: number,
+    motoristaId: number,
+    veiculoId: number,
+    regras: RegraCorridaInput[],
   ): Promise<Solicitacao>;
   abstract decidirPeloFornecedor(
     id: number,

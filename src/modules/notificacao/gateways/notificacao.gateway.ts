@@ -10,7 +10,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { NotificacoesEventsService } from './notificacoes-events.service';
+import { NotificacaoEventsService } from './notificacao-events.service';
 
 type SocketEvents = Record<string, (...args: unknown[]) => void>;
 type AuthenticatedSocket = Socket<
@@ -25,12 +25,12 @@ type AuthenticatedSocket = Socket<
   namespace: '/notificacoes',
   transports: ['websocket', 'polling'],
 })
-export class NotificacoesGateway implements OnGatewayInit, OnGatewayConnection {
+export class NotificacaoGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;
 
   constructor(
     private readonly tokens: TokenServiceContract,
-    private readonly events: NotificacoesEventsService,
+    private readonly events: NotificacaoEventsService,
   ) {}
 
   afterInit(server: Server): void {
