@@ -16,6 +16,7 @@ jobs:
 
     env:
       IMAGE_NAME: frota-backend
+      REDIS_IMAGE: frota-redis:7-alpine
 
     steps:
       - name: Checkout
@@ -30,8 +31,9 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "image=${IMAGE_NAME}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "archive=${IMAGE_NAME}-${SHORT_SHA}.tar" >> "$GITHUB_OUTPUT"
+          echo "redis_archive=frota-redis-7-alpine.tar" >> "$GITHUB_OUTPUT"
 
-      - name: Build image
+      - name: Build backend image
         run: |
           docker build \
             --target runner \
@@ -41,7 +43,7 @@ jobs:
             -t "${{ steps.meta.outputs.image }}" \
             .
 
-      - name: Validate image
+      - name: Validate backend image
         run: |
           docker run \
             --rm \
@@ -55,13 +57,22 @@ jobs:
             "${{ steps.meta.outputs.image }}" \
             -e "require('fs').accessSync('/app/prisma/schema.prisma')"
 
-      - name: Export image
+      - name: Prepare Redis image
+        run: |
+          docker pull --platform linux/amd64 redis:7-alpine
+          docker tag redis:7-alpine "${REDIS_IMAGE}"
+
+      - name: Export images
         run: |
           mkdir -p artifact
 
           docker save \
             -o "artifact/${{ steps.meta.outputs.archive }}" \
             "${{ steps.meta.outputs.image }}"
+
+          docker save \
+            -o "artifact/${{ steps.meta.outputs.redis_archive }}" \
+            "${REDIS_IMAGE}"
 
       - name: Create manifest
         shell: bash
@@ -73,16 +84,27 @@ jobs:
             "shortCommit": "${{ steps.meta.outputs.short_sha }}",
             "image": "${{ steps.meta.outputs.image }}",
             "archive": "${{ steps.meta.outputs.archive }}",
+            "runtimeImages": {
+              "redis": {
+                "source": "redis:7-alpine",
+                "image": "${REDIS_IMAGE}",
+                "archive": "${{ steps.meta.outputs.redis_archive }}"
+              }
+            },
             "createdAt": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           }
           EOF
 
-      - name: Generate checksum
+      - name: Generate checksums
         working-directory: artifact
         run: |
           sha256sum \
             "${{ steps.meta.outputs.archive }}" \
             > "${{ steps.meta.outputs.archive }}.sha256"
+
+          sha256sum \
+            "${{ steps.meta.outputs.redis_archive }}" \
+            > "${{ steps.meta.outputs.redis_archive }}.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -94,8 +116,9 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Backend image" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Backend runtime" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Image: \`${{ steps.meta.outputs.image }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Backend: \`${{ steps.meta.outputs.image }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Redis: \`${REDIS_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Artifact: \`frota-backend-${{ steps.meta.outputs.short_sha }}\`" >> "$GITHUB_STEP_SUMMARY"
