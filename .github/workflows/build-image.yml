@@ -1,0 +1,101 @@
+﻿name: Build Backend Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build production image
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: frota-backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image metadata
+        id: meta
+        shell: bash
+        run: |
+          SHORT_SHA="${GITHUB_SHA::12}"
+
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_NAME}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "archive=${IMAGE_NAME}-${SHORT_SHA}.tar" >> "$GITHUB_OUTPUT"
+
+      - name: Build image
+        run: |
+          docker build \
+            --target runner \
+            --build-arg BACKEND_PORT=3000 \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.source=${GITHUB_REPOSITORY}" \
+            -t "${{ steps.meta.outputs.image }}" \
+            .
+
+      - name: Validate image
+        run: |
+          docker run \
+            --rm \
+            --entrypoint node \
+            "${{ steps.meta.outputs.image }}" \
+            -e "require('fs').accessSync('/app/dist/src/main.js')"
+
+          docker run \
+            --rm \
+            --entrypoint node \
+            "${{ steps.meta.outputs.image }}" \
+            -e "require('fs').accessSync('/app/prisma/schema.prisma')"
+
+      - name: Export image
+        run: |
+          mkdir -p artifact
+
+          docker save \
+            -o "artifact/${{ steps.meta.outputs.archive }}" \
+            "${{ steps.meta.outputs.image }}"
+
+      - name: Create manifest
+        shell: bash
+        run: |
+          cat > artifact/manifest.json <<EOF
+          {
+            "repository": "${GITHUB_REPOSITORY}",
+            "commit": "${GITHUB_SHA}",
+            "shortCommit": "${{ steps.meta.outputs.short_sha }}",
+            "image": "${{ steps.meta.outputs.image }}",
+            "archive": "${{ steps.meta.outputs.archive }}",
+            "createdAt": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          }
+          EOF
+
+      - name: Generate checksum
+        working-directory: artifact
+        run: |
+          sha256sum \
+            "${{ steps.meta.outputs.archive }}" \
+            > "${{ steps.meta.outputs.archive }}.sha256"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frota-backend-${{ steps.meta.outputs.short_sha }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Summary
+        run: |
+          echo "## Backend image" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${{ steps.meta.outputs.image }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact: \`frota-backend-${{ steps.meta.outputs.short_sha }}\`" >> "$GITHUB_STEP_SUMMARY"
