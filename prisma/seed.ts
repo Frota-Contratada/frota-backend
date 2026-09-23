@@ -13,12 +13,23 @@ const prisma = new PrismaClient({
 
 const SENHA_PADRAO = 'Teste@123';
 
-const FILIAL_ID = 1;
+const FILIAL = {
+  LONDRINA: 1,
+  MARINGA: 2,
+};
+
+/** Filial usada pelas solicitações de demonstração criadas manualmente. */
+const FILIAL_ID = FILIAL.LONDRINA;
 
 const CENTRO_CUSTO = {
   OPERACOES: 101,
   ADMINISTRATIVO: 102,
   LOGISTICA: 103,
+};
+
+const CENTRO_CUSTO_MARINGA = {
+  COMERCIAL: 201,
+  SUPRIMENTOS: 202,
 };
 
 const USUARIO = {
@@ -29,6 +40,18 @@ const USUARIO = {
   APROVADOR_ADMINISTRATIVO: 1004,
   APROVADOR_LOGISTICA: 1005,
   ACOMPANHANTE: 1006,
+  ADMIN_FILIAL_LONDRINA: 1010,
+  ADMIN_FILIAL_MARINGA: 1011,
+  ADMIN_FORNECEDOR_AURORA: 1012,
+  ADMIN_FORNECEDOR_ROTA_CERTA: 1013,
+  ADMIN_FORNECEDOR_VIA_NORTE: 1014,
+  MOTORISTA_AURORA_NOTURNO: 1015,
+  MOTORISTA_ROTA_CERTA: 1016,
+  MOTORISTA_VIA_NORTE: 1017,
+  SOLICITANTE_LOGISTICA: 1020,
+  SOLICITANTE_MARINGA: 1021,
+  APROVADOR_COMERCIAL_MARINGA: 1022,
+  APROVADOR_SUPRIMENTOS_MARINGA: 1023,
 };
 
 const CPF = {
@@ -39,6 +62,18 @@ const CPF = {
   APROVADOR_OPERACOES: '22233344455',
   APROVADOR_ADMINISTRATIVO: '33344455566',
   APROVADOR_LOGISTICA: '44455566677',
+  ADMIN_FILIAL_LONDRINA: '12345678901',
+  ADMIN_FILIAL_MARINGA: '12345678902',
+  ADMIN_FORNECEDOR_AURORA: '90011122233',
+  ADMIN_FORNECEDOR_ROTA_CERTA: '90022233344',
+  ADMIN_FORNECEDOR_VIA_NORTE: '90033344455',
+  MOTORISTA_AURORA_NOTURNO: '99911122233',
+  MOTORISTA_ROTA_CERTA: '99922233344',
+  MOTORISTA_VIA_NORTE: '99933344455',
+  SOLICITANTE_LOGISTICA: '77711122233',
+  SOLICITANTE_MARINGA: '77722233344',
+  APROVADOR_COMERCIAL_MARINGA: '66611122233',
+  APROVADOR_SUPRIMENTOS_MARINGA: '66622233344',
 };
 
 const TIPO_CORRIDA = {
@@ -47,8 +82,8 @@ const TIPO_CORRIDA = {
   EMERGENCIAL: 3,
 };
 const TIPO_VEICULO = { MOTO: 1, CARRO: 2, VAN: 3 };
-const FORNECEDOR = { AURORA: 1, ROTA_CERTA: 2 };
-const CONTRATO = { AURORA: 1, ROTA_CERTA: 2 };
+const FORNECEDOR = { AURORA: 1, ROTA_CERTA: 2, VIA_NORTE: 3 };
+const CONTRATO = { AURORA: 1, ROTA_CERTA: 2, VIA_NORTE: 3 };
 
 const TIPO_MOTIVO = {
   SOLICITACAO: '1',
@@ -176,6 +211,61 @@ const PONTO = {
     latitude: -23.3182,
     longitude: -51.1441,
   },
+  FILIAL_MARINGA: {
+    id: 9,
+    logradouro: 'Avenida Colombo',
+    numero: '5790',
+    bairro: 'Zona 7',
+    cidade: 'Maringá',
+    uf: 'PR',
+    cep: '87020900',
+    latitude: -23.4053,
+    longitude: -51.9331,
+  },
+  AEROPORTO_MARINGA: {
+    id: 10,
+    logradouro: 'Rodovia PR-317',
+    numero: 'Km 10',
+    bairro: 'Aeroporto',
+    cidade: 'Maringá',
+    uf: 'PR',
+    cep: '87065005',
+    latitude: -23.4763,
+    longitude: -52.0161,
+  },
+  CENTRO_DISTRIBUICAO_MARINGA: {
+    id: 11,
+    logradouro: 'Avenida Tuiuti',
+    numero: '1800',
+    bairro: 'Zona 5',
+    cidade: 'Maringá',
+    uf: 'PR',
+    cep: '87015100',
+    latitude: -23.421,
+    longitude: -51.949,
+  },
+  CLIENTE_MARINGA: {
+    id: 12,
+    logradouro: 'Avenida Brasil',
+    numero: '4300',
+    bairro: 'Zona 1',
+    cidade: 'Maringá',
+    uf: 'PR',
+    cep: '87013000',
+    latitude: -23.4253,
+    longitude: -51.9386,
+  },
+  HOSPITAL_MARINGA: {
+    id: 13,
+    logradouro: 'Avenida Mandacaru',
+    numero: '1590',
+    bairro: 'Mandacaru',
+    cidade: 'Maringá',
+    uf: 'PR',
+    cep: '87080000',
+    latitude: -23.4034,
+    longitude: -51.9128,
+  },
 } satisfies Record<string, PontoSeed>;
 
 const RAIO_TERRA_KM = 6371;
@@ -184,6 +274,39 @@ const VELOCIDADE_MEDIA_KMH = 50;
 
 const BANDEIRADA = 7.5;
 const VALOR_KM = 2.9;
+
+/** Acréscimo da regra percentual dos contratos para corridas noturnas. */
+const ADICIONAL_NOTURNO = 0.2;
+const HORA_INICIO_NOTURNO = 22;
+
+interface TarifaContrato {
+  bandeirada: number;
+  valorKm: number;
+}
+
+const CONTRATOS = [
+  {
+    id: CONTRATO.AURORA,
+    fornecedorId: FORNECEDOR.AURORA,
+    bandeirada: BANDEIRADA,
+    valorKm: VALOR_KM,
+    filiais: [FILIAL.LONDRINA, FILIAL.MARINGA],
+  },
+  {
+    id: CONTRATO.ROTA_CERTA,
+    fornecedorId: FORNECEDOR.ROTA_CERTA,
+    bandeirada: 9.0,
+    valorKm: 3.4,
+    filiais: [FILIAL.LONDRINA, FILIAL.MARINGA],
+  },
+  {
+    id: CONTRATO.VIA_NORTE,
+    fornecedorId: FORNECEDOR.VIA_NORTE,
+    bandeirada: 6.5,
+    valorKm: 2.6,
+    filiais: [FILIAL.LONDRINA, FILIAL.MARINGA],
+  },
+];
 
 const paraRadianos = (graus: number) => (graus * Math.PI) / 180;
 
@@ -399,39 +522,63 @@ async function semearEnderecos() {
   }
 }
 
-async function semearFilialECentrosCusto() {
-  await prisma.filial.upsert({
-    where: { nCdFilial: FILIAL_ID },
-    update: { cNmFilial: 'Filial Londrina', nCdEndereco: PONTO.FILIAL.id },
-    create: {
-      nCdFilial: FILIAL_ID,
-      cNmFilial: 'Filial Londrina',
-      cCNPJ: '12345678000190',
-      nCdEndereco: PONTO.FILIAL.id,
+async function semearFiliaisECentrosCusto() {
+  const filiais = [
+    {
+      id: FILIAL.LONDRINA,
+      nome: 'Filial Londrina',
+      cnpj: '12345678000190',
+      enderecoId: PONTO.FILIAL.id,
+      centrosCusto: [
+        { id: CENTRO_CUSTO.OPERACOES, nome: 'Operações' },
+        { id: CENTRO_CUSTO.ADMINISTRATIVO, nome: 'Administrativo' },
+        { id: CENTRO_CUSTO.LOGISTICA, nome: 'Logística' },
+      ],
     },
-  });
-
-  const centrosCusto = [
-    { id: CENTRO_CUSTO.OPERACOES, nome: 'Operações' },
-    { id: CENTRO_CUSTO.ADMINISTRATIVO, nome: 'Administrativo' },
-    { id: CENTRO_CUSTO.LOGISTICA, nome: 'Logística' },
+    {
+      id: FILIAL.MARINGA,
+      nome: 'Filial Maringá',
+      cnpj: '12345678000271',
+      enderecoId: PONTO.FILIAL_MARINGA.id,
+      centrosCusto: [
+        { id: CENTRO_CUSTO_MARINGA.COMERCIAL, nome: 'Comercial' },
+        { id: CENTRO_CUSTO_MARINGA.SUPRIMENTOS, nome: 'Suprimentos' },
+      ],
+    },
   ];
 
-  for (const centroCusto of centrosCusto) {
-    await prisma.centroCusto.upsert({
-      where: {
-        nCdFilial_nCdCentroCusto: {
-          nCdFilial: FILIAL_ID,
-          nCdCentroCusto: centroCusto.id,
-        },
+  for (const filial of filiais) {
+    await prisma.filial.upsert({
+      where: { nCdFilial: filial.id },
+      update: {
+        cNmFilial: filial.nome,
+        nCdEndereco: filial.enderecoId,
+        dDesativacao: null,
       },
-      update: { cNmCentroCusto: centroCusto.nome, dDesativacao: null },
       create: {
-        nCdFilial: FILIAL_ID,
-        nCdCentroCusto: centroCusto.id,
-        cNmCentroCusto: centroCusto.nome,
+        nCdFilial: filial.id,
+        cNmFilial: filial.nome,
+        cCNPJ: filial.cnpj,
+        nCdEndereco: filial.enderecoId,
       },
     });
+
+    for (const centroCusto of filial.centrosCusto) {
+      await prisma.centroCusto.upsert({
+        where: {
+          nCdFilial_nCdCentroCusto: {
+            nCdFilial: filial.id,
+            nCdCentroCusto: centroCusto.id,
+          },
+        },
+        update: { cNmCentroCusto: centroCusto.nome, dDesativacao: null },
+        create: {
+          nCdFilial: filial.id,
+          nCdCentroCusto: centroCusto.id,
+          cNmCentroCusto: centroCusto.nome,
+        },
+      });
+    }
   }
 }
 
@@ -506,6 +653,118 @@ async function semearUsuarios() {
       centroCustoId: CENTRO_CUSTO.LOGISTICA,
       perfis: ['aprovador'],
     },
+    {
+      id: USUARIO.ADMIN_FILIAL_LONDRINA,
+      nome: 'Fernanda Arruda',
+      email: 'fernanda.arruda@frota.com.br',
+      cargo: 'Administradora da filial',
+      cpf: CPF.ADMIN_FILIAL_LONDRINA,
+      filialId: FILIAL.LONDRINA,
+      perfis: ['admin-filial'],
+    },
+    {
+      id: USUARIO.ADMIN_FILIAL_MARINGA,
+      nome: 'Gustavo Peixoto',
+      email: 'gustavo.peixoto@frota.com.br',
+      cargo: 'Administrador da filial',
+      cpf: CPF.ADMIN_FILIAL_MARINGA,
+      filialId: FILIAL.MARINGA,
+      perfis: ['admin-filial'],
+    },
+    {
+      id: USUARIO.ADMIN_FORNECEDOR_AURORA,
+      nome: 'Helena Tavares',
+      email: 'helena.tavares@transportesaurora.com.br',
+      cargo: 'Gestora de frota',
+      cpf: CPF.ADMIN_FORNECEDOR_AURORA,
+      fornecedorId: FORNECEDOR.AURORA,
+      perfis: ['admin-fornecedor'],
+    },
+    {
+      id: USUARIO.ADMIN_FORNECEDOR_ROTA_CERTA,
+      nome: 'Igor Salgado',
+      email: 'igor.salgado@rotacerta.com.br',
+      cargo: 'Gestor de frota',
+      cpf: CPF.ADMIN_FORNECEDOR_ROTA_CERTA,
+      fornecedorId: FORNECEDOR.ROTA_CERTA,
+      perfis: ['admin-fornecedor'],
+    },
+    {
+      id: USUARIO.ADMIN_FORNECEDOR_VIA_NORTE,
+      nome: 'Juliana Freitas',
+      email: 'juliana.freitas@vianorte.com.br',
+      cargo: 'Gestora de frota',
+      cpf: CPF.ADMIN_FORNECEDOR_VIA_NORTE,
+      fornecedorId: FORNECEDOR.VIA_NORTE,
+      perfis: ['admin-fornecedor'],
+    },
+    {
+      id: USUARIO.MOTORISTA_AURORA_NOTURNO,
+      nome: 'Marcos Vinícius Alves',
+      email: 'marcos.alves@transportesaurora.com.br',
+      cargo: 'Motorista',
+      cpf: CPF.MOTORISTA_AURORA_NOTURNO,
+      fornecedorId: FORNECEDOR.AURORA,
+      perfis: ['motorista'],
+    },
+    {
+      id: USUARIO.MOTORISTA_ROTA_CERTA,
+      nome: 'Rafael Domingues',
+      email: 'rafael.domingues@rotacerta.com.br',
+      cargo: 'Motorista',
+      cpf: CPF.MOTORISTA_ROTA_CERTA,
+      fornecedorId: FORNECEDOR.ROTA_CERTA,
+      perfis: ['motorista'],
+    },
+    {
+      id: USUARIO.MOTORISTA_VIA_NORTE,
+      nome: 'Tatiane Moraes',
+      email: 'tatiane.moraes@vianorte.com.br',
+      cargo: 'Motorista',
+      cpf: CPF.MOTORISTA_VIA_NORTE,
+      fornecedorId: FORNECEDOR.VIA_NORTE,
+      perfis: ['motorista'],
+    },
+    {
+      id: USUARIO.SOLICITANTE_LOGISTICA,
+      nome: 'Bruno Cavalcanti',
+      email: 'bruno.cavalcanti@frota.com.br',
+      cargo: 'Analista de Suprimentos',
+      cpf: CPF.SOLICITANTE_LOGISTICA,
+      filialId: FILIAL.LONDRINA,
+      centroCustoId: CENTRO_CUSTO.LOGISTICA,
+      perfis: ['solicitante'],
+    },
+    {
+      id: USUARIO.SOLICITANTE_MARINGA,
+      nome: 'Larissa Antunes',
+      email: 'larissa.antunes@frota.com.br',
+      cargo: 'Executiva de Contas',
+      cpf: CPF.SOLICITANTE_MARINGA,
+      filialId: FILIAL.MARINGA,
+      centroCustoId: CENTRO_CUSTO_MARINGA.COMERCIAL,
+      perfis: ['solicitante'],
+    },
+    {
+      id: USUARIO.APROVADOR_COMERCIAL_MARINGA,
+      nome: 'Otávio Bastos',
+      email: 'otavio.bastos@frota.com.br',
+      cargo: 'Gerente Comercial',
+      cpf: CPF.APROVADOR_COMERCIAL_MARINGA,
+      filialId: FILIAL.MARINGA,
+      centroCustoId: CENTRO_CUSTO_MARINGA.COMERCIAL,
+      perfis: ['aprovador', 'solicitante'],
+    },
+    {
+      id: USUARIO.APROVADOR_SUPRIMENTOS_MARINGA,
+      nome: 'Patrícia Lemos',
+      email: 'patricia.lemos@frota.com.br',
+      cargo: 'Coordenadora de Suprimentos',
+      cpf: CPF.APROVADOR_SUPRIMENTOS_MARINGA,
+      filialId: FILIAL.MARINGA,
+      centroCustoId: CENTRO_CUSTO_MARINGA.SUPRIMENTOS,
+      perfis: ['aprovador'],
+    },
   ];
 
   for (const usuario of usuarios) {
@@ -558,6 +817,11 @@ async function semearFornecedores() {
       nome: 'Rota Certa Mobilidade',
       cnpj: '45678912000155',
     },
+    {
+      id: FORNECEDOR.VIA_NORTE,
+      nome: 'Via Norte Transportes',
+      cnpj: '32165498000177',
+    },
   ];
 
   for (const fornecedor of fornecedores) {
@@ -574,20 +838,7 @@ async function semearFornecedores() {
 }
 
 async function semearContratos() {
-  const contratos = [
-    {
-      id: CONTRATO.AURORA,
-      fornecedorId: FORNECEDOR.AURORA,
-      bandeirada: BANDEIRADA,
-      valorKm: VALOR_KM,
-    },
-    {
-      id: CONTRATO.ROTA_CERTA,
-      fornecedorId: FORNECEDOR.ROTA_CERTA,
-      bandeirada: 9.0,
-      valorKm: 3.4,
-    },
-  ];
+  const contratos = CONTRATOS;
 
   for (const contrato of contratos) {
     await prisma.contrato.upsert({
@@ -601,21 +852,23 @@ async function semearContratos() {
       },
     });
 
-    await prisma.filialFornecedor.upsert({
-      where: {
-        nCdFilial_nCdFornecedor_nCdContrato: {
-          nCdFilial: FILIAL_ID,
+    for (const filialId of contrato.filiais) {
+      await prisma.filialFornecedor.upsert({
+        where: {
+          nCdFilial_nCdFornecedor_nCdContrato: {
+            nCdFilial: filialId,
+            nCdFornecedor: contrato.fornecedorId,
+            nCdContrato: contrato.id,
+          },
+        },
+        update: {},
+        create: {
+          nCdFilial: filialId,
           nCdFornecedor: contrato.fornecedorId,
           nCdContrato: contrato.id,
         },
-      },
-      update: {},
-      create: {
-        nCdFilial: FILIAL_ID,
-        nCdFornecedor: contrato.fornecedorId,
-        nCdContrato: contrato.id,
-      },
-    });
+      });
+    }
 
     for (const tipoCorridaId of Object.values(TIPO_CORRIDA)) {
       await prisma.modalidadeContrato.upsert({
@@ -694,21 +947,73 @@ async function semearContratos() {
 
 async function semearVeiculos() {
   const veiculos = [
-    { id: 1, placa: 'ABC1D23', tipo: TIPO_VEICULO.CARRO },
-    { id: 2, placa: 'XYZ9K88', tipo: TIPO_VEICULO.MOTO },
+    {
+      fornecedorId: FORNECEDOR.AURORA,
+      id: 1,
+      placa: 'ABC1D23',
+      tipo: TIPO_VEICULO.CARRO,
+    },
+    {
+      fornecedorId: FORNECEDOR.AURORA,
+      id: 2,
+      placa: 'XYZ9K88',
+      tipo: TIPO_VEICULO.MOTO,
+    },
+    {
+      fornecedorId: FORNECEDOR.AURORA,
+      id: 3,
+      placa: 'AUR3V11',
+      tipo: TIPO_VEICULO.VAN,
+    },
+    {
+      fornecedorId: FORNECEDOR.ROTA_CERTA,
+      id: 1,
+      placa: 'RCT1A11',
+      tipo: TIPO_VEICULO.CARRO,
+    },
+    {
+      fornecedorId: FORNECEDOR.ROTA_CERTA,
+      id: 2,
+      placa: 'RCT2M22',
+      tipo: TIPO_VEICULO.MOTO,
+    },
+    {
+      fornecedorId: FORNECEDOR.ROTA_CERTA,
+      id: 3,
+      placa: 'RCT3V33',
+      tipo: TIPO_VEICULO.VAN,
+    },
+    {
+      fornecedorId: FORNECEDOR.VIA_NORTE,
+      id: 1,
+      placa: 'VNT1A44',
+      tipo: TIPO_VEICULO.CARRO,
+    },
+    {
+      fornecedorId: FORNECEDOR.VIA_NORTE,
+      id: 2,
+      placa: 'VNT2M55',
+      tipo: TIPO_VEICULO.MOTO,
+    },
+    {
+      fornecedorId: FORNECEDOR.VIA_NORTE,
+      id: 3,
+      placa: 'VNT3V66',
+      tipo: TIPO_VEICULO.VAN,
+    },
   ];
 
   for (const veiculo of veiculos) {
     await prisma.veiculo.upsert({
       where: {
         nCdFornecedor_nCdVeiculo: {
-          nCdFornecedor: FORNECEDOR.AURORA,
+          nCdFornecedor: veiculo.fornecedorId,
           nCdVeiculo: veiculo.id,
         },
       },
       update: { nCdTpVeiculo: veiculo.tipo, dDesativacao: null },
       create: {
-        nCdFornecedor: FORNECEDOR.AURORA,
+        nCdFornecedor: veiculo.fornecedorId,
         nCdVeiculo: veiculo.id,
         nCdTpVeiculo: veiculo.tipo,
         cPlaca: veiculo.placa,
@@ -962,18 +1267,673 @@ async function semearSolicitacoes() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Histórico para os dashboards
+//
+// Os dashboards de admin master, admin de filial e aprovador leem corridas por
+// período: sem filtro o período vai de 1º de janeiro até hoje, e a variação
+// percentual dos cards compara com o mês anterior ao início do período. Por
+// isso o histórico cobre de dezembro do ano passado até o mês atual.
+//
+// O sorteio é determinístico (mesma semente, mesmos dados), então rodar o seed
+// novamente atualiza as mesmas solicitações em vez de duplicar o histórico.
+// ---------------------------------------------------------------------------
+
+const SEMENTE_HISTORICO = 20260101;
+const PRIMEIRA_SOLICITACAO_HISTORICO = 2000;
+const PRIMEIRA_CORRIDA_HISTORICO = 2000;
+/**
+ * Faixa de códigos reservada ao histórico. As solicitações de demonstração
+ * (1 a 7) e as do seed aditivo (10001 em diante) ficam de fora.
+ */
+const ULTIMO_CODIGO_HISTORICO = 9999;
+const CORRIDAS_POR_MES = { minimo: 9, maximo: 16 };
+const SOLICITACOES_PENDENTES = 6;
+
+type Sorteio = () => number;
+
+/** Congruência linear simples: basta ser estável entre execuções. */
+const criarSorteio = (semente: number): Sorteio => {
+  let estado = semente >>> 0;
+
+  return () => {
+    estado = (Math.imul(estado, 1664525) + 1013904223) >>> 0;
+
+    return estado / 0x1_0000_0000;
+  };
+};
+
+const entre = (sortear: Sorteio, minimo: number, maximo: number): number =>
+  minimo + sortear() * (maximo - minimo);
+
+const inteiroEntre = (
+  sortear: Sorteio,
+  minimo: number,
+  maximo: number,
+): number => Math.floor(entre(sortear, minimo, maximo + 1));
+
+const escolher = <T>(sortear: Sorteio, itens: T[]): T =>
+  itens[Math.min(itens.length - 1, Math.floor(sortear() * itens.length))];
+
+const ocorre = (sortear: Sorteio, probabilidade: number): boolean =>
+  sortear() < probabilidade;
+
+const escolherPorPeso = <T extends { peso: number }>(
+  sortear: Sorteio,
+  itens: T[],
+): T => {
+  const total = itens.reduce((soma, item) => soma + item.peso, 0);
+  let acumulado = sortear() * total;
+
+  for (const item of itens) {
+    acumulado -= item.peso;
+    if (acumulado <= 0) return item;
+  }
+
+  return itens[itens.length - 1];
+};
+
+const precoDoContrato = (
+  tarifa: TarifaContrato,
+  km: number,
+  hora: number,
+): number => {
+  const base = tarifa.bandeirada + tarifa.valorKm * km;
+  const adicional = hora >= HORA_INICIO_NOTURNO ? base * ADICIONAL_NOTURNO : 0;
+
+  return Math.round((base + adicional) * 100) / 100;
+};
+
+interface FornecedorHistorico {
+  fornecedorId: number;
+  contratoId: number;
+  tarifa: TarifaContrato;
+  motoristas: number[];
+  veiculoPorTipo: Record<number, number>;
+  peso: number;
+  /**
+   * Faixa de razão entre km cobrado e km estimado. A auditoria classifica como
+   * desvio alto a partir de 20%, então a Via Norte aparece como fornecedor em
+   * risco e as demais ficam dentro do esperado.
+   */
+  desvioMinimo: number;
+  desvioMaximo: number;
+}
+
+const FORNECEDORES_HISTORICO: FornecedorHistorico[] = [
+  {
+    fornecedorId: FORNECEDOR.AURORA,
+    contratoId: CONTRATO.AURORA,
+    tarifa: { bandeirada: BANDEIRADA, valorKm: VALOR_KM },
+    motoristas: [USUARIO.MOTORISTA, USUARIO.MOTORISTA_AURORA_NOTURNO],
+    veiculoPorTipo: {
+      [TIPO_VEICULO.CARRO]: 1,
+      [TIPO_VEICULO.MOTO]: 2,
+      [TIPO_VEICULO.VAN]: 3,
+    },
+    peso: 45,
+    desvioMinimo: 0.97,
+    desvioMaximo: 1.09,
+  },
+  {
+    fornecedorId: FORNECEDOR.ROTA_CERTA,
+    contratoId: CONTRATO.ROTA_CERTA,
+    tarifa: { bandeirada: 9.0, valorKm: 3.4 },
+    motoristas: [USUARIO.MOTORISTA_ROTA_CERTA],
+    veiculoPorTipo: {
+      [TIPO_VEICULO.CARRO]: 1,
+      [TIPO_VEICULO.MOTO]: 2,
+      [TIPO_VEICULO.VAN]: 3,
+    },
+    peso: 35,
+    desvioMinimo: 1.0,
+    desvioMaximo: 1.16,
+  },
+  {
+    fornecedorId: FORNECEDOR.VIA_NORTE,
+    contratoId: CONTRATO.VIA_NORTE,
+    tarifa: { bandeirada: 6.5, valorKm: 2.6 },
+    motoristas: [USUARIO.MOTORISTA_VIA_NORTE],
+    veiculoPorTipo: {
+      [TIPO_VEICULO.CARRO]: 1,
+      [TIPO_VEICULO.MOTO]: 2,
+      [TIPO_VEICULO.VAN]: 3,
+    },
+    peso: 20,
+    desvioMinimo: 1.18,
+    desvioMaximo: 1.45,
+  },
+];
+
+interface CentroCustoHistorico {
+  centroCustoId: number;
+  aprovadorId: number;
+}
+
+interface FilialHistorico {
+  filialId: number;
+  origem: PontoSeed;
+  destinos: PontoSeed[];
+  /** Destinos em outra cidade: corridas longas e caras, boas para os cards de gasto. */
+  destinosIntermunicipais: PontoSeed[];
+  centrosCusto: CentroCustoHistorico[];
+  solicitantes: { id: number; cpf: string }[];
+  cpfsPassageiros: string[];
+}
+
+const FILIAIS_HISTORICO: FilialHistorico[] = [
+  {
+    filialId: FILIAL.LONDRINA,
+    origem: PONTO.FILIAL,
+    destinos: [
+      PONTO.AEROPORTO,
+      PONTO.SHOPPING,
+      PONTO.UNIVERSIDADE,
+      PONTO.CLIENTE_CENTRO,
+      PONTO.HOSPITAL,
+      PONTO.CASA,
+    ],
+    destinosIntermunicipais: [
+      PONTO.FILIAL_MARINGA,
+      PONTO.CENTRO_DISTRIBUICAO_MARINGA,
+    ],
+    centrosCusto: [
+      {
+        centroCustoId: CENTRO_CUSTO.OPERACOES,
+        aprovadorId: USUARIO.APROVADOR_OPERACOES,
+      },
+      {
+        centroCustoId: CENTRO_CUSTO.ADMINISTRATIVO,
+        aprovadorId: USUARIO.APROVADOR_ADMINISTRATIVO,
+      },
+      {
+        centroCustoId: CENTRO_CUSTO.LOGISTICA,
+        aprovadorId: USUARIO.APROVADOR_LOGISTICA,
+      },
+    ],
+    solicitantes: [
+      { id: USUARIO.PASSAGEIRO, cpf: CPF.PASSAGEIRO },
+      { id: USUARIO.ACOMPANHANTE, cpf: CPF.ACOMPANHANTE },
+      { id: USUARIO.SOLICITANTE_LOGISTICA, cpf: CPF.SOLICITANTE_LOGISTICA },
+    ],
+    cpfsPassageiros: [
+      CPF.PASSAGEIRO,
+      CPF.ACOMPANHANTE,
+      CPF.SOLICITANTE_LOGISTICA,
+      CPF.APROVADOR_OPERACOES,
+    ],
+  },
+  {
+    filialId: FILIAL.MARINGA,
+    origem: PONTO.FILIAL_MARINGA,
+    destinos: [
+      PONTO.AEROPORTO_MARINGA,
+      PONTO.CENTRO_DISTRIBUICAO_MARINGA,
+      PONTO.CLIENTE_MARINGA,
+      PONTO.HOSPITAL_MARINGA,
+    ],
+    destinosIntermunicipais: [PONTO.FILIAL, PONTO.AEROPORTO],
+    centrosCusto: [
+      {
+        centroCustoId: CENTRO_CUSTO_MARINGA.COMERCIAL,
+        aprovadorId: USUARIO.APROVADOR_COMERCIAL_MARINGA,
+      },
+      {
+        centroCustoId: CENTRO_CUSTO_MARINGA.SUPRIMENTOS,
+        aprovadorId: USUARIO.APROVADOR_SUPRIMENTOS_MARINGA,
+      },
+    ],
+    solicitantes: [
+      { id: USUARIO.SOLICITANTE_MARINGA, cpf: CPF.SOLICITANTE_MARINGA },
+      {
+        id: USUARIO.APROVADOR_COMERCIAL_MARINGA,
+        cpf: CPF.APROVADOR_COMERCIAL_MARINGA,
+      },
+    ],
+    cpfsPassageiros: [
+      CPF.SOLICITANTE_MARINGA,
+      CPF.APROVADOR_COMERCIAL_MARINGA,
+      CPF.APROVADOR_SUPRIMENTOS_MARINGA,
+    ],
+  },
+];
+
+const MOTIVOS_POR_TIPO_CORRIDA: Record<number, number[]> = {
+  [TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO]: [
+    MOTIVO.VIAGEM_TRABALHO,
+    MOTIVO.REUNIAO_EXTERNA,
+    MOTIVO.VISITA_CLIENTE,
+  ],
+  [TIPO_CORRIDA.TRANSPORTE_OBJETO]: [
+    MOTIVO.OBJ_DOCUMENTOS,
+    MOTIVO.OBJ_EQUIPAMENTOS,
+    MOTIVO.OBJ_ENCOMENDAS,
+    MOTIVO.OBJ_MATERIAIS,
+    MOTIVO.OBJ_OUTROS,
+  ],
+  [TIPO_CORRIDA.EMERGENCIAL]: [MOTIVO.EMERGENCIA],
+};
+
+const MOTIVOS_CANCELAMENTO = [
+  MOTIVO.CANCEL_MUDANCA_AGENDA,
+  MOTIVO.CANCEL_NAO_PRECISO,
+  MOTIVO.CANCEL_ERRO,
+];
+
+const MOTIVOS_RECUSA = [
+  MOTIVO.RECUSA_FORA_POLITICA,
+  MOTIVO.RECUSA_CC_INCORRETO,
+  MOTIVO.RECUSA_SEM_VERBA,
+];
+
+type SituacaoHistorica = 'finalizada' | 'cancelada' | 'reprovada' | 'pendente';
+
+interface CorridaHistorica {
+  solicitacaoId: number;
+  corridaId: number;
+  filialId: number;
+  fornecedor: FornecedorHistorico;
+  solicitanteId: number;
+  rateios: CentroCustoHistorico[];
+  origem: PontoSeed;
+  destino: PontoSeed;
+  data: DateTime;
+  tipoCorridaId: number;
+  tipoVeiculoId: number;
+  motoristaId: number;
+  veiculoId: number;
+  motivoId: number;
+  motivoDesfechoId: number | null;
+  passageiros: string[];
+  situacao: SituacaoHistorica;
+  kmEstimado: number;
+  kmPercorrido: number;
+  valorEstimado: number;
+  valorFinal: number;
+}
+
+/** De dezembro do ano passado (base de comparação dos cards) até o mês atual. */
+const mesesDoHistorico = (): DateTime[] => {
+  const primeiro = DateTime.now().startOf('year').minus({ months: 1 });
+  const ultimo = DateTime.now().startOf('month');
+  const meses: DateTime[] = [];
+
+  for (
+    let mes = primeiro;
+    mes.toMillis() <= ultimo.toMillis();
+    mes = mes.plus({ months: 1 })
+  ) {
+    meses.push(mes);
+  }
+
+  return meses;
+};
+
+/** Momento dentro do mês, sempre no passado para o dashboard ter valor final. */
+const sortearMomento = (sortear: Sorteio, mes: DateTime): DateTime => {
+  const hoje = DateTime.now();
+  const ehMesAtual = mes.hasSame(hoje, 'month') && mes.hasSame(hoje, 'year');
+  const ultimoDia = ehMesAtual
+    ? Math.max(1, hoje.day - 1)
+    : (mes.daysInMonth ?? 28);
+  const hora = ocorre(sortear, 0.12)
+    ? inteiroEntre(sortear, HORA_INICIO_NOTURNO, 23)
+    : inteiroEntre(sortear, 6, 20);
+
+  return mes.set({
+    day: inteiroEntre(sortear, 1, ultimoDia),
+    hour: hora,
+    minute: escolher(sortear, [0, 15, 30, 45]),
+    second: 0,
+    millisecond: 0,
+  });
+};
+
+/** Data futura, para as solicitações que ainda esperam decisão do aprovador. */
+const proximosDias = (sortear: Sorteio): DateTime =>
+  DateTime.now()
+    .plus({ days: inteiroEntre(sortear, 1, 7) })
+    .set({
+      hour: inteiroEntre(sortear, 7, 19),
+      minute: escolher(sortear, [0, 15, 30, 45]),
+      second: 0,
+      millisecond: 0,
+    });
+
+const sortearTipoCorrida = (sortear: Sorteio): number => {
+  const sorteado = sortear();
+
+  if (sorteado < 0.64) return TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO;
+  if (sorteado < 0.9) return TIPO_CORRIDA.TRANSPORTE_OBJETO;
+
+  return TIPO_CORRIDA.EMERGENCIAL;
+};
+
+const sortearSituacao = (sortear: Sorteio): SituacaoHistorica => {
+  const sorteado = sortear();
+
+  if (sorteado < 0.84) return 'finalizada';
+  if (sorteado < 0.92) return 'cancelada';
+
+  return 'reprovada';
+};
+
+const sortearPassageiros = (
+  sortear: Sorteio,
+  filial: FilialHistorico,
+  cpfSolicitante: string,
+): string[] => {
+  const desejados = ocorre(sortear, 0.25) ? inteiroEntre(sortear, 2, 3) : 1;
+  const quantidade = Math.min(desejados, filial.cpfsPassageiros.length);
+  const cpfs = new Set<string>([cpfSolicitante]);
+
+  while (cpfs.size < quantidade) {
+    cpfs.add(escolher(sortear, filial.cpfsPassageiros));
+  }
+
+  return [...cpfs];
+};
+
+const sortearRateios = (
+  sortear: Sorteio,
+  filial: FilialHistorico,
+): CentroCustoHistorico[] => {
+  const principal = escolher(sortear, filial.centrosCusto);
+  const outros = filial.centrosCusto.filter(
+    (centro) => centro.centroCustoId !== principal.centroCustoId,
+  );
+
+  if (outros.length === 0 || !ocorre(sortear, 0.25)) return [principal];
+
+  return [principal, escolher(sortear, outros)];
+};
+
+function sortearCorrida(
+  sortear: Sorteio,
+  data: DateTime,
+  solicitacaoId: number,
+  corridaId: number,
+  situacaoForcada?: SituacaoHistorica,
+): CorridaHistorica {
+  const filial = escolher(sortear, FILIAIS_HISTORICO);
+  const fornecedor = escolherPorPeso(sortear, FORNECEDORES_HISTORICO);
+  const solicitante = escolher(sortear, filial.solicitantes);
+  const destino = ocorre(sortear, 0.08)
+    ? escolher(sortear, filial.destinosIntermunicipais)
+    : escolher(sortear, filial.destinos);
+  const tipoCorridaId = sortearTipoCorrida(sortear);
+  const passageiros =
+    tipoCorridaId === TIPO_CORRIDA.TRANSPORTE_OBJETO
+      ? []
+      : sortearPassageiros(sortear, filial, solicitante.cpf);
+  const tipoVeiculoId =
+    tipoCorridaId === TIPO_CORRIDA.TRANSPORTE_OBJETO
+      ? TIPO_VEICULO.MOTO
+      : passageiros.length >= 3
+        ? TIPO_VEICULO.VAN
+        : TIPO_VEICULO.CARRO;
+  const situacao = situacaoForcada ?? sortearSituacao(sortear);
+  const kmEstimado = distanciaKm([filial.origem, destino]);
+  const kmPercorrido =
+    situacao === 'finalizada'
+      ? Math.round(
+          kmEstimado *
+            entre(sortear, fornecedor.desvioMinimo, fornecedor.desvioMaximo) *
+            100,
+        ) / 100
+      : 0;
+
+  return {
+    solicitacaoId,
+    corridaId,
+    filialId: filial.filialId,
+    fornecedor,
+    solicitanteId: solicitante.id,
+    rateios: sortearRateios(sortear, filial),
+    origem: filial.origem,
+    destino,
+    data,
+    tipoCorridaId,
+    tipoVeiculoId,
+    motoristaId: escolher(sortear, fornecedor.motoristas),
+    veiculoId: fornecedor.veiculoPorTipo[tipoVeiculoId],
+    motivoId: escolher(sortear, MOTIVOS_POR_TIPO_CORRIDA[tipoCorridaId]),
+    motivoDesfechoId:
+      situacao === 'cancelada'
+        ? escolher(sortear, MOTIVOS_CANCELAMENTO)
+        : situacao === 'reprovada'
+          ? escolher(sortear, MOTIVOS_RECUSA)
+          : null,
+    passageiros,
+    situacao,
+    kmEstimado,
+    kmPercorrido,
+    valorEstimado: precoDoContrato(fornecedor.tarifa, kmEstimado, data.hour),
+    valorFinal:
+      situacao === 'finalizada'
+        ? precoDoContrato(fornecedor.tarifa, kmPercorrido, data.hour)
+        : 0,
+  };
+}
+
+const STATUS_SOLICITACAO_HISTORICO: Record<SituacaoHistorica, string> = {
+  finalizada: 'A',
+  cancelada: 'C',
+  reprovada: 'R',
+  pendente: 'P',
+};
+
+const STATUS_APROVACAO_HISTORICO: Record<SituacaoHistorica, string> = {
+  finalizada: 'A',
+  cancelada: 'A',
+  reprovada: 'R',
+  pendente: 'P',
+};
+
+/** Só solicitação aprovada vira corrida; pendente e reprovada ficam sem. */
+const geraCorrida = (situacao: SituacaoHistorica): boolean =>
+  situacao === 'finalizada' || situacao === 'cancelada';
+
+async function gravarCorridaHistorica(registro: CorridaHistorica) {
+  const dados = {
+    nCdSolicitante: registro.solicitanteId,
+    nCdFornecedor: registro.fornecedor.fornecedorId,
+    nCdContrato: registro.fornecedor.contratoId,
+    dCriacao: registro.data.minus({ days: 2 }).toJSDate(),
+    dCorrida: registro.data.toJSDate(),
+    nDistanciaEstimada: registro.kmEstimado,
+    nCdTipoCorrida: registro.tipoCorridaId,
+    nCdTpVeiculo: registro.tipoVeiculoId,
+    nCdEnderecoOrigem: registro.origem.id,
+    nCdEnderecoDestino: registro.destino.id,
+    nValorEstimado: registro.valorEstimado,
+    cStatus: STATUS_SOLICITACAO_HISTORICO[registro.situacao],
+    nCdMotivoSolicitacao: registro.motivoId,
+    nCdMotivoCancelamento:
+      registro.situacao === 'cancelada' ? registro.motivoDesfechoId : null,
+  };
+
+  await prisma.solicitacao.upsert({
+    where: { nCdSolicitacao: registro.solicitacaoId },
+    update: dados,
+    create: { nCdSolicitacao: registro.solicitacaoId, ...dados },
+  });
+
+  for (const rateio of registro.rateios) {
+    const aprovacao = {
+      nCdAprovador: rateio.aprovadorId,
+      cStatusAprovacao: STATUS_APROVACAO_HISTORICO[registro.situacao],
+      nCdMotivoRecusa:
+        registro.situacao === 'reprovada' ? registro.motivoDesfechoId : null,
+    };
+
+    await prisma.solicitacaoCentroCusto.upsert({
+      where: {
+        nCdSolicitacao_nCdFilial_nCdCentroCusto: {
+          nCdSolicitacao: registro.solicitacaoId,
+          nCdFilial: registro.filialId,
+          nCdCentroCusto: rateio.centroCustoId,
+        },
+      },
+      update: aprovacao,
+      create: {
+        nCdSolicitacao: registro.solicitacaoId,
+        nCdFilial: registro.filialId,
+        nCdCentroCusto: rateio.centroCustoId,
+        ...aprovacao,
+      },
+    });
+  }
+
+  for (const cpf of registro.passageiros) {
+    await prisma.solicitacaoPassageiro.upsert({
+      where: {
+        nCdSolicitacao_cCPF: {
+          nCdSolicitacao: registro.solicitacaoId,
+          cCPF: cpf,
+        },
+      },
+      update: {},
+      create: { nCdSolicitacao: registro.solicitacaoId, cCPF: cpf },
+    });
+  }
+
+  if (!geraCorrida(registro.situacao)) return;
+
+  const dadosCorrida = {
+    nCdSolicitacao: registro.solicitacaoId,
+    nCdMotorista: registro.motoristaId,
+    nCdFornecedor: registro.fornecedor.fornecedorId,
+    nCdVeiculo: registro.veiculoId,
+    dInicioCorrida: registro.data.toJSDate(),
+    dFimCorrida:
+      registro.situacao === 'finalizada'
+        ? registro.data
+            .plus({ minutes: duracaoMinutos(registro.kmPercorrido) })
+            .toJSDate()
+        : null,
+    nKmPercorrido: registro.kmPercorrido,
+    nValorFinal: registro.valorFinal,
+    cStatus: registro.situacao === 'finalizada' ? 'F' : 'C',
+  };
+
+  await prisma.corrida.upsert({
+    where: { nCdCorrida: registro.corridaId },
+    update: dadosCorrida,
+    create: { nCdCorrida: registro.corridaId, ...dadosCorrida },
+  });
+}
+
+/**
+ * Apaga o histórico da execução anterior. Como a quantidade de corridas por mês
+ * é sorteada, mudar o gerador deixaria registros órfãos de outra geração
+ * misturados aos novos.
+ */
+async function limparHistorico() {
+  const daCorrida = {
+    nCdCorrida: {
+      gte: PRIMEIRA_CORRIDA_HISTORICO,
+      lte: ULTIMO_CODIGO_HISTORICO,
+    },
+  };
+  const daSolicitacao = {
+    nCdSolicitacao: {
+      gte: PRIMEIRA_SOLICITACAO_HISTORICO,
+      lte: ULTIMO_CODIGO_HISTORICO,
+    },
+  };
+
+  await prisma.despesaCorrida.deleteMany({ where: daCorrida });
+  await prisma.recusaCorrida.deleteMany({ where: daCorrida });
+  await prisma.regraCorrida.deleteMany({ where: daCorrida });
+  await prisma.corrida.deleteMany({ where: daCorrida });
+
+  await prisma.solicitacaoResposta.deleteMany({ where: daSolicitacao });
+  await prisma.solicitacaoPassageiro.deleteMany({ where: daSolicitacao });
+  await prisma.solicitacaoCentroCusto.deleteMany({ where: daSolicitacao });
+  await prisma.parada.deleteMany({ where: daSolicitacao });
+  await prisma.solicitacao.deleteMany({ where: daSolicitacao });
+}
+
+async function semearHistorico(): Promise<number> {
+  await limparHistorico();
+
+  const sortear = criarSorteio(SEMENTE_HISTORICO);
+  let solicitacaoId = PRIMEIRA_SOLICITACAO_HISTORICO;
+  let corridaId = PRIMEIRA_CORRIDA_HISTORICO;
+
+  for (const mes of mesesDoHistorico()) {
+    const quantidade = inteiroEntre(
+      sortear,
+      CORRIDAS_POR_MES.minimo,
+      CORRIDAS_POR_MES.maximo,
+    );
+
+    for (let indice = 0; indice < quantidade; indice += 1) {
+      const registro = sortearCorrida(
+        sortear,
+        sortearMomento(sortear, mes),
+        solicitacaoId,
+        corridaId,
+      );
+
+      await gravarCorridaHistorica(registro);
+
+      solicitacaoId += 1;
+      if (geraCorrida(registro.situacao)) corridaId += 1;
+    }
+  }
+
+  // Solicitações dos próximos dias aguardando decisão dos aprovadores.
+  for (let indice = 0; indice < SOLICITACOES_PENDENTES; indice += 1) {
+    const registro = sortearCorrida(
+      sortear,
+      proximosDias(sortear),
+      solicitacaoId,
+      corridaId,
+      'pendente',
+    );
+
+    await gravarCorridaHistorica(registro);
+
+    solicitacaoId += 1;
+  }
+
+  return solicitacaoId - PRIMEIRA_SOLICITACAO_HISTORICO;
+}
+
 async function main() {
   await semearCatalogos();
   await semearEnderecos();
-  await semearFilialECentrosCusto();
+  await semearFiliaisECentrosCusto();
   await semearFornecedores();
   await semearUsuarios();
   await semearContratos();
   await semearVeiculos();
   await semearSolicitacoes();
 
+  const solicitacoesHistoricas = await semearHistorico();
+
   console.log('Seed concluído.');
   console.log(`Senha de todos os usuários de teste: ${SENHA_PADRAO}`);
+  console.log('');
+  console.log('Acessos por perfil:');
+  console.log('  admin-master:      admin.master@frota.com.br');
+  console.log('  admin-filial:      fernanda.arruda@frota.com.br (Londrina)');
+  console.log('                     gustavo.peixoto@frota.com.br (Maringá)');
+  console.log('  aprovador:         carla.nogueira@frota.com.br (Operações)');
+  console.log('                     diego.prado@frota.com.br (Administrativo)');
+  console.log('                     eduarda.lima@frota.com.br (Logística)');
+  console.log('                     otavio.bastos@frota.com.br (Comercial)');
+  console.log('                     patricia.lemos@frota.com.br (Suprimentos)');
+  console.log('  admin-fornecedor:  helena.tavares@transportesaurora.com.br');
+  console.log('                     igor.salgado@rotacerta.com.br');
+  console.log('                     juliana.freitas@vianorte.com.br');
+  console.log('  solicitante:       passageiro.teste@frota.com.br');
+  console.log('                     bruno.cavalcanti@frota.com.br');
+  console.log('                     larissa.antunes@frota.com.br (Maringá)');
+  console.log('  motorista:         motorista.teste@frota.com.br');
+  console.log('');
   console.log(
     `Passageiro: passageiro.teste@frota.com.br (CPF ${CPF.PASSAGEIRO})`,
   );
@@ -981,7 +1941,13 @@ async function main() {
     `Acompanhante para viagem compartilhada: CPF ${CPF.ACOMPANHANTE}`,
   );
   console.log(
-    `Centros de custo da filial ${FILIAL_ID}: ${Object.values(CENTRO_CUSTO).join(', ')}`,
+    `Centros de custo da filial ${FILIAL.LONDRINA}: ${Object.values(CENTRO_CUSTO).join(', ')}`,
+  );
+  console.log(
+    `Centros de custo da filial ${FILIAL.MARINGA}: ${Object.values(CENTRO_CUSTO_MARINGA).join(', ')}`,
+  );
+  console.log(
+    `Histórico para os dashboards: ${solicitacoesHistoricas} solicitações de dezembro do ano passado até hoje.`,
   );
 }
 
