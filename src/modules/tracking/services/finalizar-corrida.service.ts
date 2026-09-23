@@ -10,7 +10,12 @@ export class FinalizarCorridaService {
     corridaId: number,
     usuario: AuthenticatedUser,
     chaveIdempotencia: string,
-  ): Promise<{ tripStatus: 'finished'; finishedAt: string }> {
+  ): Promise<{
+    tripStatus: 'finished';
+    finishedAt: string;
+    quilometragem: number;
+    valorFinal: number;
+  }> {
     return this.trackingService.finish(corridaId, usuario, chaveIdempotencia);
   }
 }

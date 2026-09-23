@@ -154,6 +154,19 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     });
   }
 
+  async atualizar(
+    id: number,
+    nome: string,
+    cnpjCpf: string,
+  ): Promise<Fornecedor> {
+    return PrismaFornecedorMapper.toDomain(
+      await this.prismaService.cliente.fornecedor.update({
+        where: { nCdFornecedor: id },
+        data: { cNmFornecedor: nome, cCNPJCPF: cnpjCpf },
+      }),
+    );
+  }
+
   async atualizarFoto(id: number, caminhoArquivo: string): Promise<Fornecedor> {
     return PrismaFornecedorMapper.toDomain(
       await this.prismaService.cliente.fornecedor.update({
@@ -179,11 +192,56 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     return resultado !== null;
   }
 
-  async existePorCnpjCpf(cnpjCpf: string): Promise<boolean> {
-    const resultado = await this.prismaService.fornecedor.findUnique({
-      where: { cCNPJCPF: cnpjCpf },
+  async existeOutroComNomeNasFiliaisDoFornecedor(
+    nome: string,
+    fornecedorId: number,
+  ): Promise<boolean> {
+    const vinculos = await this.prismaService.filialFornecedor.findMany({
+      where: { nCdFornecedor: fornecedorId },
+      select: { nCdFilial: true },
+      distinct: ['nCdFilial'],
+    });
+
+    if (vinculos.length === 0) {
+      return false;
+    }
+
+    const conflito = await this.prismaService.filialFornecedor.findFirst({
+      where: {
+        nCdFilial: { in: vinculos.map((vinculo) => vinculo.nCdFilial) },
+        nCdFornecedor: { not: fornecedorId },
+        Fornecedor: { cNmFornecedor: nome },
+      },
+      select: { nCdFornecedor: true },
+    });
+
+    return conflito !== null;
+  }
+
+  async existePorCnpjCpf(
+    cnpjCpf: string,
+    ignorarId?: number,
+  ): Promise<boolean> {
+    const resultado = await this.prismaService.fornecedor.findFirst({
+      where: {
+        cCNPJCPF: cnpjCpf,
+        ...(ignorarId === undefined
+          ? {}
+          : { nCdFornecedor: { not: ignorarId } }),
+      },
       select: { nCdFornecedor: true },
     });
     return resultado !== null;
+  }
+
+  async pertenceAFilial(
+    fornecedorId: number,
+    filialId: number,
+  ): Promise<boolean> {
+    const vinculo = await this.prismaService.filialFornecedor.findFirst({
+      where: { nCdFornecedor: fornecedorId, nCdFilial: filialId },
+      select: { nCdFornecedor: true },
+    });
+    return vinculo !== null;
   }
 }

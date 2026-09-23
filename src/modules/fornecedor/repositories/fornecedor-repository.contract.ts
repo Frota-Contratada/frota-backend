@@ -18,6 +18,11 @@ export abstract class FornecedorRepositoryContract {
     filialId?: number;
   }): Promise<FornecedorBigNumbers>;
   abstract criar(fornecedor: Fornecedor): Promise<Fornecedor>;
+  abstract atualizar(
+    id: number,
+    nome: string,
+    cnpjCpf: string,
+  ): Promise<Fornecedor>;
   abstract atualizarFoto(
     id: number,
     caminhoArquivo: string,
@@ -26,5 +31,21 @@ export abstract class FornecedorRepositoryContract {
     nome: string,
     filialId: number,
   ): Promise<boolean>;
-  abstract existePorCnpjCpf(cnpjCpf: string): Promise<boolean>;
+  /**
+   * Mantém a unicidade de nome por filial ao atualizar: procura outro
+   * fornecedor com o mesmo nome em alguma das filiais em que este atua.
+   */
+  abstract existeOutroComNomeNasFiliaisDoFornecedor(
+    nome: string,
+    fornecedorId: number,
+  ): Promise<boolean>;
+  /** @param ignorarId id desconsiderado na busca, usado em atualizações. */
+  abstract existePorCnpjCpf(
+    cnpjCpf: string,
+    ignorarId?: number,
+  ): Promise<boolean>;
+  abstract pertenceAFilial(
+    fornecedorId: number,
+    filialId: number,
+  ): Promise<boolean>;
 }

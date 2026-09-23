@@ -7,18 +7,22 @@ import { FilialModule } from '@module/filial/filial.module';
 import { CriarFornecedorController } from './controllers/criar-fornecedor.controller';
 import { BuscarFornecedorController } from './controllers/buscar-fornecedor.controller';
 import { BuscarVariosFornecedoresController } from './controllers/buscar-varios-fornecedores.controller';
+import { AtualizarFornecedorController } from './controllers/atualizar-fornecedor.controller';
 import { AtualizarFotoFornecedorController } from './controllers/atualizar-foto-fornecedor.controller';
 import { CriarFornecedorService } from './services/criar-fornecedor.service';
 import { BuscarFornecedorService } from './services/buscar-fornecedor.service';
 import { BuscarVariosFornecedoresService } from './services/buscar-varios-fornecedores.service';
 import { BuscarBigNumbersFornecedoresService } from './services/buscar-big-numbers-fornecedores.service';
+import { AtualizarFornecedorService } from './services/atualizar-fornecedor.service';
 import { AtualizarFotoFornecedorService } from './services/atualizar-foto-fornecedor.service';
+import { ValidarFornecedorDaFilialService } from './services/validar-fornecedor-da-filial.service';
 
 @Module({
   imports: [PrismaModule, StorageModule, FilialModule],
   controllers: [
     CriarFornecedorController,
     BuscarVariosFornecedoresController,
+    AtualizarFornecedorController,
     BuscarFornecedorController,
     AtualizarFotoFornecedorController,
   ],
@@ -27,6 +31,8 @@ import { AtualizarFotoFornecedorService } from './services/atualizar-foto-fornec
     BuscarVariosFornecedoresService,
     BuscarBigNumbersFornecedoresService,
     BuscarFornecedorService,
+    AtualizarFornecedorService,
+    ValidarFornecedorDaFilialService,
     AtualizarFotoFornecedorService,
     {
       provide: FornecedorRepositoryContract,

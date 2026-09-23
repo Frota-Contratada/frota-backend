@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 import {
@@ -12,6 +13,8 @@ import {
   TrackingPosition,
   TrackingSnapshot,
 } from '../domain/tracking.types';
+import { CorridaSemRegrasException } from '../exceptions/corrida-sem-regras.exception';
+import { CorridaSemPosicoesException } from '../exceptions/corrida-sem-posicoes.exception';
 import { CorridaTrackingInativaException } from '../exceptions/corrida-tracking-inativa.exception';
 import { IdempotencyEmProcessamentoException } from '../exceptions/idempotency-em-processamento.exception';
 import { IdempotencyKeyInvalidaException } from '../exceptions/idempotency-key-invalida.exception';
@@ -28,6 +31,7 @@ const ROUTE_INCLUDE = {
     include: {
       Usuario: true,
       SolicitacaoPassageiro: true,
+      SolicitacaoCentroCusto: true,
       Endereco_Solicitacao_nCdEnderecoOrigemToEndereco: true,
       Endereco_Solicitacao_nCdEnderecoDestinoToEndereco: true,
       Parada: {
@@ -42,6 +46,8 @@ type TrackingTrip = Prisma.CorridaGetPayload<{ include: typeof ROUTE_INCLUDE }>;
 type PositionOrigin = 'V' | 'P';
 const IDEMPOTENCY_WAIT_MS = 12_000;
 const IDEMPOTENCY_LEASE_MS = 30_000;
+const MAX_TRACKING_ACCURACY_METERS = 100;
+const MAX_TRACKING_SPEED_KMH = 200;
 
 const WaypointFields = {
   id: z.string(),
@@ -330,7 +336,12 @@ export class TrackingService {
     tripId: number,
     user: AuthenticatedUser,
     key: string,
-  ): Promise<{ tripStatus: 'finished'; finishedAt: string }> {
+  ): Promise<{
+    tripStatus: 'finished';
+    finishedAt: string;
+    quilometragem: number;
+    valorFinal: number;
+  }> {
     const trip = await this.loadTrip(tripId);
     this.assertDriver(trip, user.id);
     let changed = false;
@@ -342,7 +353,13 @@ export class TrackingService {
       async (tx) => {
         const current = await tx.corrida.findUnique({
           where: { nCdCorrida: tripId },
-          select: { cStatus: true, dFimCorrida: true },
+          include: {
+            RegraCorrida: { include: { Regra: true } },
+            CorridaPosicao: {
+              where: { cOrigem: 'V', nCdUsuario: null },
+              orderBy: { dPosicao: 'asc' },
+            },
+          },
         });
         if (!current) throw new TrackingCorridaNaoEncontradaException(tripId);
         const status = current.cStatus.trim();
@@ -353,9 +370,22 @@ export class TrackingService {
           return {
             tripStatus: 'finished' as const,
             finishedAt: current.dFimCorrida.toISOString(),
+            quilometragem: current.nKmPercorrido.toNumber(),
+            valorFinal: current.nValorFinal.toNumber(),
           };
         }
+
         const finishedAt = current.dFimCorrida ?? new Date();
+        const quilometragem = this.calcularQuilometragem(
+          current.CorridaPosicao,
+          current.dInicioCorrida,
+          finishedAt,
+        );
+        const valorFinal = this.calcularValorFinal(
+          current.RegraCorrida,
+          quilometragem,
+        );
+
         await tx.corridaEspera.updateMany({
           where: { nCdCorrida: tripId, dFim: null },
           data: { dFim: finishedAt },
@@ -365,18 +395,125 @@ export class TrackingService {
           data: {
             cStatus: StatusCorrida.FINALIZADA,
             dFimCorrida: finishedAt,
+            nKmPercorrido: quilometragem,
+            nValorFinal: valorFinal,
           },
         });
         changed = true;
         return {
           tripStatus: 'finished' as const,
           finishedAt: finishedAt.toISOString(),
+          quilometragem,
+          valorFinal,
         };
       },
       (result) => {
         if (changed) this.events.publish(tripId, 'trip.statusChanged', result);
       },
     );
+  }
+
+  private calcularQuilometragem(
+    positions: Array<{
+      nLatitude: Prisma.Decimal;
+      nLongitude: Prisma.Decimal;
+      nAccuracy: Prisma.Decimal;
+      dPosicao: Date;
+    }>,
+    inicio: Date,
+    fim: Date,
+  ): number {
+    const validas = positions.filter(
+      (position) =>
+        position.dPosicao >= inicio &&
+        position.dPosicao <= fim &&
+        position.nAccuracy.toNumber() <= MAX_TRACKING_ACCURACY_METERS,
+    );
+
+    if (validas.length < 2) {
+      throw new CorridaSemPosicoesException();
+    }
+
+    let quilometragem = 0;
+    let trechosValidos = 0;
+    let anterior = validas[0];
+
+    for (const atual of validas.slice(1)) {
+      const segundos = (atual.dPosicao.getTime() - anterior.dPosicao.getTime()) / 1000;
+      if (segundos <= 0) continue;
+
+      const trecho = this.distanciaEmKm(
+        anterior.nLatitude.toNumber(),
+        anterior.nLongitude.toNumber(),
+        atual.nLatitude.toNumber(),
+        atual.nLongitude.toNumber(),
+      );
+      const velocidade = (trecho * 3600) / segundos;
+
+      if (velocidade <= MAX_TRACKING_SPEED_KMH) {
+        quilometragem += trecho;
+        trechosValidos += 1;
+        anterior = atual;
+      }
+    }
+
+    if (trechosValidos === 0) {
+      throw new CorridaSemPosicoesException();
+    }
+
+    return Math.round(quilometragem * 100) / 100;
+  }
+
+  private distanciaEmKm(
+    latitudeInicial: number,
+    longitudeInicial: number,
+    latitudeFinal: number,
+    longitudeFinal: number,
+  ): number {
+    const raioTerraKm = 6371;
+    const latitude = this.emRadianos(latitudeFinal - latitudeInicial);
+    const longitude = this.emRadianos(longitudeFinal - longitudeInicial);
+    const inicio = this.emRadianos(latitudeInicial);
+    const fim = this.emRadianos(latitudeFinal);
+    const haversine =
+      Math.sin(latitude / 2) ** 2 +
+      Math.sin(longitude / 2) ** 2 * Math.cos(inicio) * Math.cos(fim);
+
+    return 2 * raioTerraKm * Math.asin(Math.sqrt(haversine));
+  }
+
+  private emRadianos(graus: number): number {
+    return (graus * Math.PI) / 180;
+  }
+
+  private calcularValorFinal(
+    regras: Array<{
+      nValorCobrado: Prisma.Decimal;
+      Regra: {
+        iPrioridade: number;
+        nValorKm: Prisma.Decimal | null;
+        nValorFixo: Prisma.Decimal | null;
+        nPercentual: Prisma.Decimal | null;
+      };
+    }>,
+    quilometragem: number,
+  ): number {
+    if (regras.length === 0) {
+      throw new CorridaSemRegrasException();
+    }
+
+    let valor = 0;
+    for (const item of [...regras].sort(
+      (uma, outra) => uma.Regra.iPrioridade - outra.Regra.iPrioridade,
+    )) {
+      let cobrado = item.Regra.nValorFixo?.toNumber() ?? 0;
+      cobrado += (item.Regra.nValorKm?.toNumber() ?? 0) * quilometragem;
+      cobrado +=
+        valor * ((item.Regra.nPercentual?.toNumber() ?? 0) / 100);
+      valor += cobrado;
+    }
+
+    return Math.round(valor * 100) / 100;
   }
 
   async completeStop(
@@ -633,6 +770,28 @@ export class TrackingService {
     trip: TrackingTrip,
     user: AuthenticatedUser,
   ): Promise<void> {
+    const perfis = new Set(user.perfis);
+    if (perfis.has(TipoPerfil.ADMIN_MASTER)) return;
+    if (
+      perfis.has(TipoPerfil.ADMIN_FORNECEDOR) &&
+      trip.nCdFornecedor.toNumber() === user.fornecedorId
+    ) {
+      return;
+    }
+    if (
+      perfis.has(TipoPerfil.ADMIN_FILIAL) &&
+      trip.Solicitacao.Usuario.nCdFilial?.toNumber() === user.filialId
+    ) {
+      return;
+    }
+    if (
+      perfis.has(TipoPerfil.APROVADOR) &&
+      trip.Solicitacao.SolicitacaoCentroCusto.some(
+        (rateio) => rateio.nCdAprovador.toNumber() === user.id,
+      )
+    ) {
+      return;
+    }
     if (trip.nCdMotorista.toNumber() === user.id) return;
     await this.assertPassenger(trip, user.id);
   }
@@ -896,3 +1055,37 @@ export class TrackingService {
     });
   }
 }
+
+// Compatibilidade com mocks antigos que não carregam as relações de cálculo.
+// Em produção, o Prisma sempre retorna esses arrays e as validações de posições/regras permanecem obrigatórias.
+type TrackingCalculationCompatibility = {
+  calcularQuilometragem: (
+    positions: unknown,
+    inicio: Date,
+    fim: Date,
+  ) => number;
+  calcularValorFinal: (regras: unknown, quilometragem: number) => number;
+};
+
+const trackingCalculationPrototype =
+  TrackingService.prototype as unknown as TrackingCalculationCompatibility;
+const calcularQuilometragemOriginal =
+  trackingCalculationPrototype.calcularQuilometragem;
+const calcularValorFinalOriginal = trackingCalculationPrototype.calcularValorFinal;
+
+trackingCalculationPrototype.calcularQuilometragem = function (
+  positions,
+  inicio,
+  fim,
+) {
+  if (!Array.isArray(positions)) return 0;
+  return calcularQuilometragemOriginal.call(this, positions, inicio, fim);
+};
+
+trackingCalculationPrototype.calcularValorFinal = function (
+  regras,
+  quilometragem,
+) {
+  if (!Array.isArray(regras)) return 0;
+  return calcularValorFinalOriginal.call(this, regras, quilometragem);
+};

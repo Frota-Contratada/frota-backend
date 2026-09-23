@@ -41,7 +41,11 @@ const CPF = {
   APROVADOR_LOGISTICA: '44455566677',
 };
 
-const TIPO_CORRIDA = { TAXI: 1, OBJETO: 2 };
+const TIPO_CORRIDA = {
+  TRANSPORTE_PASSAGEIRO: 1,
+  TRANSPORTE_OBJETO: 2,
+  EMERGENCIAL: 3,
+};
 const TIPO_VEICULO = { MOTO: 1, CARRO: 2, VAN: 3 };
 const FORNECEDOR = { AURORA: 1, ROTA_CERTA: 2 };
 const CONTRATO = { AURORA: 1, ROTA_CERTA: 2 };
@@ -245,8 +249,12 @@ async function semearCatalogos() {
   }
 
   const tiposCorrida = [
-    { id: TIPO_CORRIDA.TAXI, nome: 'Táxi' },
-    { id: TIPO_CORRIDA.OBJETO, nome: 'Transporte de objetos' },
+    {
+      id: TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO,
+      nome: 'Transporte de passageiro',
+    },
+    { id: TIPO_CORRIDA.TRANSPORTE_OBJETO, nome: 'Transporte de objeto' },
+    { id: TIPO_CORRIDA.EMERGENCIAL, nome: 'Emergencial' },
   ];
 
   for (const tipo of tiposCorrida) {
@@ -739,7 +747,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.AEROPORTO,
       dataCorrida: nestaSemana(2, 9, 30),
-      tipoCorridaId: TIPO_CORRIDA.TAXI,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO,
       tipoVeiculoId: TIPO_VEICULO.CARRO,
       motivoId: MOTIVO.VIAGEM_TRABALHO,
       status: 'A',
@@ -753,7 +761,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.CLIENTE_CENTRO,
       dataCorrida: nestaSemana(5, 14),
-      tipoCorridaId: TIPO_CORRIDA.TAXI,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO,
       tipoVeiculoId: TIPO_VEICULO.CARRO,
       motivoId: MOTIVO.VISITA_CLIENTE,
       status: 'A',
@@ -769,7 +777,7 @@ async function semearSolicitacoes() {
       destino: PONTO.SHOPPING,
       paradas: [PONTO.PARADA_MAZZEI],
       dataCorrida: nestaSemana(5, 8),
-      tipoCorridaId: TIPO_CORRIDA.TAXI,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO,
       tipoVeiculoId: TIPO_VEICULO.VAN,
       motivoId: MOTIVO.REUNIAO_EXTERNA,
       status: 'P',
@@ -783,7 +791,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.UNIVERSIDADE,
       dataCorrida: nestaSemana(3, 16),
-      tipoCorridaId: TIPO_CORRIDA.TAXI,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_PASSAGEIRO,
       tipoVeiculoId: TIPO_VEICULO.CARRO,
       motivoId: MOTIVO.REUNIAO_EXTERNA,
       status: 'R',
@@ -798,7 +806,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.HOSPITAL,
       dataCorrida: semanaPassada(4, 10),
-      tipoCorridaId: TIPO_CORRIDA.TAXI,
+      tipoCorridaId: TIPO_CORRIDA.EMERGENCIAL,
       tipoVeiculoId: TIPO_VEICULO.CARRO,
       motivoId: MOTIVO.EMERGENCIA,
       status: 'A',
@@ -813,7 +821,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.CLIENTE_CENTRO,
       dataCorrida: semanaPassada(3, 9),
-      tipoCorridaId: TIPO_CORRIDA.OBJETO,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_OBJETO,
       tipoVeiculoId: TIPO_VEICULO.MOTO,
       motivoId: MOTIVO.OBJ_ENCOMENDAS,
       status: 'A',
@@ -828,7 +836,7 @@ async function semearSolicitacoes() {
       origem: PONTO.CASA,
       destino: PONTO.CLIENTE_CENTRO,
       dataCorrida: nestaSemana(5, 15),
-      tipoCorridaId: TIPO_CORRIDA.OBJETO,
+      tipoCorridaId: TIPO_CORRIDA.TRANSPORTE_OBJETO,
       tipoVeiculoId: TIPO_VEICULO.MOTO,
       motivoId: MOTIVO.OBJ_DOCUMENTOS,
       status: 'P',

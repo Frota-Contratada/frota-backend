@@ -16,6 +16,8 @@ import { ConfigModule } from '@nestjs/config';
 import { RouterModule } from '@nestjs/core';
 import { TrackingModule } from '@module/tracking/tracking.module';
 import { NotificacaoModule } from '@module/notificacao/notificacao.module';
+import { DashboardModule } from '@module/dashboard/dashboard.module';
+import { CorridaModule } from '@module/corrida/corrida.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { NotificacaoModule } from '@module/notificacao/notificacao.module';
     SolicitacaoModule,
     NotificacaoModule,
     TrackingModule,
+    DashboardModule,
+    CorridaModule,
     RouterModule.register([
       {
         path: 'autenticacao',
@@ -93,6 +97,10 @@ import { NotificacaoModule } from '@module/notificacao/notificacao.module';
       {
         path: 'corridas',
         module: TrackingModule,
+      },
+      {
+        path: 'dashboard',
+        module: DashboardModule,
       },
     ]),
   ],

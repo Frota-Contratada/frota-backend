@@ -688,9 +688,37 @@ describe('TrackingService', () => {
     const tx = {
       corridaEspera: { updateMany: waitingUpdate },
       corrida: {
-        findUnique: jest
-          .fn()
-          .mockResolvedValue({ cStatus: 'I', dFimCorrida: null }),
+        findUnique: jest.fn().mockResolvedValue({
+          cStatus: 'I',
+          dFimCorrida: null,
+          dInicioCorrida: new Date('2026-08-24T12:00:00.000Z'),
+          nKmPercorrido: decimal(0),
+          nValorFinal: decimal(0),
+          CorridaPosicao: [
+            {
+              nLatitude: decimal(-23.55),
+              nLongitude: decimal(-46.63),
+              nAccuracy: decimal(5),
+              dPosicao: new Date('2026-08-24T12:00:00.000Z'),
+            },
+            {
+              nLatitude: decimal(-23.551),
+              nLongitude: decimal(-46.631),
+              nAccuracy: decimal(5),
+              dPosicao: new Date('2026-08-24T12:01:00.000Z'),
+            },
+          ],
+          RegraCorrida: [
+            {
+              Regra: {
+                iPrioridade: 1,
+                nValorKm: decimal(1),
+                nValorFixo: decimal(0),
+                nPercentual: decimal(0),
+              },
+            },
+          ],
+        }),
         update: tripUpdate,
       },
       comandoIdempotente: {

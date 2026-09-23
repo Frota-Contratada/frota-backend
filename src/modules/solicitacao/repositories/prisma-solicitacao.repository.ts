@@ -7,6 +7,7 @@ import {
   FiltrosBuscarSolicitacoes,
   FiltrosBuscarSolicitacoesParaAprovacao,
   DecisaoFornecedor,
+  DecisaoAprovador,
   RegraCorridaInput,
   SolicitacaoRepositoryContract,
 } from './solicitacao-repository.contract';
@@ -29,7 +30,11 @@ import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
 import { SolicitacaoNaoPodeSerDecididaPeloFornecedorException } from '../exceptions/solicitacao-nao-pode-ser-decidida-pelo-fornecedor.exception';
+import { FornecedorObrigatorioException } from '../exceptions/fornecedor-obrigatorio.exception';
+import { FornecedorIndisponivelException } from '../exceptions/fornecedor-indisponivel.exception';
 import { MotoristaOuVeiculoIndisponivelException } from '../exceptions/motorista-ou-veiculo-indisponivel.exception';
+import { AprovadorNaoAutorizadoException } from '../exceptions/aprovador-nao-autorizado.exception';
+import { SolicitacaoNaoPodeSerAprovadaException } from '../exceptions/solicitacao-nao-pode-ser-aprovada.exception';
 
 @Injectable()
 export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
@@ -305,6 +310,184 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       totalCount,
       hasNextPage: filtros.page * filtros.limit < totalCount,
     };
+  }
+
+  async decidirPeloAprovador(
+    id: number,
+    aprovadorId: number,
+    decisao: DecisaoAprovador,
+  ): Promise<Solicitacao> {
+    await this.prismaService.$transaction(async (tx) => {
+      const solicitacao = await tx.solicitacao.findUnique({
+        where: { nCdSolicitacao: id },
+        include: { Usuario: true, SolicitacaoCentroCusto: true },
+      });
+
+      if (solicitacao == null) {
+        throw new SolicitacaoNaoEncontradaException(id);
+      }
+
+      if (solicitacao.cStatus !== StatusSolicitacao.PENDENTE) {
+        throw new SolicitacaoNaoPodeSerAprovadaException(id);
+      }
+
+      const rateio = solicitacao.SolicitacaoCentroCusto.find(
+        (item) =>
+          item.nCdAprovador.toNumber() === aprovadorId &&
+          item.cStatusAprovacao === StatusAprovacao.PENDENTE,
+      );
+
+      if (rateio == null) {
+        throw new AprovadorNaoAutorizadoException(id);
+      }
+
+      const ehAprovadorDoCentroDoSolicitante =
+        solicitacao.Usuario.nCdFilial != null &&
+        solicitacao.Usuario.nCdCentroCusto != null &&
+        rateio.nCdFilial.toNumber() ===
+          solicitacao.Usuario.nCdFilial.toNumber() &&
+        rateio.nCdCentroCusto.toNumber() ===
+          solicitacao.Usuario.nCdCentroCusto.toNumber();
+
+      if (decisao.fornecedorId != null && !ehAprovadorDoCentroDoSolicitante) {
+        throw new AprovadorNaoAutorizadoException(id);
+      }
+
+      if (
+        decisao.decisao === 'APROVAR' &&
+        ehAprovadorDoCentroDoSolicitante &&
+        decisao.fornecedorId == null
+      ) {
+        throw new FornecedorObrigatorioException();
+      }
+
+      if (decisao.decisao === 'APROVAR' && decisao.fornecedorId != null) {
+        if (decisao.contratoId == null || decisao.valorEstimado == null) {
+          throw new FornecedorIndisponivelException(
+            solicitacao.Usuario.nCdFilial?.toNumber() ?? 0,
+            solicitacao.nCdTipoCorrida.toNumber(),
+          );
+        }
+
+        const inicio = new Date(solicitacao.dCorrida);
+        inicio.setSeconds(0, 0);
+        const fim = new Date(inicio);
+        fim.setMinutes(fim.getMinutes() + 1);
+
+        const fornecedor = await tx.fornecedor.findFirst({
+          where: {
+            nCdFornecedor: decisao.fornecedorId,
+            dAtivacao: { lte: solicitacao.dCorrida },
+            OR: [
+              { dDesativacao: null },
+              { dDesativacao: { gt: solicitacao.dCorrida } },
+            ],
+          },
+          select: { nCdFornecedor: true },
+        });
+        const vinculo = await tx.filialFornecedor.findFirst({
+          where: {
+            nCdFilial: solicitacao.Usuario.nCdFilial ?? -1,
+            nCdFornecedor: decisao.fornecedorId,
+            nCdContrato: decisao.contratoId,
+            Contrato: {
+              dVigenciaInicio: { lte: inicio },
+              OR: [{ dVigenciaFim: null }, { dVigenciaFim: { gte: inicio } }],
+              ModalidadeContrato: {
+                some: { nCdTipoCorrida: solicitacao.nCdTipoCorrida },
+              },
+            },
+          },
+          select: { nCdFornecedor: true },
+        });
+        const motorista = await tx.usuario.findFirst({
+          where: {
+            nCdFornecedor: decisao.fornecedorId,
+            cDisponivel: 'S',
+            dAtivacao: { lte: solicitacao.dCorrida },
+            OR: [
+              { dDesativacao: null },
+              { dDesativacao: { gt: solicitacao.dCorrida } },
+            ],
+            Corrida: {
+              none: {
+                cStatus: { not: StatusCorrida.CANCELADA },
+                dInicioCorrida: { gte: inicio, lt: fim },
+              },
+            },
+          },
+          select: { nCdUsuario: true },
+        });
+
+        if (fornecedor == null || vinculo == null || motorista == null) {
+          throw new FornecedorIndisponivelException(
+            solicitacao.Usuario.nCdFilial?.toNumber() ?? 0,
+            solicitacao.nCdTipoCorrida.toNumber(),
+          );
+        }
+      }
+
+      await tx.solicitacaoCentroCusto.update({
+        where: {
+          nCdSolicitacao_nCdFilial_nCdCentroCusto: {
+            nCdSolicitacao: id,
+            nCdFilial: rateio.nCdFilial,
+            nCdCentroCusto: rateio.nCdCentroCusto,
+          },
+        },
+        data:
+          decisao.decisao === 'APROVAR'
+            ? {
+                cStatusAprovacao: StatusAprovacao.APROVADA,
+                nCdMotivoRecusa: null,
+              }
+            : {
+                cStatusAprovacao: StatusAprovacao.REPROVADA,
+                nCdMotivoRecusa: decisao.motivoRecusaId,
+              },
+      });
+
+      if (decisao.decisao === 'REPROVAR') {
+        await tx.solicitacao.update({
+          where: { nCdSolicitacao: id },
+          data: { cStatus: StatusSolicitacao.REPROVADA },
+        });
+        return;
+      }
+
+      const fornecedorSelecionado =
+        decisao.fornecedorId != null && decisao.contratoId != null
+          ? {
+              nCdFornecedor: decisao.fornecedorId,
+              nCdContrato: decisao.contratoId,
+              nValorEstimado: decisao.valorEstimado,
+              nCdRotaFixa: decisao.rotaFixaId ?? null,
+            }
+          : undefined;
+      const pendentes = await tx.solicitacaoCentroCusto.count({
+        where: {
+          nCdSolicitacao: id,
+          cStatusAprovacao: StatusAprovacao.PENDENTE,
+        },
+      });
+
+      await tx.solicitacao.update({
+        where: { nCdSolicitacao: id },
+        data: {
+          cStatus:
+            pendentes === 0
+              ? StatusSolicitacao.APROVADA
+              : StatusSolicitacao.PENDENTE,
+          ...(fornecedorSelecionado ?? {}),
+        },
+      });
+    });
+
+    const atualizada = await this.buscar(id);
+    if (atualizada == null) {
+      throw new SolicitacaoNaoEncontradaException(id);
+    }
+    return atualizada;
   }
 
   async buscarAgendadasPorPeriodo(filtros: {

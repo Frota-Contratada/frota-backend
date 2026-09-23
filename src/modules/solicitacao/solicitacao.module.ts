@@ -14,6 +14,7 @@ import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-a
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
 import { CriarSolicitacaoController } from './controllers/criar-solicitacao.controller';
 import { DecidirSolicitacaoFornecedorController } from './controllers/decidir-solicitacao-fornecedor.controller';
+import { DecidirSolicitacaoAprovadorController } from './controllers/decidir-solicitacao-aprovador.controller';
 import { BuscarSolicitacoesAprovadorController } from './controllers/buscar-solicitacoes-aprovador.controller';
 import { SimularSolicitacaoController } from './controllers/simular-solicitacao.controller';
 import { CatalogoSolicitacaoRepositoryContract } from './repositories/catalogo-solicitacao-repository.contract';
@@ -33,6 +34,7 @@ import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.serv
 import { CriarCorridaService } from './services/criar-corrida.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
 import { DecidirSolicitacaoFornecedorService } from './services/decidir-solicitacao-fornecedor.service';
+import { DecidirSolicitacaoAprovadorService } from './services/decidir-solicitacao-aprovador.service';
 import { SelecionarFornecedorService } from './services/selecionar-fornecedor.service';
 import { SimularSolicitacaoService } from './services/simular-solicitacao.service';
 
@@ -55,6 +57,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     CriarSolicitacaoController,
     CancelarSolicitacaoController,
     DecidirSolicitacaoFornecedorController,
+    DecidirSolicitacaoAprovadorController,
     BuscarSolicitacoesAprovadorController,
     BuscarSolicitacaoController,
   ],
@@ -67,6 +70,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
     DecidirSolicitacaoFornecedorService,
+    DecidirSolicitacaoAprovadorService,
     CriarCorridaService,
     CalcularValorEstimadoService,
     SelecionarFornecedorService,

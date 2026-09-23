@@ -34,6 +34,15 @@ export interface DecisaoFornecedor {
   motivo?: string;
 }
 
+export interface DecisaoAprovador {
+  decisao: 'APROVAR' | 'REPROVAR';
+  fornecedorId?: number;
+  contratoId?: number;
+  valorEstimado?: number;
+  rotaFixaId?: number;
+  motivoRecusaId?: number;
+}
+
 export interface RegraCorridaInput {
   contratoId: number;
   regraId: number;
@@ -61,6 +70,11 @@ export abstract class SolicitacaoRepositoryContract {
   abstract cancelar(
     id: number,
     motivoCancelamentoId: number,
+  ): Promise<Solicitacao>;
+  abstract decidirPeloAprovador(
+    id: number,
+    aprovadorId: number,
+    decisao: DecisaoAprovador,
   ): Promise<Solicitacao>;
   abstract criarCorrida(
     id: number,

@@ -1,0 +1,5 @@
+export enum TipoCorridaEnum {
+  TRANSPORTE_PASSAGEIRO = 1,
+  TRANSPORTE_OBJETO = 2,
+  EMERGENCIAL = 3,
+}
