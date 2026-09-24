@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -18,11 +18,6 @@ export class DecidirSolicitacaoAprovadorController {
 
   @Patch(':id/aprovacao')
   @Perfis(TipoPerfil.APROVADOR)
-  @ApiOperation({
-    summary: 'Aprova ou reprova o rateio da solicitação',
-    description:
-      'O aprovador do centro de custo do solicitante também escolhe o fornecedor disponível.',
-  })
   async handle(
     @CurrentUser('id') aprovadorId: number,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

@@ -1,5 +1,5 @@
 import { Body, Controller, Headers, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
@@ -17,7 +17,6 @@ export class RecalcularRotaController {
   constructor(private readonly recalcularRotaService: RecalcularRotaService) {}
 
   @Post(':id/route/reroute')
-  @ApiOperation({ summary: 'Recalcula a rota da corrida' })
   @ApiRespostaDe(RotaCanonicaDto)
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

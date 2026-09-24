@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -21,11 +21,6 @@ export class SimularSolicitacaoController {
   @Post('simulacao')
   @HttpCode(HttpStatus.OK)
   @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
-  @ApiOperation({
-    summary: 'Estima distância, duração e valor de uma corrida',
-    description:
-      'Aplica as mesmas regras da criação sem gravar nada, para o app mostrar o valor e o horário de chegada antes de o solicitante confirmar.',
-  })
   @ApiRespostaDe(SimulacaoSolicitacaoDto)
   async handle(
     @CurrentUser('id') solicitanteId: number,

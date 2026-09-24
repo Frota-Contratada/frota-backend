@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -18,9 +18,6 @@ export class DecidirSolicitacaoFornecedorController {
 
   @Post(':id/decisao-fornecedor')
   @Perfis(TipoPerfil.ADMIN_FORNECEDOR)
-  @ApiOperation({
-    summary: 'Decide o próximo passo após a recusa de um motorista',
-  })
   async handle(
     @CurrentUser('fornecedorId') fornecedorId: number,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

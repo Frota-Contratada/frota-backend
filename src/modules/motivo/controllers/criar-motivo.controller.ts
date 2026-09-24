@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
@@ -19,11 +19,6 @@ export class CriarMotivoController {
 
   @Post('admin')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Cria um motivo global ou de uma filial específica',
-    description:
-      'Exclusivo para admin master. Sem filialId o motivo é global e fica disponível para todas as filiais. Com filialId o motivo pertence apenas àquela filial.',
-  })
   async criar(
     @Body() body: CriarMotivoAdminRequestDto,
   ): Promise<ResponseInterface<MotivoDto>> {
@@ -38,11 +33,6 @@ export class CriarMotivoController {
 
   @Post('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Cria um motivo para a filial do usuário',
-    description:
-      'Exclusivo para admin de filial. A filial é obtida do vínculo do usuário autenticado, não do corpo da requisição.',
-  })
   async criarNaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Body() body: CriarMotivoRequestDto,

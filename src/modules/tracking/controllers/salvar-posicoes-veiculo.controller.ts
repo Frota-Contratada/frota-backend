@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
@@ -19,7 +19,6 @@ export class SalvarPosicoesVeiculoController {
   ) {}
 
   @Post(':id/tracking/positions/batch')
-  @ApiOperation({ summary: 'Persiste um lote offline de posições do veículo' })
   @ApiRespostaDe(PosicaoAceitaDto)
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

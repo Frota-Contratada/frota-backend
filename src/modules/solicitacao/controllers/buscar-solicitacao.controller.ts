@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
@@ -28,11 +28,6 @@ export class BuscarSolicitacaoController {
 
   @Get()
   @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
-  @ApiOperation({
-    summary: 'Lista as solicitações do solicitante autenticado',
-    description:
-      'Filtra por status, modalidade e período da corrida, com ordenação da mais recente para a mais antiga por padrão.',
-  })
   @ApiRespostaPaginadaDe(SolicitacaoDto)
   async buscarVarias(
     @CurrentUser('id') solicitanteId: number,
@@ -70,11 +65,6 @@ export class BuscarSolicitacaoController {
     TipoPerfil.SOLICITANTE_EMERGENCIA,
     TipoPerfil.APROVADOR,
   )
-  @ApiOperation({
-    summary: 'Detalha uma solicitação',
-    description:
-      'Inclui trajeto, rateios com status de aprovação, passageiros e, quando já houve atribuição, os dados da corrida.',
-  })
   @ApiRespostaDe(SolicitacaoDto)
   async buscar(
     @CurrentUser('id') usuarioId: number,

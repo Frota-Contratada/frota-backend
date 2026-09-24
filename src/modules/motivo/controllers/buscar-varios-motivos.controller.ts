@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -23,11 +23,6 @@ export class BuscarVariosMotivosController {
 
   @Get('admin')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Lista motivos globais e de todas as filiais',
-    description:
-      'Exclusivo para admin master. Filtra por nome e tipo. Informar filialId retorna os motivos daquela filial somados aos globais; apenasGlobais restringe aos globais. Por padrão traz somente os ativos.',
-  })
   async buscarVarios(
     @Query() query: BuscarMotivosAdminQueryDto,
   ): Promise<ResponseInterface<PaginatedResponseInterface<MotivoDto>>> {
@@ -38,11 +33,6 @@ export class BuscarVariosMotivosController {
 
   @Get('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Lista os motivos disponíveis para a filial do usuário',
-    description:
-      'Exclusivo para admin de filial. A filial é obtida do vínculo do usuário autenticado. Retorna os motivos da filial somados aos globais. Filtra por nome e tipo.',
-  })
   async buscarVariosDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarMotivosQueryDto,

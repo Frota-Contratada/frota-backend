@@ -1,10 +1,5 @@
-import {
-  Controller,
-  NotFoundException,
-  Param,
-  Patch,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, NotFoundException, Param, Patch } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -20,7 +15,6 @@ export class MarcarNotificacaoComoLidaController {
   ) {}
 
   @Patch(':id/lida')
-  @ApiOperation({ summary: 'Marca uma notificação como lida' })
   @ApiRespostaDe(NotificacaoDto)
   async handle(
     @CurrentUser('id') usuarioId: number,

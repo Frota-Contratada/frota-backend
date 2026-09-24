@@ -1,5 +1,5 @@
 import { Controller, Headers, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
@@ -16,7 +16,6 @@ export class IniciarEsperaController {
   constructor(private readonly iniciarEsperaService: IniciarEsperaService) {}
 
   @Post(':id/waiting/start')
-  @ApiOperation({ summary: 'Inicia a espera da corrida' })
   @ApiRespostaDe(EsperaDto)
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

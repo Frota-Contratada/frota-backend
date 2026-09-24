@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -20,11 +20,6 @@ export class BuscarViagensAgendadasController {
 
   @Get('viagens')
   @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
-  @ApiOperation({
-    summary: 'Lista as viagens aprovadas do solicitante em um período',
-    description:
-      'Alimenta a agenda da semana na home do passageiro. Traz apenas solicitações aprovadas com corrida marcada no intervalo.',
-  })
   @ApiRespostaListaDe(ViagemAgendadaDto)
   async handle(
     @CurrentUser('id') solicitanteId: number,

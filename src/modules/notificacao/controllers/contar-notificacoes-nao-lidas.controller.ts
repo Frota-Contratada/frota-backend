@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -15,7 +15,6 @@ export class ContarNotificacoesNaoLidasController {
   ) {}
 
   @Get('nao-lidas/quantidade')
-  @ApiOperation({ summary: 'Retorna a quantidade de notificações não lidas' })
   @ApiRespostaDe(QuantidadeNotificacoesNaoLidasDto)
   async handle(
     @CurrentUser('id') usuarioId: number,

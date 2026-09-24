@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ApiRespostaPaginadaDe } from '@common/decorators/api-resposta.decorator';
@@ -21,18 +21,13 @@ export class BuscarSolicitacoesAprovadorController {
 
   @Get('aprovador/pendentes')
   @Perfis(TipoPerfil.APROVADOR)
-  @ApiOperation({
-    summary: 'Lista as solicitações pendentes do aprovador autenticado',
-    description:
-      'Retorna somente solicitações com rateio pendente atribuído ao usuário autenticado como aprovador.',
-  })
   @ApiRespostaPaginadaDe(SolicitacaoDto)
   async handle(
     @CurrentUser('id') aprovadorId: number,
     @Query() query: BuscarSolicitacoesAprovadorQueryDto,
   ): Promise<ResponseInterface<PaginatedResponseInterface<SolicitacaoDto>>> {
-    const resultado =
-      await this.buscarSolicitacoesParaAprovacaoService.execute({
+    const resultado = await this.buscarSolicitacoesParaAprovacaoService.execute(
+      {
         aprovadorId,
         tipoCorridaId: query.tipoCorridaId,
         dataInicio: query.dataInicio
@@ -42,7 +37,8 @@ export class BuscarSolicitacoesAprovadorController {
         ordenacao: query.ordenacao,
         page: query.page,
         limit: query.limit,
-      });
+      },
+    );
 
     return {
       response: {

@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
@@ -21,9 +21,6 @@ export class BuscarDashboardGastosController {
 
   @Get('gastos/admin')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Busca o dashboard de gastos de todas as filiais',
-  })
   async buscarComoAdminMaster(
     @Query() query: BuscarDashboardQueryDto,
   ): Promise<ResponseInterface<DashboardGastosDto>> {
@@ -34,9 +31,6 @@ export class BuscarDashboardGastosController {
 
   @Get('gastos/filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Busca o dashboard de gastos da filial do usuário',
-  })
   async buscarComoAdminFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarDashboardQueryDto,
@@ -52,9 +46,6 @@ export class BuscarDashboardGastosController {
 
   @Get('gastos/aprovador')
   @Perfis(TipoPerfil.APROVADOR)
-  @ApiOperation({
-    summary: 'Busca o dashboard de gastos dos centros de custo do aprovador',
-  })
   async buscarComoAprovador(
     @CurrentUser('id') aprovadorId: number,
     @Query() query: BuscarDashboardQueryDto,

@@ -1,5 +1,5 @@
 import { Controller, Delete, Param } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -21,11 +21,6 @@ export class DesativarMotivoController {
 
   @Delete('admin/:id')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Desativa um motivo',
-    description:
-      'Exclusivo para admin master. Desativação lógica: o registro é preservado porque solicitações já criadas o referenciam.',
-  })
   async desativar(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
@@ -37,11 +32,6 @@ export class DesativarMotivoController {
 
   @Delete('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Desativa um motivo da filial do usuário',
-    description:
-      'Exclusivo para admin de filial. Só alcança motivos da própria filial; motivos globais são somente leitura para esse perfil.',
-  })
   async desativarDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

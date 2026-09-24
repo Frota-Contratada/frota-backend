@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -22,11 +22,6 @@ export class AtualizarMotivoController {
 
   @Patch('admin/:id')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Atualiza nome e tipo de um motivo',
-    description:
-      'Exclusivo para admin master. Alcança motivos de qualquer escopo. O escopo (global ou filial) não é alterado.',
-  })
   async atualizar(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
@@ -43,11 +38,6 @@ export class AtualizarMotivoController {
 
   @Patch('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Atualiza um motivo da filial do usuário',
-    description:
-      'Exclusivo para admin de filial. Só alcança motivos da própria filial; motivos globais são somente leitura para esse perfil.',
-  })
   async atualizarDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

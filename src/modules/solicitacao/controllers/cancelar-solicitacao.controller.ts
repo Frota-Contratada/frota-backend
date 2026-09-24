@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -21,14 +21,7 @@ export class CancelarSolicitacaoController {
 
   @Patch(':id/cancelamento')
   @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
-  @ApiOperation({
-    summary: 'Cancela uma solicitação',
-    description:
-      'Permitido apenas enquanto a corrida não foi iniciada. O solicitante só cancela o que ele mesmo pediu.',
-  })
-  @ApiRespostaDe(SolicitacaoDto, {
-    description: 'Solicitação cancelada.',
-  })
+  @ApiRespostaDe(SolicitacaoDto)
   async handle(
     @CurrentUser('id') solicitanteId: number,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -23,11 +23,6 @@ export class BuscarVariosCentrosCustoController {
 
   @Get('admin')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Lista centros de custo de todas as filiais',
-    description:
-      'Exclusivo para admin master. Filtra por filial e nome. Os filtros informados são combinados entre si.',
-  })
   async buscarVarios(
     @Query() query: BuscarCentrosCustoAdminQueryDto,
   ): Promise<
@@ -40,11 +35,6 @@ export class BuscarVariosCentrosCustoController {
 
   @Get('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Lista centros de custo da filial do usuário',
-    description:
-      'Exclusivo para admin de filial. A filial é obtida do vínculo do usuário autenticado. Filtra por nome.',
-  })
   async buscarVariosDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarCentrosCustoQueryDto,

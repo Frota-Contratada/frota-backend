@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -21,15 +21,7 @@ export class CriarSolicitacaoController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
-  @ApiOperation({
-    summary: 'Cria uma solicitação de corrida',
-    description:
-      'Calcula o trajeto, escolhe o fornecedor com contrato vigente mais barato para a filial do solicitante e abre a solicitação como pendente, com um rateio por centro de custo aguardando aprovação.',
-  })
-  @ApiRespostaDe(SolicitacaoDto, {
-    status: HttpStatus.CREATED,
-    description: 'Solicitação criada e aguardando aprovação.',
-  })
+  @ApiRespostaDe(SolicitacaoDto, { status: HttpStatus.CREATED })
   async handle(
     @CurrentUser('id') solicitanteId: number,
     @Body() body: CriarSolicitacaoRequestDto,

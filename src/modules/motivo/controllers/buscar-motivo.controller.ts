@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -19,11 +19,6 @@ export class BuscarMotivoController {
 
   @Get('admin/:id')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Busca um motivo por id',
-    description:
-      'Exclusivo para admin master. Alcança motivos de qualquer escopo.',
-  })
   async buscar(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
@@ -35,11 +30,6 @@ export class BuscarMotivoController {
 
   @Get('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Busca um motivo disponível para a filial do usuário',
-    description:
-      'Exclusivo para admin de filial. Alcança os motivos da própria filial e os globais.',
-  })
   async buscarDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

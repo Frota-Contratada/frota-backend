@@ -1,5 +1,5 @@
 import { Controller, Headers, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
@@ -16,7 +16,6 @@ export class ConcluirParadaController {
   constructor(private readonly concluirParadaService: ConcluirParadaService) {}
 
   @Post(':id/stops/:sequence/complete')
-  @ApiOperation({ summary: 'Marca uma parada como concluída pelo motorista' })
   @ApiRespostaDe(ParadaConcluidaDto)
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

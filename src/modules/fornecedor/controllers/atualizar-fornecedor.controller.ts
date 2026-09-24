@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -23,11 +23,6 @@ export class AtualizarFornecedorController {
 
   @Patch('me')
   @Perfis(TipoPerfil.ADMIN_FORNECEDOR)
-  @ApiOperation({
-    summary: 'Atualiza o cadastro do próprio fornecedor',
-    description:
-      'Exclusivo para admin de fornecedor. O fornecedor alterado é sempre o do vínculo do token, não há id na rota.',
-  })
   @ApiRespostaDe(FornecedorDto)
   async atualizarProprio(
     @CurrentUser('fornecedorId') fornecedorId: number | undefined,
@@ -42,11 +37,6 @@ export class AtualizarFornecedorController {
 
   @Patch('admin/:id')
   @Perfis(TipoPerfil.ADMIN_MASTER)
-  @ApiOperation({
-    summary: 'Atualiza nome e CNPJ/CPF de um fornecedor',
-    description:
-      'Exclusivo para admin master. Alcança fornecedores de qualquer filial.',
-  })
   @ApiRespostaDe(FornecedorDto)
   async atualizarComoAdmin(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
@@ -58,11 +48,6 @@ export class AtualizarFornecedorController {
 
   @Patch('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
-  @ApiOperation({
-    summary: 'Atualiza um fornecedor vinculado à filial do usuário',
-    description:
-      'Exclusivo para admin de filial. Só alcança fornecedores com vínculo na própria filial.',
-  })
   @ApiRespostaDe(FornecedorDto)
   async atualizarDaFilial(
     @CurrentUser('filialId') filialId: number | undefined,

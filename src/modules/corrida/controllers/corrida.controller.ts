@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -34,9 +34,6 @@ export class CorridaController {
 
   @Get('minhas')
   @Perfis(...PERFIS_CONSULTA)
-  @ApiOperation({
-    summary: 'Lista as corridas visíveis ao usuário autenticado',
-  })
   async listar(
     @CurrentUser() usuario: AuthenticatedUser,
     @Query() query: BuscarCorridasQueryDto,
@@ -52,9 +49,6 @@ export class CorridaController {
 
   @Get(':id')
   @Perfis(...PERFIS_CONSULTA)
-  @ApiOperation({
-    summary: 'Consulta uma corrida conforme o escopo do usuário',
-  })
   async buscar(
     @CurrentUser() usuario: AuthenticatedUser,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
@@ -71,7 +65,6 @@ export class CorridaController {
     TipoPerfil.SOLICITANTE_EMERGENCIA,
     TipoPerfil.MOTORISTA,
   )
-  @ApiOperation({ summary: 'Cancela uma corrida até 15 minutos antes' })
   async cancelar(
     @CurrentUser() usuario: AuthenticatedUser,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))

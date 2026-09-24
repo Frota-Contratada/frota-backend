@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ApiRespostaListaDe } from '@common/decorators/api-resposta.decorator';
@@ -15,11 +15,6 @@ export class BuscarCentrosCustoController {
   ) {}
 
   @Get()
-  @ApiOperation({
-    summary: 'Lista os centros de custo da filial do usuário autenticado',
-    description:
-      'Indica se cada centro de custo está ativo e se possui aprovador vigente. Sem aprovador, ele não pode ser usado em uma solicitação.',
-  })
   @ApiRespostaListaDe(CentroCustoDto)
   async handle(
     @CurrentUser('id') usuarioId: number,

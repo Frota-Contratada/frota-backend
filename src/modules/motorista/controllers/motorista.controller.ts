@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
@@ -31,9 +31,6 @@ export class MotoristaController {
   ) {}
 
   @Get('viagens')
-  @ApiOperation({
-    summary: 'Lista as corridas do motorista no período informado',
-  })
   async buscarViagens(
     @CurrentUser('id') motoristaId: number,
     @Query() query: BuscarViagensQueryDto,
