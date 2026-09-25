@@ -66,10 +66,19 @@ export class TrackingGateway implements OnGatewayInit, OnGatewayConnection {
 
   private async authenticate(socket: AuthenticatedSocket): Promise<void> {
     const authorization = socket.handshake.headers.authorization;
-    if (!authorization?.startsWith('Bearer ')) {
+    const browserToken: unknown = socket.handshake.auth?.token;
+    if (authorization !== undefined && !authorization.startsWith('Bearer ')) {
       throw new WsException('Não autenticado.');
     }
-    const token = authorization.slice('Bearer '.length);
+    const token =
+      authorization !== undefined
+        ? authorization.slice('Bearer '.length)
+        : typeof browserToken === 'string'
+          ? browserToken
+          : null;
+    if (!token) {
+      throw new WsException('Não autenticado.');
+    }
     if (!(await this.tokens.validarAccessToken(token))) {
       throw new WsException('Não autenticado.');
     }
