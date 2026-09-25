@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -292,7 +293,7 @@ model Fornecedor {
   cSituacaoCadastro   String?            @db.VarChar(50)
   dCadastro           DateTime?          @db.DateTime
   cNmFornecedor       String             @db.VarChar(150)
-  cCNPJCPF            String?            @unique(map: "UK_Fornecedor_cCNPJCPF") @db.VarChar(14)
+  cCNPJCPF            String?            @unique(map: "UK_Fornecedor_cCNPJCPF", where: raw("[cCNPJCPF] IS NOT NULL")) @db.VarChar(14)
   cCaminhoArquivo     String?            @db.VarChar(255)
   dAtivacao           DateTime           @default(now(), map: "DF_Fornecedor_dAtivacao") @db.DateTime
   dDesativacao        DateTime?          @db.DateTime
