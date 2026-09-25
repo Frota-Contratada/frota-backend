@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -32,16 +33,25 @@ model PinUsuario {
 }
 
 model CentroCusto {
+  nCdEmpresa             Decimal                  @db.Decimal(10, 0)
   nCdFilial              Decimal                  @db.Decimal(10, 0)
   nCdCentroCusto         Decimal                  @db.Decimal(10, 0)
   cNmCentroCusto         String                   @db.VarChar(100)
   dAtivacao              DateTime                 @default(now(), map: "DF_CentroCusto_dAtivacao") @db.DateTime
   dDesativacao           DateTime?                @db.DateTime
-  Filial                 Filial                   @relation(fields: [nCdFilial], references: [nCdFilial], onUpdate: NoAction, map: "FK_CentroCusto_Filial")
+  Filial                 Filial                   @relation(fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onUpdate: NoAction, map: "FK_CentroCusto_Filial")
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
   usuarios               Usuario[]
 
-  @@id([nCdFilial, nCdCentroCusto], map: "PK_CentroCusto")
+  @@id([nCdEmpresa, nCdFilial, nCdCentroCusto], map: "PK_CentroCusto")
+}
+
+model Empresa {
+  nCdEmpresa   Decimal   @id(map: "PK_Empresa") @db.Decimal(10, 0)
+  cNmEmpresa   String    @db.VarChar(100)
+  dAtivacao    DateTime  @db.DateTime
+  dDesativacao DateTime? @db.DateTime
+  Filial       Filial[]
 }
 
 model CondicaoRegra {
@@ -222,6 +232,7 @@ model RecusaCorrida {
 
 model Endereco {
   nCdEndereco                                          Decimal       @id(map: "PK_Endereco") @db.Decimal(10, 0)
+  cTpLogradouro                                        String?       @db.VarChar(10)
   cEndereco                                            String        @db.VarChar(200)
   cNumero                                              String        @db.VarChar(20)
   cComplemento                                         String?       @db.VarChar(100)
@@ -243,41 +254,55 @@ model Endereco {
 }
 
 model Filial {
-  nCdFilial        Decimal            @id(map: "PK_Filial") @db.Decimal(10, 0)
-  cNmFilial        String             @unique(map: "UK_Filial_cNmFilial") @db.VarChar(100)
+  nCdEmpresa       Decimal            @db.Decimal(10, 0)
+  nCdFilial        Decimal            @db.Decimal(10, 0)
+  cMnemonico       String?            @db.VarChar(50)
+  cNmFilial        String             @db.VarChar(100)
   cCNPJ            String             @unique(map: "UK_Filial_cCNPJ") @db.VarChar(14)
   nCdEndereco      Decimal            @db.Decimal(10, 0)
   dAtivacao        DateTime           @default(now(), map: "DF_Filial_dAtivacao") @db.DateTime
   dDesativacao     DateTime?          @db.DateTime
   CentroCusto      CentroCusto[]
+  Empresa          Empresa            @relation(fields: [nCdEmpresa], references: [nCdEmpresa], onUpdate: NoAction, map: "FK_Filial_Empresa")
   Endereco         Endereco           @relation(fields: [nCdEndereco], references: [nCdEndereco], onUpdate: NoAction, map: "FK_Filial_Endereco")
   FilialFornecedor FilialFornecedor[]
   Motivo           Motivo[]
   Usuario          Usuario[]          @relation("UsuarioFilial")
+
+  @@id([nCdEmpresa, nCdFilial], map: "PK_Filial")
 }
 
 model FilialFornecedor {
+  nCdEmpresa    Decimal    @db.Decimal(10, 0)
   nCdFilial     Decimal    @db.Decimal(10, 0)
   nCdFornecedor Decimal    @db.Decimal(10, 0)
   nCdContrato   Decimal    @db.Decimal(10, 0)
   Contrato      Contrato   @relation(fields: [nCdContrato], references: [nCdContrato], onUpdate: NoAction, map: "FK_FilialFornecedor_Contrato")
-  Filial        Filial     @relation(fields: [nCdFilial], references: [nCdFilial], onUpdate: NoAction, map: "FK_FilialFornecedor_Filial")
+  Filial        Filial     @relation(fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onUpdate: NoAction, map: "FK_FilialFornecedor_Filial")
   Fornecedor    Fornecedor @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onUpdate: NoAction, map: "FK_FilialFornecedor_Fornecedor")
 
-  @@id([nCdFilial, nCdFornecedor, nCdContrato], map: "PK_FilialFornecedor")
+  @@id([nCdEmpresa, nCdFilial, nCdFornecedor, nCdContrato], map: "PK_FilialFornecedor")
 }
 
 model Fornecedor {
-  nCdFornecedor    Decimal            @id(map: "PK_Fornecedor") @db.Decimal(10, 0)
-  cNmFornecedor    String             @db.VarChar(100)
-  cCNPJCPF         String             @unique(map: "UK_Fornecedor_cCNPJCPF") @db.VarChar(14)
-  cCaminhoArquivo  String?            @db.VarChar(255)
-  dAtivacao        DateTime           @default(now(), map: "DF_Fornecedor_dAtivacao") @db.DateTime
-  dDesativacao     DateTime?          @db.DateTime
-  FilialFornecedor FilialFornecedor[]
-  Solicitacao      Solicitacao[]
-  Usuario          Usuario[]
-  Veiculo          Veiculo[]
+  nCdFornecedor       Decimal            @id(map: "PK_Fornecedor") @db.Decimal(10, 0)
+  nCdBaseFornecedor   Decimal?           @db.Decimal(10, 0)
+  nCdEstabFornecedor  Decimal?           @db.Decimal(10, 0)
+  nDigitoFornecedor   Decimal?           @db.Decimal(10, 0)
+  nCdSituacaoCadastro Decimal?           @db.Decimal(10, 0)
+  cSituacaoCadastro   String?            @db.VarChar(50)
+  dCadastro           DateTime?          @db.DateTime
+  cNmFornecedor       String             @db.VarChar(150)
+  cCNPJCPF            String?            @unique(map: "UK_Fornecedor_cCNPJCPF", where: raw("[cCNPJCPF] IS NOT NULL")) @db.VarChar(14)
+  cCaminhoArquivo     String?            @db.VarChar(255)
+  dAtivacao           DateTime           @default(now(), map: "DF_Fornecedor_dAtivacao") @db.DateTime
+  dDesativacao        DateTime?          @db.DateTime
+  FilialFornecedor    FilialFornecedor[]
+  Solicitacao         Solicitacao[]
+  Usuario             Usuario[]
+  Veiculo             Veiculo[]
+
+  @@unique([nCdBaseFornecedor, nCdEstabFornecedor], map: "UK_Fornecedor_BaseEstab")
 }
 
 model ModalidadeContrato {
@@ -291,17 +316,18 @@ model ModalidadeContrato {
 
 model Motivo {
   nCdMotivo                                             Decimal                  @id(map: "PK_Motivo") @db.Decimal(10, 0)
+  nCdEmpresa                                            Decimal?                 @db.Decimal(10, 0)
   nCdFilial                                             Decimal?                 @db.Decimal(10, 0)
   cNmMotivo                                             String                   @db.VarChar(100)
   cTipoMotivo                                           String                   @default("solicitacao", map: "DF_Motivo_cTipoMotivo") @db.VarChar(30)
   dAtivacao                                             DateTime                 @default(now(), map: "DF_Motivo_dAtivacao") @db.DateTime
   dDesativacao                                          DateTime?                @db.DateTime
-  Filial                                                Filial?                  @relation(fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Motivo_Filial")
+  Filial                                                Filial?                  @relation(fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Motivo_Filial")
   Solicitacao_Solicitacao_nCdMotivoCancelamentoToMotivo Solicitacao[]            @relation("Solicitacao_nCdMotivoCancelamentoToMotivo")
   Solicitacao_Solicitacao_nCdMotivoSolicitacaoToMotivo  Solicitacao[]            @relation("Solicitacao_nCdMotivoSolicitacaoToMotivo")
   SolicitacaoCentroCusto                                SolicitacaoCentroCusto[]
 
-  @@index([nCdFilial, cTipoMotivo, dDesativacao], map: "IX_Motivo_EscopoTipo")
+  @@index([nCdEmpresa, nCdFilial, cTipoMotivo, dDesativacao], map: "IX_Motivo_EscopoTipo")
 }
 
 model Parada {
@@ -388,17 +414,18 @@ model Solicitacao {
 
 model SolicitacaoCentroCusto {
   nCdSolicitacao   Decimal     @db.Decimal(10, 0)
+  nCdEmpresa       Decimal     @db.Decimal(10, 0)
   nCdFilial        Decimal     @db.Decimal(10, 0)
   nCdCentroCusto   Decimal     @db.Decimal(10, 0)
   nCdAprovador     Decimal     @db.Decimal(10, 0)
   cStatusAprovacao String      @default("P", map: "DF_SolCC_cStatus") @db.Char(1)
   nCdMotivoRecusa  Decimal?    @db.Decimal(10, 0)
-  CentroCusto      CentroCusto @relation(fields: [nCdFilial, nCdCentroCusto], references: [nCdFilial, nCdCentroCusto], onUpdate: NoAction, map: "FK_SolicitacaoCentroCusto_CentroCusto")
+  CentroCusto      CentroCusto @relation(fields: [nCdEmpresa, nCdFilial, nCdCentroCusto], references: [nCdEmpresa, nCdFilial, nCdCentroCusto], onUpdate: NoAction, map: "FK_SolicitacaoCentroCusto_CentroCusto")
   Motivo           Motivo?     @relation(fields: [nCdMotivoRecusa], references: [nCdMotivo], onDelete: NoAction, onUpdate: NoAction, map: "FK_SolicitacaoCentroCusto_MotivoRecusa")
   Solicitacao      Solicitacao @relation(fields: [nCdSolicitacao], references: [nCdSolicitacao], onUpdate: NoAction, map: "FK_SolicitacaoCentroCusto_Solicitacao")
   Usuario          Usuario     @relation(fields: [nCdAprovador], references: [nCdUsuario], onUpdate: NoAction, map: "FK_SolicitacaoCentroCusto_Usuario")
 
-  @@id([nCdSolicitacao, nCdFilial, nCdCentroCusto], map: "PK_SolicitacaoCentroCusto")
+  @@id([nCdSolicitacao, nCdEmpresa, nCdFilial, nCdCentroCusto], map: "PK_SolicitacaoCentroCusto")
 }
 
 model SolicitacaoPassageiro {
@@ -432,6 +459,7 @@ model TipoVeiculo {
 model Usuario {
   nCdUsuario             Decimal                  @id(map: "PK_Usuario") @db.Decimal(10, 0)
   cNmUsuario             String                   @db.VarChar(100)
+  nCdEmpresa             Decimal?                 @db.Decimal(10, 0)
   nCdFilial              Decimal?                 @db.Decimal(10, 0)
   nCdFornecedor          Decimal?                 @db.Decimal(10, 0)
   nCdCentroCusto         Decimal?                 @db.Decimal(10, 0)
@@ -448,8 +476,8 @@ model Usuario {
   Corrida                Corrida[]
   Solicitacao            Solicitacao[]
   SolicitacaoCentroCusto SolicitacaoCentroCusto[]
-  CentroCusto            CentroCusto?             @relation(fields: [nCdFilial, nCdCentroCusto], references: [nCdFilial, nCdCentroCusto], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_CentroCusto")
-  Filial                 Filial?                  @relation("UsuarioFilial", fields: [nCdFilial], references: [nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
+  CentroCusto            CentroCusto?             @relation(fields: [nCdEmpresa, nCdFilial, nCdCentroCusto], references: [nCdEmpresa, nCdFilial, nCdCentroCusto], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_CentroCusto")
+  Filial                 Filial?                  @relation("UsuarioFilial", fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
   Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
   UsuarioPerfil          UsuarioPerfil[]
   PinUsuario             PinUsuario[]
@@ -457,7 +485,7 @@ model Usuario {
   CorridaPosicao         CorridaPosicao[]
 
   @@index([cEmail, cDisponivel], map: "IX_Usuario_LoginRumo")
-  @@index([nCdFilial, nCdCentroCusto], map: "IX_Usuario_CentroCusto")
+  @@index([nCdEmpresa, nCdFilial, nCdCentroCusto], map: "IX_Usuario_CentroCusto")
 }
 
 model UsuarioPerfil {
