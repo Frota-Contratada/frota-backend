@@ -62,7 +62,8 @@ ALTER TABLE [dbo].[FilialFornecedor] ADD CONSTRAINT PK_FilialFornecedor PRIMARY 
 ALTER TABLE [dbo].[Fornecedor] ALTER COLUMN [cNmFornecedor] VARCHAR(150) NOT NULL;
 ALTER TABLE [dbo].[Fornecedor] DROP CONSTRAINT [UK_Fornecedor_cCNPJCPF];
 ALTER TABLE [dbo].[Fornecedor] ALTER COLUMN [cCNPJCPF] VARCHAR(14) NULL;
-ALTER TABLE [dbo].[Fornecedor] ADD CONSTRAINT [UK_Fornecedor_cCNPJCPF] UNIQUE NONCLUSTERED ([cCNPJCPF]);
+-- SQL Server permits multiple NULLs only with a filtered unique index.
+CREATE UNIQUE NONCLUSTERED INDEX [UK_Fornecedor_cCNPJCPF] ON [dbo].[Fornecedor]([cCNPJCPF]) WHERE ([cCNPJCPF] IS NOT NULL);
 ALTER TABLE [dbo].[Fornecedor] ADD [cSituacaoCadastro] VARCHAR(50),
 [dCadastro] DATETIME,
 [nCdBaseFornecedor] DECIMAL(10,0),
