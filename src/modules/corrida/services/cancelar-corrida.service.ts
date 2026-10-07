@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
+import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { CorridaAcessoNegadoException } from '../exceptions/corrida-acesso-negado.exception';
 import { CorridaNaoEncontradaException } from '../exceptions/corrida-nao-encontrada.exception';
 import { CorridaNaoPodeSerCanceladaException } from '../exceptions/corrida-nao-pode-ser-cancelada.exception';
@@ -14,6 +16,8 @@ export class CancelarCorridaService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly corridaRepository: PrismaCorridaRepository,
+    private readonly notificarSolicitacao: NotificarSolicitacaoService,
+    private readonly cancelarNotificacoesDaSolicitacao: CancelarNotificacoesDaSolicitacaoService,
   ) {}
 
   async execute(
@@ -21,7 +25,7 @@ export class CancelarCorridaService {
     usuario: AuthenticatedUser,
     motivoCancelamentoId: number,
   ): Promise<CorridaDto> {
-    await this.prismaService.$transaction(
+    const { solicitacaoId, motivoNome } = await this.prismaService.$transaction(
       async (tx) => {
         const corrida = await tx.corrida.findUnique({
           where: { nCdCorrida: id },
@@ -87,9 +91,20 @@ export class CancelarCorridaService {
             },
           });
         }
+
+        return {
+          solicitacaoId: corrida.nCdSolicitacao.toNumber(),
+          motivoNome: motivo.cNmMotivo,
+        };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    await this.cancelarNotificacoesDaSolicitacao.execute(solicitacaoId);
+    await this.notificarSolicitacao.corridaCancelada(solicitacaoId, {
+      canceladaPorId: usuario.id,
+      motivo: motivoNome,
+    });
 
     return this.buscarCorrida(id, usuario);
   }

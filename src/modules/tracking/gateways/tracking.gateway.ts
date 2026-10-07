@@ -36,7 +36,10 @@ const LocationSchema = z.object({
 });
 
 @Public()
-@WebSocketGateway({ transports: ['websocket', 'polling'] })
+@WebSocketGateway({
+  transports: ['websocket', 'polling'],
+  cors: { origin: true, credentials: true },
+})
 export class TrackingGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;
 

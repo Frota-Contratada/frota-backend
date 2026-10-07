@@ -16,20 +16,10 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
-  const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  const corsOrigin =
-    configuredOrigins.length > 0
-      ? configuredOrigins
-      : process.env.NODE_ENV === 'production'
-        ? false
-        : true;
-
   app.enableCors({
-    origin: corsOrigin,
-    methods: '*',
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   if (process.env.REDIS_URL) {
@@ -42,7 +32,8 @@ async function bootstrap() {
         const server = super.createIOServer(port, {
           ...options,
           cors: {
-            origin: corsOrigin,
+            origin: true,
+            credentials: true,
             methods: ['GET', 'POST'],
           },
         }) as Server;

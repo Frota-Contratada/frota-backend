@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { AgendarLembreteDaSolicitacaoService } from '@module/notificacao/services/agendar-lembrete-da-solicitacao.service';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
+import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { CriarCorridaService } from './criar-corrida.service';
 import { MotoristaOuVeiculoIndisponivelException } from '../exceptions/motorista-ou-veiculo-indisponivel.exception';
 import { Solicitacao } from '../domain/solicitacao';
@@ -14,7 +14,7 @@ export class DecidirSolicitacaoFornecedorService {
   constructor(
     private readonly solicitacaoRepository: SolicitacaoRepositoryContract,
     private readonly criarCorrida: CriarCorridaService,
-    private readonly agendarLembreteDaSolicitacao: AgendarLembreteDaSolicitacaoService,
+    private readonly notificarSolicitacao: NotificarSolicitacaoService,
     private readonly cancelarNotificacoesDaSolicitacao: CancelarNotificacoesDaSolicitacaoService,
   ) {}
 
@@ -32,6 +32,11 @@ export class DecidirSolicitacaoFornecedorService {
         );
 
       await this.cancelarNotificacoesDaSolicitacao.execute(solicitacao.id);
+      await this.notificarSolicitacao.solicitacaoRecusadaPeloFornecedor(
+        solicitacao.id,
+        decisao.motivo,
+      );
+
       return solicitacao;
     }
 
@@ -46,16 +51,8 @@ export class DecidirSolicitacaoFornecedorService {
       veiculoId: decisao.veiculoId,
     });
 
-    const destinatarioIds = [
-      solicitacao.solicitanteId,
-      solicitacao.corrida?.motoristaId,
-    ].filter((usuarioId): usuarioId is number => usuarioId != null);
-
-    await this.agendarLembreteDaSolicitacao.execute({
-      solicitacaoId: solicitacao.id,
-      destinatarioIds,
-      dataCorrida: solicitacao.dataCorrida.toJSDate(),
-    });
+    await this.notificarSolicitacao.solicitacaoVirouCorrida(solicitacao.id);
+    await this.notificarSolicitacao.agendarLembretesDaCorrida(solicitacao.id);
 
     return solicitacao;
   }

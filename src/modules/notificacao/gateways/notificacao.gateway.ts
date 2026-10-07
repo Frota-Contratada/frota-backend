@@ -24,6 +24,7 @@ type AuthenticatedSocket = Socket<
 @WebSocketGateway({
   namespace: '/notificacoes',
   transports: ['websocket', 'polling'],
+  cors: { origin: true, credentials: true },
 })
 export class NotificacaoGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;

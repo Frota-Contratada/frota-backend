@@ -5,6 +5,7 @@ import { UsuarioRepositoryContract } from '@module/usuario/info/repositories/usu
 import { ColaboradorRepositoryContract } from '@module/usuario/colaborador/repositories/colaborador-repository.contract';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { CentroCustoRepositoryContract } from '@module/centro-de-custo/repositories/centro-custo-repository.contract';
+import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { CentroCustoNaoEncontradoException } from '@module/centro-de-custo/exceptions/centro-custo-nao-encontrado.exception';
 import { CentroCustoInativoException } from '@module/centro-de-custo/exceptions/centro-custo-inativo.exception';
 import { CentroCustoSemAprovadorException } from '@module/centro-de-custo/exceptions/centro-custo-sem-aprovador.exception';
@@ -71,6 +72,7 @@ export class CriarSolicitacaoService {
     private readonly centroCustoRepository: CentroCustoRepositoryContract,
     private readonly rotaService: RotaServiceContract,
     private readonly selecionarFornecedorService: SelecionarFornecedorService,
+    private readonly notificarSolicitacao: NotificarSolicitacaoService,
   ) {}
 
   async execute(input: CriarSolicitacaoInput): Promise<Solicitacao> {
@@ -201,6 +203,8 @@ export class CriarSolicitacaoService {
 
     const criada = await this.solicitacaoRepository.criar(solicitacao);
     criada.duracaoEstimadaMinutos = rota.duracaoMinutos;
+
+    await this.notificarSolicitacao.solicitacaoCriada(criada.id);
 
     return criada;
   }

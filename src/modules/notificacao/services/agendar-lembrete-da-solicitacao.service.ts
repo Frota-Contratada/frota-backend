@@ -3,28 +3,34 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import {
   AgendamentoNotificacao,
+  NotificacaoConteudo,
   StatusAgendamentoNotificacao,
 } from '../domain/notificacao';
 import { NotificacaoQueueContract } from '../queue/notificacao-queue.contract';
 import { NotificacaoRepositoryContract } from '../repositories/notificacao-repository.contract';
 import {
-  ContextoLembreteViagem,
+  LembreteViagemIminenteNotificacao,
   LembreteViagemNotificacao,
 } from '../templates/lembrete-viagem.notificacao';
 import { CancelarNotificacoesDaSolicitacaoService } from './cancelar-notificacoes-da-solicitacao.service';
 
 export interface AgendarLembreteDaSolicitacaoInput {
   solicitacaoId: number;
-  destinatarioIds: number[];
   dataCorrida: Date;
-  dispararEm?: Date;
+  /** Recebem o lembrete antecipado (NOTIFICACOES_ANTECEDENCIA_MINUTOS). */
+  destinatarioIds: number[];
+  /** Recebem o lembrete às vésperas da corrida (NOTIFICACOES_ANTECEDENCIA_FINAL_MINUTOS). */
+  destinatariosLembreteFinal?: number[];
 }
 
 @Injectable()
 export class AgendarLembreteDaSolicitacaoService {
   private readonly templateLembreteViagem = new LembreteViagemNotificacao();
+  private readonly templateLembreteIminente =
+    new LembreteViagemIminenteNotificacao();
   private readonly ttlEmMs: number;
   private readonly antecedenciaEmMs: number;
+  private readonly antecedenciaFinalEmMinutos: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -35,6 +41,10 @@ export class AgendarLembreteDaSolicitacaoService {
     this.ttlEmMs = this.valorPositivo('NOTIFICACOES_TTL_DIAS', 30) * 86_400_000;
     this.antecedenciaEmMs =
       this.valorPositivo('NOTIFICACOES_ANTECEDENCIA_MINUTOS', 120) * 60_000;
+    this.antecedenciaFinalEmMinutos = this.valorPositivo(
+      'NOTIFICACOES_ANTECEDENCIA_FINAL_MINUTOS',
+      10,
+    );
   }
 
   async execute(input: AgendarLembreteDaSolicitacaoInput): Promise<void> {
@@ -49,26 +59,50 @@ export class AgendarLembreteDaSolicitacaoService {
 
     if (input.dataCorrida.getTime() <= Date.now()) return;
 
-    const dispararEm =
-      input.dispararEm ??
-      new Date(input.dataCorrida.getTime() - this.antecedenciaEmMs);
+    await this.agendar(
+      input.solicitacaoId,
+      new Date(input.dataCorrida.getTime() - this.antecedenciaEmMs),
+      this.templateLembreteViagem.preparar({
+        solicitacaoId: input.solicitacaoId,
+        destinatarioIds: input.destinatarioIds,
+        dataCorrida: input.dataCorrida,
+      }),
+    );
+
+    await this.agendar(
+      input.solicitacaoId,
+      new Date(
+        input.dataCorrida.getTime() - this.antecedenciaFinalEmMinutos * 60_000,
+      ),
+      this.templateLembreteIminente.preparar({
+        solicitacaoId: input.solicitacaoId,
+        destinatarioIds:
+          input.destinatariosLembreteFinal ?? input.destinatarioIds,
+        dataCorrida: input.dataCorrida,
+        antecedenciaEmMinutos: this.antecedenciaFinalEmMinutos,
+      }),
+    );
+  }
+
+  private async agendar(
+    solicitacaoId: number,
+    dispararEm: Date,
+    notificacoes: NotificacaoConteudo[],
+  ): Promise<void> {
+    if (notificacoes.length === 0) return;
     if (Number.isNaN(dispararEm.getTime())) {
       throw new BadRequestException('A data do lembrete é inválida.');
     }
 
-    const contexto: ContextoLembreteViagem = {
-      solicitacaoId: input.solicitacaoId,
-      destinatarioIds: input.destinatarioIds,
-      dataCorrida: input.dataCorrida,
-    };
-    const notificacoes = this.templateLembreteViagem.preparar(contexto);
-    if (notificacoes.length === 0) return;
-
     const agora = Date.now();
+    // Corrida marcada em cima da hora: o lembrete antecipado já venceu e
+    // dispará-lo agora só duplicaria o lembrete final.
+    if (dispararEm.getTime() <= agora) return;
+
     const agendamentoId = randomUUID();
     const agendamento: AgendamentoNotificacao = {
       id: agendamentoId,
-      solicitacaoId: input.solicitacaoId,
+      solicitacaoId,
       jobId: `notificacao:${agendamentoId}`,
       dispararEm: dispararEm.toISOString(),
       expiraEm: new Date(

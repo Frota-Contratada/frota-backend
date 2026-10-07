@@ -1,11 +1,7 @@
-import { randomUUID } from 'node:crypto';
 import { NotificacaoConteudo, TipoNotificacao } from '../domain/notificacao';
+import { NotificacaoSistema } from './notificacao-sistema';
 
-export abstract class NotificacaoSistema<TContexto> {
-  abstract readonly tipo: TipoNotificacao;
-
-  abstract preparar(contexto: TContexto): NotificacaoConteudo[];
-}
+export { NotificacaoSistema };
 
 export interface ContextoLembreteViagem {
   solicitacaoId: number;
@@ -17,20 +13,11 @@ export class LembreteViagemNotificacao extends NotificacaoSistema<ContextoLembre
   readonly tipo = TipoNotificacao.LEMBRETE_VIAGEM;
 
   preparar(contexto: ContextoLembreteViagem): NotificacaoConteudo[] {
-    const destinatarioIds = [...new Set(contexto.destinatarioIds)].filter(
-      (id) => Number.isInteger(id) && id > 0,
-    );
-    const dataFormatada = new Intl.DateTimeFormat('pt-BR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(contexto.dataCorrida);
-
-    return destinatarioIds.map((usuarioId) => ({
-      id: randomUUID(),
-      usuarioId,
-      tipo: this.tipo,
+    return this.paraCadaDestinatario(contexto.destinatarioIds, {
       titulo: 'Lembrete de viagem',
-      mensagem: `Sua viagem está agendada para ${dataFormatada}.`,
+      mensagem: `Sua viagem está agendada para ${this.formatarDataHora(
+        contexto.dataCorrida,
+      )}.`,
       dados: {
         solicitacaoId: contexto.solicitacaoId,
         dataCorrida: contexto.dataCorrida.toISOString(),
@@ -41,6 +28,34 @@ export class LembreteViagemNotificacao extends NotificacaoSistema<ContextoLembre
           solicitacaoId: String(contexto.solicitacaoId),
         },
       },
-    }));
+    });
+  }
+}
+
+export interface ContextoLembreteViagemIminente extends ContextoLembreteViagem {
+  antecedenciaEmMinutos: number;
+}
+
+export class LembreteViagemIminenteNotificacao extends NotificacaoSistema<ContextoLembreteViagemIminente> {
+  readonly tipo = TipoNotificacao.LEMBRETE_VIAGEM;
+
+  preparar(contexto: ContextoLembreteViagemIminente): NotificacaoConteudo[] {
+    return this.paraCadaDestinatario(contexto.destinatarioIds, {
+      titulo: 'Sua viagem está chegando',
+      mensagem: `Sua viagem começa em ${contexto.antecedenciaEmMinutos} minutos, às ${this.formatarDataHora(
+        contexto.dataCorrida,
+      )}.`,
+      dados: {
+        solicitacaoId: contexto.solicitacaoId,
+        dataCorrida: contexto.dataCorrida.toISOString(),
+        antecedenciaEmMinutos: contexto.antecedenciaEmMinutos,
+      },
+      acao: {
+        rota: '/solicitacoes',
+        parametros: {
+          solicitacaoId: String(contexto.solicitacaoId),
+        },
+      },
+    });
   }
 }

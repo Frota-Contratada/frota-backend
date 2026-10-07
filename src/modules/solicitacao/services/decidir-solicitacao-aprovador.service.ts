@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { Solicitacao } from '../domain/solicitacao';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
@@ -12,6 +13,7 @@ import {
   SolicitacaoRepositoryContract,
 } from '../repositories/solicitacao-repository.contract';
 import { ContratoPrecificacaoRepositoryContract } from '../repositories/contrato-precificacao-repository.contract';
+import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { CalcularValorEstimadoService } from './calcular-valor-estimado.service';
 
 @Injectable()
@@ -22,6 +24,7 @@ export class DecidirSolicitacaoAprovadorService {
     private readonly contratoPrecificacaoRepository: ContratoPrecificacaoRepositoryContract,
     private readonly calcularValorEstimadoService: CalcularValorEstimadoService,
     private readonly prismaService: PrismaService,
+    private readonly notificarSolicitacao: NotificarSolicitacaoService,
   ) {}
 
   async execute(
@@ -47,11 +50,18 @@ export class DecidirSolicitacaoAprovadorService {
         throw new MotivoNaoEncontradoException(decisao.motivoRecusaId);
       }
 
-      return this.solicitacaoRepository.decidirPeloAprovador(
+      const reprovada = await this.solicitacaoRepository.decidirPeloAprovador(
         id,
         aprovadorId,
         decisao,
       );
+
+      await this.notificarSolicitacao.solicitacaoReprovada(id, {
+        aprovadorId,
+        motivo: motivo.nome,
+      });
+
+      return reprovada;
     }
 
     const fornecedor = await this.resolverFornecedor(
@@ -60,13 +70,24 @@ export class DecidirSolicitacaoAprovadorService {
       decisao.fornecedorId,
     );
 
-    return this.solicitacaoRepository.decidirPeloAprovador(id, aprovadorId, {
-      ...decisao,
-      fornecedorId: fornecedor?.fornecedorId,
-      contratoId: fornecedor?.contratoId,
-      valorEstimado: fornecedor?.valorEstimado,
-      rotaFixaId: fornecedor?.rotaFixaId,
-    });
+    const aprovada = await this.solicitacaoRepository.decidirPeloAprovador(
+      id,
+      aprovadorId,
+      {
+        ...decisao,
+        fornecedorId: fornecedor?.fornecedorId,
+        contratoId: fornecedor?.contratoId,
+        valorEstimado: fornecedor?.valorEstimado,
+        rotaFixaId: fornecedor?.rotaFixaId,
+      },
+    );
+
+    // Só depois da última aprovação a solicitação chega ao fornecedor.
+    if (aprovada.status === StatusSolicitacao.APROVADA) {
+      await this.notificarSolicitacao.solicitacaoAguardandoFornecedor(id);
+    }
+
+    return aprovada;
   }
 
   private async resolverFornecedor(
