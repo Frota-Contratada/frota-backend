@@ -92,13 +92,13 @@ CREATE TABLE [dbo].[Empresa] (
 );
 
 -- CreateIndex
-CREATE UNIQUE NONCLUSTERED INDEX [UK_Fornecedor_BaseEstab] ON [dbo].[Fornecedor]([nCdBaseFornecedor], [nCdEstabFornecedor]) WHERE ([nCdBaseFornecedor] IS NOT NULL AND [nCdEstabFornecedor] IS NOT NULL);
+EXEC(N'CREATE UNIQUE NONCLUSTERED INDEX [UK_Fornecedor_BaseEstab] ON [dbo].[Fornecedor]([nCdBaseFornecedor], [nCdEstabFornecedor]) WHERE ([nCdBaseFornecedor] IS NOT NULL AND [nCdEstabFornecedor] IS NOT NULL)');
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [IX_Motivo_EscopoTipo] ON [dbo].[Motivo]([nCdEmpresa], [nCdFilial], [cTipoMotivo], [dDesativacao]);
+EXEC(N'CREATE NONCLUSTERED INDEX [IX_Motivo_EscopoTipo] ON [dbo].[Motivo]([nCdEmpresa], [nCdFilial], [cTipoMotivo], [dDesativacao])');
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [IX_Usuario_CentroCusto] ON [dbo].[Usuario]([nCdEmpresa], [nCdFilial], [nCdCentroCusto]);
+EXEC(N'CREATE NONCLUSTERED INDEX [IX_Usuario_CentroCusto] ON [dbo].[Usuario]([nCdEmpresa], [nCdFilial], [nCdCentroCusto])');
 
 -- AddForeignKey
 ALTER TABLE [dbo].[CentroCusto] ADD CONSTRAINT [FK_CentroCusto_Filial] FOREIGN KEY ([nCdEmpresa], [nCdFilial]) REFERENCES [dbo].[Filial]([nCdEmpresa],[nCdFilial]) ON DELETE NO ACTION ON UPDATE NO ACTION;
