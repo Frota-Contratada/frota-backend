@@ -25,11 +25,13 @@ import {
 export interface FiltrosDashboardQuery {
   startDate?: string;
   endDate?: string;
+  empresa?: number;
   filial?: number;
   centroCusto?: number;
 }
 
 export interface EscopoDashboard {
+  empresaId?: number;
   filialId?: number;
   aprovadorId?: number;
 }
@@ -48,6 +50,7 @@ export class BuscarDashboardService {
     const filtros = {
       inicio: periodo.inicio.toJSDate(),
       fim: periodo.fim.toJSDate(),
+      empresaId: escopo.empresaId ?? query.empresa,
       filialId: escopo.filialId ?? query.filial,
       centroCustoId: query.centroCusto,
       aprovadorId: escopo.aprovadorId,

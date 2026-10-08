@@ -13,6 +13,7 @@ export class BuscarVariosFornecedoresService {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<FornecedorSummary>> {
@@ -20,6 +21,7 @@ export class BuscarVariosFornecedoresService {
       nome: filtros.nome,
       cnpjCpf: filtros.cnpjCpf,
       filialId: filtros.filialId,
+      empresaId: filtros.empresaId,
       page: filtros.page,
       limit: filtros.limit,
     });

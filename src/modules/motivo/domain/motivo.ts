@@ -10,6 +10,7 @@ export class Motivo {
     /** `undefined` indica motivo global, disponível para todas as filiais. */
     public filialId?: number,
     public dataDesativacao?: DateTime,
+    public empresaId?: number,
   ) {}
 
   get global(): boolean {

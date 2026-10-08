@@ -47,6 +47,7 @@ export class BuscarDashboardAuditoriaService {
     const filtros = {
       inicio: periodo.inicio.toJSDate(),
       fim: periodo.fim.toJSDate(),
+      empresaId: escopo.empresaId ?? query.empresa,
       filialId: escopo.filialId ?? query.filial,
       centroCustoId: query.centroCusto,
       aprovadorId: escopo.aprovadorId,
@@ -101,9 +102,8 @@ export class BuscarDashboardAuditoriaService {
         },
       },
       conformidadeQuilometragem: this.montarConformidade(totaisPorFornecedor),
-      maioresDesviosFornecedores: this.montarMaioresDesvios(
-        totaisPorFornecedor,
-      ),
+      maioresDesviosFornecedores:
+        this.montarMaioresDesvios(totaisPorFornecedor),
       corridas: corridas.map((corrida) => this.montarCorrida(corrida)),
     };
   }

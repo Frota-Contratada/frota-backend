@@ -7,8 +7,8 @@ import { Filial } from '../domain/filial';
 export class BuscarFilialService {
   constructor(private readonly filialRepository: FilialRepositoryContract) {}
 
-  async execute(id: number): Promise<Filial> {
-    const filial = await this.filialRepository.buscar(id);
+  async execute(empresaId: number, id: number): Promise<Filial> {
+    const filial = await this.filialRepository.buscar(empresaId, id);
 
     if (!filial) {
       throw new FilialNaoEncontradaException(id);

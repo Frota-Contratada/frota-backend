@@ -17,6 +17,7 @@ export class BuscarVariosColaboradoresService {
     nome?: string;
     cpf?: string;
     filialId?: number;
+    empresaId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ColaboradorSummary>> {

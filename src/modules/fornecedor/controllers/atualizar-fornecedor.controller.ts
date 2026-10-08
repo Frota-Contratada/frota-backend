@@ -50,28 +50,31 @@ export class AtualizarFornecedorController {
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   @ApiRespostaDe(FornecedorDto)
   async atualizarDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
     @Body() body: AtualizarFornecedorRequestDto,
   ): Promise<ResponseInterface<FornecedorDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
-    return this.atualizar(id, body, filialId);
+    return this.atualizar(id, body, filialId, empresaId);
   }
 
   private async atualizar(
     id: number,
     body: AtualizarFornecedorRequestDto,
     filialId?: number,
+    empresaId?: number,
   ): Promise<ResponseInterface<FornecedorDto>> {
     const fornecedor = await this.atualizarFornecedorService.execute(
       id,
       body.nome,
       body.cnpjCpf,
       filialId,
+      empresaId,
     );
 
     return {

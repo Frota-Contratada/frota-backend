@@ -6,6 +6,7 @@ import {
 
 export class ContratoVigenteDto {
   contratoId: number;
+  empresaId: number;
   filialId: number;
   filialNome: string;
   dataVigenciaInicio: DateTime;
@@ -14,6 +15,7 @@ export class ContratoVigenteDto {
 
   constructor(contrato: ContratoVigenteSummary) {
     this.contratoId = contrato.contratoId;
+    this.empresaId = contrato.empresaId;
     this.filialId = contrato.filialId;
     this.filialNome = contrato.filialNome;
     this.dataVigenciaInicio = contrato.dataVigenciaInicio;
@@ -25,7 +27,7 @@ export class ContratoVigenteDto {
 export class FornecedorSummaryDto {
   id: number;
   nome: string;
-  cnpjCpf: string;
+  cnpjCpf: string | null;
   dataAtivacao: DateTime;
   ativo: boolean;
   quantidadeVeiculosAtivos: number;

@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -24,9 +25,15 @@ export class SubstituirAdministradoresController {
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
+    @Query(
+      'empresaId',
+      new ZodValidationPipe(z.coerce.number().int().positive()),
+    )
+    empresaId: number,
     @Body() body: SubstituirAdministradoresRequestDto,
   ): Promise<void> {
     await this.substituirAdministradoresService.execute(
+      empresaId,
       id,
       body.administradorIds,
     );

@@ -20,9 +20,10 @@ export class TornarSolicitanteEmergenciaService {
 
   async execute(params: {
     colaboradorId: number;
+    empresaId?: number;
     filialId?: number;
   }): Promise<Colaborador> {
-    const { colaboradorId, filialId } = params;
+    const { colaboradorId, empresaId, filialId } = params;
 
     const colaborador = await this.colaboradorRepository.buscar(colaboradorId);
 
@@ -30,7 +31,10 @@ export class TornarSolicitanteEmergenciaService {
       throw new ColaboradorNaoEncontradoException(colaboradorId);
     }
 
-    if (filialId && colaborador.filialId !== filialId) {
+    if (
+      filialId &&
+      (colaborador.empresaId !== empresaId || colaborador.filialId !== filialId)
+    ) {
       throw new ColaboradorDeOutraFilialException(colaboradorId);
     }
 
@@ -42,7 +46,7 @@ export class TornarSolicitanteEmergenciaService {
       throw new ColaboradorNaoEhSolicitanteException(colaboradorId);
     }
 
-    if (!colaborador.filialId) {
+    if (!colaborador.empresaId || !colaborador.filialId) {
       throw new ColaboradorSemFilialException(colaboradorId);
     }
 
@@ -51,6 +55,7 @@ export class TornarSolicitanteEmergenciaService {
     }
 
     const centroCusto = await this.centroCustoRepository.buscar(
+      colaborador.empresaId,
       colaborador.filialId,
       colaborador.centroCustoId,
     );

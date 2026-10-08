@@ -7,5 +7,6 @@ export type AccessTokenPayload = {
   plataforma: Plataforma;
   perfis: TipoPerfil[];
   filialId?: number;
+  empresaId?: number;
   fornecedorId?: number;
 };

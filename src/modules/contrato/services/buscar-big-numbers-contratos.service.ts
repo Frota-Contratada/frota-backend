@@ -10,6 +10,7 @@ export class BuscarBigNumbersContratosService {
 
   async execute(filtros: {
     filialId?: number;
+    empresaId?: number;
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;

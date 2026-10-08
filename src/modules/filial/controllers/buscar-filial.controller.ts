@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -15,8 +15,13 @@ export class BuscarFilialController {
   async buscar(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
+    @Query(
+      'empresaId',
+      new ZodValidationPipe(z.coerce.number().int().positive()),
+    )
+    empresaId: number,
   ): Promise<ResponseInterface<FilialDto>> {
-    const filial = await this.buscarFilialService.execute(id);
+    const filial = await this.buscarFilialService.execute(empresaId, id);
 
     return {
       response: FilialDto.aPartirDoDominio(filial),

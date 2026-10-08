@@ -15,6 +15,7 @@ export class PrismaContratoPrecificacaoRepository extends ContratoPrecificacaoRe
   }
 
   async buscarCandidatos(
+    empresaId: number,
     filialId: number,
     tipoCorridaId: number,
     data: DateTime,
@@ -23,6 +24,7 @@ export class PrismaContratoPrecificacaoRepository extends ContratoPrecificacaoRe
 
     const vinculos = await this.prismaService.filialFornecedor.findMany({
       where: {
+        nCdEmpresa: empresaId,
         nCdFilial: filialId,
         Fornecedor: { dDesativacao: null },
         Contrato: {

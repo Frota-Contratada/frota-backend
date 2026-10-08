@@ -29,6 +29,8 @@ export class PrismaUsuarioMapper {
         ? undefined
         : entity.nCdFornecedor.toNumber(),
       entity.cCaminhoFotoPerfil ?? undefined,
+      undefined,
+      entity.nCdEmpresa == null ? undefined : entity.nCdEmpresa.toNumber(),
     );
   }
 
@@ -68,6 +70,8 @@ export class PrismaUsuarioMapper {
         ? undefined
         : entity.nCdFornecedor.toNumber(),
       entity.cCaminhoFotoPerfil ?? undefined,
+      undefined,
+      entity.nCdEmpresa == null ? undefined : entity.nCdEmpresa.toNumber(),
     );
   }
 }

@@ -73,6 +73,8 @@ export class PrismaColaboradorMapper {
       perfis,
       entity.nCdFilial == null ? undefined : entity.nCdFilial.toNumber(),
       entity.cCaminhoFotoPerfil ?? undefined,
+      undefined,
+      entity.nCdEmpresa == null ? undefined : entity.nCdEmpresa.toNumber(),
     );
   }
 }

@@ -10,12 +10,14 @@ export class BuscarVariosCentrosCustoService {
   ) {}
 
   async execute(filtros: {
+    empresaId?: number;
     filialId?: number;
     nome?: string;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<CentroCusto>> {
     return this.centroCustoRepository.buscarVarios({
+      empresaId: filtros.empresaId,
       filialId: filtros.filialId,
       nome: filtros.nome,
       page: filtros.page,

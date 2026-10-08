@@ -23,8 +23,9 @@ export class AtualizarFornecedorService {
   async execute(
     id: number,
     nome: string,
-    cnpjCpf: string,
+    cnpjCpf: string | null | undefined,
     filialId?: number,
+    empresaId?: number,
   ): Promise<Fornecedor> {
     const fornecedor = await this.fornecedorRepository.buscar(id);
 
@@ -32,15 +33,26 @@ export class AtualizarFornecedorService {
       throw new FornecedorNaoEncontradoException(id);
     }
 
+    const novoCnpjCpf = cnpjCpf === undefined ? fornecedor.cnpjCpf : cnpjCpf;
+
     if (filialId !== undefined) {
-      await this.validarFornecedorDaFilialService.execute(id, filialId);
+      if (empresaId === undefined)
+        throw new Error(
+          'empresaId is required for branch-scoped supplier updates',
+        );
+      await this.validarFornecedorDaFilialService.execute(
+        id,
+        empresaId,
+        filialId,
+      );
     }
 
     if (
-      fornecedor.cnpjCpf !== cnpjCpf &&
-      (await this.fornecedorRepository.existePorCnpjCpf(cnpjCpf, id))
+      novoCnpjCpf !== null &&
+      fornecedor.cnpjCpf !== novoCnpjCpf &&
+      (await this.fornecedorRepository.existePorCnpjCpf(novoCnpjCpf, id))
     ) {
-      throw new CnpjCpfJaCadastradoException(cnpjCpf);
+      throw new CnpjCpfJaCadastradoException(novoCnpjCpf);
     }
 
     if (
@@ -53,6 +65,6 @@ export class AtualizarFornecedorService {
       throw new FornecedorJaCadastradoException(nome);
     }
 
-    return this.fornecedorRepository.atualizar(id, nome, cnpjCpf);
+    return this.fornecedorRepository.atualizar(id, nome, novoCnpjCpf);
   }
 }

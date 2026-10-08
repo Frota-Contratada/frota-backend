@@ -27,6 +27,8 @@ import {
 const LIMITE_MAIORES_GASTOS = 5;
 
 interface GastoCentroCusto {
+  empresaId: number;
+  filialId: number;
   centroCustoId: number;
   centroCusto: string;
   responsavel: string;
@@ -47,6 +49,7 @@ export class BuscarDashboardGastosService {
     const filtros = {
       inicio: periodo.inicio.toJSDate(),
       fim: periodo.fim.toJSDate(),
+      empresaId: escopo.empresaId ?? query.empresa,
       filialId: escopo.filialId ?? query.filial,
       centroCustoId: query.centroCusto,
       aprovadorId: escopo.aprovadorId,
@@ -68,7 +71,10 @@ export class BuscarDashboardGastosService {
     const topCentroCusto = centrosCusto.at(0) ?? null;
     const gastoAnteriorDoTopCentro = topCentroCusto
       ? (centrosCustoAnteriores.find(
-          (centro) => centro.centroCustoId === topCentroCusto.centroCustoId,
+          (centro) =>
+            centro.empresaId === topCentroCusto.empresaId &&
+            centro.filialId === topCentroCusto.filialId &&
+            centro.centroCustoId === topCentroCusto.centroCustoId,
         )?.valor ?? 0)
       : 0;
 
@@ -90,6 +96,8 @@ export class BuscarDashboardGastosService {
           variacaoPercentual: calcularVariacao(precoMedio, precoMedioAnterior),
         },
         topCentroCusto: {
+          empresaId: topCentroCusto?.empresaId ?? null,
+          filialId: topCentroCusto?.filialId ?? null,
           centroCustoId: topCentroCusto?.centroCustoId ?? null,
           centroCusto: topCentroCusto?.centroCusto ?? null,
           gasto: topCentroCusto?.valor ?? 0,
@@ -156,10 +164,12 @@ export class BuscarDashboardGastosService {
       const valorPorRateio = gasto.preco / gasto.totalRateios;
 
       for (const rateio of gasto.rateios) {
-        const chave = `${rateio.filialId}-${rateio.centroCustoId}`;
+        const chave = `${rateio.empresaId}-${rateio.filialId}-${rateio.centroCustoId}`;
         const atual = centros.get(chave);
 
         centros.set(chave, {
+          empresaId: rateio.empresaId,
+          filialId: rateio.filialId,
           centroCustoId: rateio.centroCustoId,
           centroCusto: rateio.centroCustoNome,
           responsavel: rateio.responsavelNome,
@@ -183,6 +193,8 @@ export class BuscarDashboardGastosService {
     centrosCusto: GastoCentroCusto[],
   ): DashboardGastoCentroCusto[] {
     return centrosCusto.slice(0, LIMITE_MAIORES_GASTOS).map((centro) => ({
+      empresaId: centro.empresaId,
+      filialId: centro.filialId,
       centroCustoId: centro.centroCustoId,
       centroCusto: centro.centroCusto,
       valor: centro.valor,
@@ -193,6 +205,8 @@ export class BuscarDashboardGastosService {
     centrosCusto: GastoCentroCusto[],
   ): DashboardCentroCustoResumo[] {
     return centrosCusto.map((centro) => ({
+      empresaId: centro.empresaId,
+      filialId: centro.filialId,
       centroCustoId: centro.centroCustoId,
       centroCusto: centro.centroCusto,
       responsavel: centro.responsavel,

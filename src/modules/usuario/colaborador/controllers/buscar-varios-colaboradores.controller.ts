@@ -42,17 +42,19 @@ export class BuscarVariosColaboradoresController {
   @Get('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarVariosDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarColaboradoresQueryDto,
   ): Promise<
     ResponseInterface<PaginatedResponseInterface<ColaboradorSummaryDto>>
   > {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     const resultado = await this.buscarVariosColaboradoresService.execute({
       ...query,
+      empresaId,
       filialId,
     });
 
@@ -73,15 +75,17 @@ export class BuscarVariosColaboradoresController {
   @Get('filial/big-numbers')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarBigNumbersDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BigNumbersColaboradoresQueryDto,
   ): Promise<ResponseInterface<ColaboradorBigNumbersDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     const resultado = await this.buscarBigNumbersColaboradoresService.execute({
       ...query,
+      empresaId,
       filialId,
     });
 

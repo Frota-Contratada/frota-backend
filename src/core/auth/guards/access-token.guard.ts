@@ -48,6 +48,7 @@ export class AccessTokenGuard implements CanActivate {
       id: payload.sub,
       perfis: payload.perfis,
       filialId: payload.filialId,
+      empresaId: payload.empresaId,
       fornecedorId: payload.fornecedorId,
     };
 

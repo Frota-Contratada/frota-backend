@@ -9,6 +9,7 @@ export const CriarMotivoAdminRequestSchema = CriarMotivoRequestSchema.extend({
     .int()
     .positive({ message: 'Informe um id de filial válido' })
     .nullish(),
+  empresaId: z.number().int().positive().nullish(),
 });
 
 export class CriarMotivoAdminRequestDto extends createZodDto(

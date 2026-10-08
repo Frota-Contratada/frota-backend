@@ -1,6 +1,7 @@
 import { Filial } from '../../../domain/filial';
 
 export class EnderecoDto {
+  tipoLogradouro?: string;
   logradouro: string;
   numero: string;
   complemento?: string;
@@ -21,6 +22,7 @@ export class EnderecoDto {
     latitude: number,
     longitude: number,
     complemento?: string,
+    tipoLogradouro?: string,
   ) {
     this.logradouro = logradouro;
     this.numero = numero;
@@ -31,16 +33,25 @@ export class EnderecoDto {
     this.latitude = latitude;
     this.longitude = longitude;
     this.complemento = complemento;
+    this.tipoLogradouro = tipoLogradouro;
   }
 }
 
 export class FilialDto {
+  empresaId: number;
   id: number;
   nome: string;
   cnpj: string;
   endereco: EnderecoDto;
 
-  constructor(id: number, nome: string, cnpj: string, endereco: EnderecoDto) {
+  constructor(
+    empresaId: number,
+    id: number,
+    nome: string,
+    cnpj: string,
+    endereco: EnderecoDto,
+  ) {
+    this.empresaId = empresaId;
     this.id = id;
     this.nome = nome;
     this.cnpj = cnpj;
@@ -58,8 +69,15 @@ export class FilialDto {
       filial.endereco.latitude,
       filial.endereco.longitude,
       filial.endereco.complemento,
+      filial.endereco.tipoLogradouro,
     );
 
-    return new FilialDto(filial.id, filial.nome, filial.cnpj, endereco);
+    return new FilialDto(
+      filial.empresaId,
+      filial.id,
+      filial.nome,
+      filial.cnpj,
+      endereco,
+    );
   }
 }

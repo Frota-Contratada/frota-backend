@@ -11,10 +11,18 @@ export const BuscarDashboardQuerySchema = z
     endDate: dataIsoSchema(
       'Informe endDate em formato ISO 8601 válido',
     ).optional(),
+    empresa: z.coerce.number().int().positive().optional(),
     filial: z.coerce.number().int().positive().optional(),
     centroCusto: z.coerce.number().int().positive().optional(),
   })
   .superRefine((filtros, contexto) => {
+    if ((filtros.filial || filtros.centroCusto) && !filtros.empresa) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['empresa'],
+        message: 'Informe empresa para filtrar filial ou centro de custo',
+      });
+    }
     if (!filtros.startDate || !filtros.endDate) return;
 
     const inicio = DateTime.fromISO(filtros.startDate);

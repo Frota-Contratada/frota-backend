@@ -105,12 +105,13 @@ export class DecidirSolicitacaoAprovadorService {
   > {
     const solicitante = await this.prismaService.usuario.findUnique({
       where: { nCdUsuario: solicitacao.solicitanteId },
-      select: { nCdFilial: true, nCdCentroCusto: true },
+      select: { nCdEmpresa: true, nCdFilial: true, nCdCentroCusto: true },
     });
 
     const ehAprovadorDoCentroDoSolicitante = solicitacao.centrosCusto.some(
       (rateio) =>
         rateio.aprovadorId === aprovadorId &&
+        rateio.empresaId === solicitante?.nCdEmpresa?.toNumber() &&
         rateio.filialId === solicitante?.nCdFilial?.toNumber() &&
         rateio.centroCustoId === solicitante?.nCdCentroCusto?.toNumber(),
     );
@@ -126,12 +127,13 @@ export class DecidirSolicitacaoAprovadorService {
       throw new FornecedorObrigatorioException();
     }
 
-    if (solicitante?.nCdFilial == null) {
+    if (solicitante?.nCdEmpresa == null || solicitante.nCdFilial == null) {
       throw new FornecedorIndisponivelException(0, solicitacao.tipoCorrida.id);
     }
 
     const candidatos =
       await this.contratoPrecificacaoRepository.buscarCandidatos(
+        solicitante.nCdEmpresa.toNumber(),
         solicitante.nCdFilial.toNumber(),
         solicitacao.tipoCorrida.id,
         solicitacao.dataCorrida,

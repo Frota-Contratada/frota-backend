@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
@@ -15,11 +15,16 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     super();
   }
   private filtroDeVinculoComContratoVigente(
+    empresaId?: number,
     filialId?: number,
   ): Prisma.FilialFornecedorWhereInput {
+    if (filialId !== undefined && empresaId === undefined) {
+      throw new BadRequestException('Informe empresaId ao filtrar filialId');
+    }
     const hoje = DateTime.now().startOf('day').toJSDate();
 
     return {
+      ...(empresaId ? { nCdEmpresa: empresaId } : {}),
       ...(filialId ? { nCdFilial: filialId } : {}),
       Contrato: {
         dVigenciaInicio: { lte: hoje },
@@ -42,17 +47,29 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<FornecedorSummary>> {
+    if (filtros.filialId !== undefined && filtros.empresaId === undefined) {
+      throw new BadRequestException('Informe empresaId ao filtrar filialId');
+    }
     const vinculoComContratoVigente = this.filtroDeVinculoComContratoVigente(
+      filtros.empresaId,
       filtros.filialId,
     );
     const where = {
       ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
       ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
       ...(filtros.filialId
-        ? { FilialFornecedor: { some: { nCdFilial: filtros.filialId } } }
+        ? {
+            FilialFornecedor: {
+              some: {
+                nCdEmpresa: filtros.empresaId,
+                nCdFilial: filtros.filialId,
+              },
+            },
+          }
         : {}),
     };
     const skip = (filtros.page - 1) * filtros.limit;
@@ -69,6 +86,7 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
             where: vinculoComContratoVigente,
             orderBy: [{ nCdFilial: 'asc' }, { nCdContrato: 'asc' }],
             select: {
+              nCdEmpresa: true,
               nCdFilial: true,
               Filial: { select: { cNmFilial: true } },
               Contrato: true,
@@ -94,13 +112,24 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
   }): Promise<FornecedorBigNumbers> {
+    if (filtros.filialId !== undefined && filtros.empresaId === undefined) {
+      throw new BadRequestException('Informe empresaId ao filtrar filialId');
+    }
     const whereBase: Prisma.FornecedorWhereInput = {
       dDesativacao: null,
       ...(filtros.cnpjCpf ? { cCNPJCPF: { contains: filtros.cnpjCpf } } : {}),
       ...(filtros.nome ? { cNmFornecedor: { contains: filtros.nome } } : {}),
       ...(filtros.filialId
-        ? { FilialFornecedor: { some: { nCdFilial: filtros.filialId } } }
+        ? {
+            FilialFornecedor: {
+              some: {
+                nCdEmpresa: filtros.empresaId,
+                nCdFilial: filtros.filialId,
+              },
+            },
+          }
         : {}),
     };
 
@@ -109,7 +138,10 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
         whereBase,
         {
           FilialFornecedor: {
-            some: this.filtroDeVinculoComContratoVigente(filtros.filialId),
+            some: this.filtroDeVinculoComContratoVigente(
+              filtros.empresaId,
+              filtros.filialId,
+            ),
           },
         },
       ],
@@ -157,7 +189,7 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
   async atualizar(
     id: number,
     nome: string,
-    cnpjCpf: string,
+    cnpjCpf: string | null,
   ): Promise<Fornecedor> {
     return PrismaFornecedorMapper.toDomain(
       await this.prismaService.cliente.fornecedor.update({
@@ -178,10 +210,12 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
 
   async existePorNomeNaFilial(
     nome: string,
+    empresaId: number,
     filialId: number,
   ): Promise<boolean> {
     const resultado = await this.prismaService.filialFornecedor.findFirst({
       where: {
+        nCdEmpresa: empresaId,
         nCdFilial: filialId,
         Fornecedor: {
           cNmFornecedor: nome,
@@ -198,8 +232,8 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
   ): Promise<boolean> {
     const vinculos = await this.prismaService.filialFornecedor.findMany({
       where: { nCdFornecedor: fornecedorId },
-      select: { nCdFilial: true },
-      distinct: ['nCdFilial'],
+      select: { nCdEmpresa: true, nCdFilial: true },
+      distinct: ['nCdEmpresa', 'nCdFilial'],
     });
 
     if (vinculos.length === 0) {
@@ -208,7 +242,10 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
 
     const conflito = await this.prismaService.filialFornecedor.findFirst({
       where: {
-        nCdFilial: { in: vinculos.map((vinculo) => vinculo.nCdFilial) },
+        OR: vinculos.map((vinculo) => ({
+          nCdEmpresa: vinculo.nCdEmpresa,
+          nCdFilial: vinculo.nCdFilial,
+        })),
         nCdFornecedor: { not: fornecedorId },
         Fornecedor: { cNmFornecedor: nome },
       },
@@ -236,10 +273,15 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
 
   async pertenceAFilial(
     fornecedorId: number,
+    empresaId: number,
     filialId: number,
   ): Promise<boolean> {
     const vinculo = await this.prismaService.filialFornecedor.findFirst({
-      where: { nCdFornecedor: fornecedorId, nCdFilial: filialId },
+      where: {
+        nCdFornecedor: fornecedorId,
+        nCdEmpresa: empresaId,
+        nCdFilial: filialId,
+      },
       select: { nCdFornecedor: true },
     });
     return vinculo !== null;

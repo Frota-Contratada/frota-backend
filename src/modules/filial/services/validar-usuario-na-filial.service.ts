@@ -9,11 +9,13 @@ export class ValidarUsuarioNaFilialService {
 
   async execute(
     usuarioId: number,
+    empresaId: number,
     filialId: number,
     tipoPerfil: TipoPerfil,
   ): Promise<void> {
     const pertence = await this.filialRepository.existeUsuarioNaFilialComPerfil(
       usuarioId,
+      empresaId,
       filialId,
       tipoPerfil,
     );

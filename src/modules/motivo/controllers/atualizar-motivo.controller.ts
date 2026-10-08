@@ -39,12 +39,13 @@ export class AtualizarMotivoController {
   @Patch('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async atualizarDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
     @Body() body: AtualizarMotivoRequestDto,
   ): Promise<ResponseInterface<MotivoDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
@@ -53,6 +54,7 @@ export class AtualizarMotivoController {
       body.nome,
       body.tipo,
       filialId,
+      empresaId,
     );
 
     return { response: new MotivoDto(motivo) };

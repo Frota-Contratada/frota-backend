@@ -24,13 +24,19 @@ export class BuscarCentrosCustoService {
       throw new UsuarioNaoEncontradoException();
     }
 
-    if (usuario.filialId == null) {
+    if (usuario.empresaId == null || usuario.filialId == null) {
       throw new UsuarioSemFilialException(usuarioId);
     }
 
     const [centrosCusto, idsComAprovador] = await Promise.all([
-      this.centroCustoRepository.buscarPorFilial(usuario.filialId),
-      this.centroCustoRepository.buscarIdsComAprovador(usuario.filialId),
+      this.centroCustoRepository.buscarPorFilial(
+        usuario.empresaId,
+        usuario.filialId,
+      ),
+      this.centroCustoRepository.buscarIdsComAprovador(
+        usuario.empresaId,
+        usuario.filialId,
+      ),
     ]);
 
     const comAprovador = new Set(idsComAprovador);

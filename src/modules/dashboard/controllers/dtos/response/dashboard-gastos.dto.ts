@@ -19,6 +19,12 @@ export class DashboardGastoIndicadorDto {
 }
 
 export class DashboardTopCentroCustoDto {
+  @ApiProperty({ example: 1, nullable: true })
+  empresaId!: number | null;
+
+  @ApiProperty({ example: 101, nullable: true })
+  filialId!: number | null;
+
   @ApiProperty({ example: 101, nullable: true })
   centroCustoId!: number | null;
 
@@ -32,6 +38,8 @@ export class DashboardTopCentroCustoDto {
   variacaoPercentual!: number | null;
 
   constructor(indicador: DashboardTopCentroCusto) {
+    this.empresaId = indicador.empresaId;
+    this.filialId = indicador.filialId;
     this.centroCustoId = indicador.centroCustoId;
     this.centroCusto = indicador.centroCusto;
     this.gasto = indicador.gasto;
@@ -63,6 +71,12 @@ export class DashboardGastosBigNumbersDto {
 }
 
 export class DashboardGastoCentroCustoDto {
+  @ApiProperty({ example: 1 })
+  empresaId!: number;
+
+  @ApiProperty({ example: 101 })
+  filialId!: number;
+
   @ApiProperty({ example: 101 })
   centroCustoId!: number;
 
@@ -75,6 +89,8 @@ export class DashboardGastoCentroCustoDto {
   constructor(
     centro: DashboardGastosResponse['maioresGastosCentroCusto'][number],
   ) {
+    this.empresaId = centro.empresaId;
+    this.filialId = centro.filialId;
     this.centroCustoId = centro.centroCustoId;
     this.centroCusto = centro.centroCusto;
     this.valor = centro.valor;
@@ -82,6 +98,12 @@ export class DashboardGastoCentroCustoDto {
 }
 
 export class DashboardCentroCustoResumoDto {
+  @ApiProperty({ example: 1 })
+  empresaId!: number;
+
+  @ApiProperty({ example: 101 })
+  filialId!: number;
+
   @ApiProperty({ example: 101 })
   centroCustoId!: number;
 
@@ -95,6 +117,8 @@ export class DashboardCentroCustoResumoDto {
   valor!: number;
 
   constructor(centro: DashboardGastosResponse['centrosCusto'][number]) {
+    this.empresaId = centro.empresaId;
+    this.filialId = centro.filialId;
     this.centroCustoId = centro.centroCustoId;
     this.centroCusto = centro.centroCusto;
     this.responsavel = centro.responsavel;

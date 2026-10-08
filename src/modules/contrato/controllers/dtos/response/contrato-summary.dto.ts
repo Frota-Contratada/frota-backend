@@ -6,12 +6,14 @@ import {
 import { StatusContrato } from '../../../enums/status-contrato.enum';
 
 export class ContratoVinculoDto {
+  empresaId: number;
   filialId: number;
   filialNome: string;
   fornecedorId: number;
   fornecedorNome: string;
 
   constructor(vinculo: ContratoVinculoSummary) {
+    this.empresaId = vinculo.empresaId;
     this.filialId = vinculo.filialId;
     this.filialNome = vinculo.filialNome;
     this.fornecedorId = vinculo.fornecedorId;

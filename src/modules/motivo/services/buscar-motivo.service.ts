@@ -12,7 +12,11 @@ export class BuscarMotivoService {
    * @param filialId Quando informado, restringe a leitura ao escopo da filial:
    * o motivo precisa ser global ou pertencer a ela.
    */
-  async execute(id: number, filialId?: number): Promise<Motivo> {
+  async execute(
+    id: number,
+    filialId?: number,
+    empresaId?: number,
+  ): Promise<Motivo> {
     const motivo = await this.motivoRepository.buscar(id);
 
     if (!motivo) {
@@ -22,7 +26,7 @@ export class BuscarMotivoService {
     if (
       filialId !== undefined &&
       !motivo.global &&
-      motivo.filialId !== filialId
+      (motivo.empresaId !== empresaId || motivo.filialId !== filialId)
     ) {
       throw new MotivoDeOutraFilialException(id, filialId);
     }

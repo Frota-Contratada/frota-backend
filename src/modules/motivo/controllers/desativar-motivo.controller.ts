@@ -33,15 +33,20 @@ export class DesativarMotivoController {
   @Delete('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async desativarDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<MotivoDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
-    const motivo = await this.desativarMotivoService.execute(id, filialId);
+    const motivo = await this.desativarMotivoService.execute(
+      id,
+      filialId,
+      empresaId,
+    );
 
     return { response: new MotivoDto(motivo) };
   }

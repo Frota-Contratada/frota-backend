@@ -53,6 +53,7 @@ type CorridaDashboardCompleta = Prisma.CorridaGetPayload<{
 }>;
 
 const SELECT_RATEIO_GASTO = {
+  nCdEmpresa: true,
   nCdFilial: true,
   nCdCentroCusto: true,
   CentroCusto: { select: { cNmCentroCusto: true } },
@@ -124,6 +125,7 @@ export class PrismaDashboardRepository extends DashboardRepositoryContract {
 
   private paraRateio(rateio: RateioGastoCompleto) {
     return {
+      empresaId: rateio.nCdEmpresa.toNumber(),
       filialId: rateio.nCdFilial.toNumber(),
       centroCustoId: rateio.nCdCentroCusto.toNumber(),
       centroCustoNome: rateio.CentroCusto.cNmCentroCusto,
@@ -135,6 +137,9 @@ export class PrismaDashboardRepository extends DashboardRepositoryContract {
     filtros: FiltrosDashboardCorridas,
   ): Prisma.SolicitacaoCentroCustoWhereInput {
     return {
+      ...(filtros.empresaId !== undefined
+        ? { nCdEmpresa: filtros.empresaId }
+        : {}),
       ...(filtros.filialId !== undefined
         ? { nCdFilial: filtros.filialId }
         : {}),

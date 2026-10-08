@@ -60,13 +60,15 @@ export class CriarCorridaService {
   ): Promise<RegraCorridaInput[]> {
     const solicitante = await this.prismaService.usuario.findUnique({
       where: { nCdUsuario: solicitacao.solicitanteId },
-      select: { nCdFilial: true },
+      select: { nCdEmpresa: true, nCdFilial: true },
     });
 
-    if (solicitante?.nCdFilial == null) return [];
+    if (solicitante?.nCdEmpresa == null || solicitante.nCdFilial == null)
+      return [];
 
     const contratos =
       await this.contratoPrecificacaoRepository.buscarCandidatos(
+        solicitante.nCdEmpresa.toNumber(),
         solicitante.nCdFilial.toNumber(),
         solicitacao.tipoCorrida.id,
         solicitacao.dataCorrida,

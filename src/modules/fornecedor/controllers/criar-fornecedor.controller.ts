@@ -18,7 +18,8 @@ export class CriarFornecedorController {
   ): Promise<ResponseInterface<FornecedorDto>> {
     const fornecedor = await this.criarFornecedorService.execute(
       body.nome,
-      body.cnpjCpf,
+      body.cnpjCpf ?? null,
+      body.empresaId,
       body.filialId,
     );
 

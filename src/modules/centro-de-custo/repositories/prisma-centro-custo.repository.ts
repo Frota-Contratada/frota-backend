@@ -13,13 +13,15 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
   }
 
   async buscar(
+    empresaId: number,
     filialId: number,
     centroCustoId: number,
   ): Promise<CentroCusto | null> {
     return PrismaCentroCustoMapper.toDomain(
       await this.prismaService.centroCusto.findUnique({
         where: {
-          nCdFilial_nCdCentroCusto: {
+          nCdEmpresa_nCdFilial_nCdCentroCusto: {
+            nCdEmpresa: empresaId,
             nCdFilial: filialId,
             nCdCentroCusto: centroCustoId,
           },
@@ -29,12 +31,16 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
   }
 
   async buscarVarios(filtros: {
+    empresaId?: number;
     filialId?: number;
     nome?: string;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<CentroCusto>> {
     const where = {
+      ...(filtros.empresaId !== undefined
+        ? { nCdEmpresa: filtros.empresaId }
+        : {}),
       ...(filtros.filialId !== undefined
         ? { nCdFilial: filtros.filialId }
         : {}),
@@ -61,9 +67,12 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
     };
   }
 
-  async buscarPorFilial(filialId: number): Promise<CentroCusto[]> {
+  async buscarPorFilial(
+    empresaId: number,
+    filialId: number,
+  ): Promise<CentroCusto[]> {
     const centrosCusto = await this.prismaService.centroCusto.findMany({
-      where: { nCdFilial: filialId },
+      where: { nCdEmpresa: empresaId, nCdFilial: filialId },
       orderBy: { nCdCentroCusto: 'asc' },
     });
 
@@ -72,11 +81,15 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
     );
   }
 
-  async buscarIdsComAprovador(filialId: number): Promise<number[]> {
+  async buscarIdsComAprovador(
+    empresaId: number,
+    filialId: number,
+  ): Promise<number[]> {
     const agora = new Date();
 
     const aprovadores = await this.prismaService.usuario.findMany({
       where: {
+        nCdEmpresa: empresaId,
         nCdFilial: filialId,
         nCdCentroCusto: { not: null },
         dDesativacao: null,
@@ -100,13 +113,18 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
   }
 
   async existeAprovadorNoCentroCusto(
+    empresaId: number,
     filialId: number,
     centroCustoId: number,
   ): Promise<boolean> {
-    return (await this.buscarAprovadorId(filialId, centroCustoId)) !== null;
+    return (
+      (await this.buscarAprovadorId(empresaId, filialId, centroCustoId)) !==
+      null
+    );
   }
 
   async buscarAprovadorId(
+    empresaId: number,
     filialId: number,
     centroCustoId: number,
   ): Promise<number | null> {
@@ -114,6 +132,7 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
 
     const aprovador = await this.prismaService.usuario.findFirst({
       where: {
+        nCdEmpresa: empresaId,
         nCdFilial: filialId,
         nCdCentroCusto: centroCustoId,
         dDesativacao: null,

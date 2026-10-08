@@ -24,14 +24,16 @@ export class BuscarCatalogosController {
   @Get('motivos')
   @ApiRespostaListaDe(CatalogoItemDto)
   async buscarMotivos(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarMotivosQueryDto,
   ): Promise<ResponseInterface<CatalogoItemDto[]>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     const resultado = await this.buscarVariosMotivosService.execute({
+      empresaId,
       filialId,
       tipo: query.tipo,
       page: 1,

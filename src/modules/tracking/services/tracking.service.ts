@@ -439,7 +439,8 @@ export class TrackingService {
     let anterior = validas[0];
 
     for (const atual of validas.slice(1)) {
-      const segundos = (atual.dPosicao.getTime() - anterior.dPosicao.getTime()) / 1000;
+      const segundos =
+        (atual.dPosicao.getTime() - anterior.dPosicao.getTime()) / 1000;
       if (segundos <= 0) continue;
 
       const trecho = this.distanciaEmKm(
@@ -508,8 +509,7 @@ export class TrackingService {
     )) {
       let cobrado = item.Regra.nValorFixo?.toNumber() ?? 0;
       cobrado += (item.Regra.nValorKm?.toNumber() ?? 0) * quilometragem;
-      cobrado +=
-        valor * ((item.Regra.nPercentual?.toNumber() ?? 0) / 100);
+      cobrado += valor * ((item.Regra.nPercentual?.toNumber() ?? 0) / 100);
       valor += cobrado;
     }
 
@@ -780,6 +780,7 @@ export class TrackingService {
     }
     if (
       perfis.has(TipoPerfil.ADMIN_FILIAL) &&
+      trip.Solicitacao.Usuario.nCdEmpresa?.toNumber() === user.empresaId &&
       trip.Solicitacao.Usuario.nCdFilial?.toNumber() === user.filialId
     ) {
       return;
@@ -1071,7 +1072,8 @@ const trackingCalculationPrototype =
   TrackingService.prototype as unknown as TrackingCalculationCompatibility;
 const calcularQuilometragemOriginal =
   trackingCalculationPrototype.calcularQuilometragem;
-const calcularValorFinalOriginal = trackingCalculationPrototype.calcularValorFinal;
+const calcularValorFinalOriginal =
+  trackingCalculationPrototype.calcularValorFinal;
 
 trackingCalculationPrototype.calcularQuilometragem = function (
   positions,

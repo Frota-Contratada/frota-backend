@@ -10,6 +10,7 @@ export abstract class ContratoRepositoryContract {
   abstract substituirRegras(contratoId: number, regras: Regra[]): Promise<void>;
   abstract buscarVarios(filtros: {
     filialId?: number;
+    empresaId?: number;
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;
@@ -18,6 +19,7 @@ export abstract class ContratoRepositoryContract {
   }): Promise<PaginatedResponseInterface<ContratoSummary>>;
   abstract buscarBigNumbers(filtros: {
     filialId?: number;
+    empresaId?: number;
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;

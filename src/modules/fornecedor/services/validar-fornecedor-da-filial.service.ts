@@ -13,9 +13,14 @@ export class ValidarFornecedorDaFilialService {
     private readonly fornecedorRepository: FornecedorRepositoryContract,
   ) {}
 
-  async execute(fornecedorId: number, filialId: number): Promise<void> {
+  async execute(
+    fornecedorId: number,
+    empresaId: number,
+    filialId: number,
+  ): Promise<void> {
     const pertence = await this.fornecedorRepository.pertenceAFilial(
       fornecedorId,
+      empresaId,
       filialId,
     );
 

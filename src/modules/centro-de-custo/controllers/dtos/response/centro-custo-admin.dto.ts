@@ -3,6 +3,7 @@ import { CentroCusto } from '../../../domain/centro-custo';
 
 export class CentroCustoAdminDto {
   id: number;
+  empresaId: number;
   filialId: number;
   nome: string;
   dataAtivacao: DateTime;
@@ -10,6 +11,7 @@ export class CentroCustoAdminDto {
 
   constructor(centroCusto: CentroCusto) {
     this.id = centroCusto.id;
+    this.empresaId = centroCusto.empresaId;
     this.filialId = centroCusto.filialId;
     this.nome = centroCusto.nome;
     this.dataAtivacao = centroCusto.dataAtivacao;

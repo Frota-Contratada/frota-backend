@@ -1,6 +1,7 @@
 export interface FiltrosDashboardCorridas {
   inicio: Date;
   fim: Date;
+  empresaId?: number;
   filialId?: number;
   centroCustoId?: number;
   aprovadorId?: number;
@@ -32,6 +33,7 @@ export interface CorridaDashboardRegistro {
 }
 
 export interface RateioDashboard {
+  empresaId: number;
   filialId: number;
   centroCustoId: number;
   centroCustoNome: string;

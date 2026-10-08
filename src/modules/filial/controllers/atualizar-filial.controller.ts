@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -18,9 +18,15 @@ export class AtualizarFilialController {
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
+    @Query(
+      'empresaId',
+      new ZodValidationPipe(z.coerce.number().int().positive()),
+    )
+    empresaId: number,
     @Body() body: AtualizarFilialRequestDto,
   ): Promise<ResponseInterface<FilialDto>> {
     const filial = await this.atualizarFilialService.execute(
+      empresaId,
       id,
       body.nome,
       body.endereco,

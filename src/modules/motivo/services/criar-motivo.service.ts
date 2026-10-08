@@ -21,9 +21,12 @@ export class CriarMotivoService {
     nome: string,
     tipo: TipoMotivo,
     filialId?: number,
+    empresaId?: number,
   ): Promise<Motivo> {
     if (filialId !== undefined) {
-      const filial = await this.filialRepository.buscar(filialId);
+      if (empresaId === undefined)
+        throw new Error('empresaId is required for branch-scoped reasons');
+      const filial = await this.filialRepository.buscar(empresaId, filialId);
 
       if (!filial) {
         throw new FilialNaoEncontradaException(filialId);
@@ -34,6 +37,7 @@ export class CriarMotivoService {
       nome,
       tipo,
       filialId,
+      empresaId,
     });
 
     if (nomeJaCadastrado) {
@@ -41,7 +45,7 @@ export class CriarMotivoService {
     }
 
     return this.motivoRepository.criar(
-      new Motivo(0, nome, tipo, DateTime.now(), filialId),
+      new Motivo(0, nome, tipo, DateTime.now(), filialId, undefined, empresaId),
     );
   }
 }

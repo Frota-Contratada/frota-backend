@@ -22,11 +22,13 @@ export class SelecionarFornecedorService {
   ) {}
 
   async execute(
+    empresaId: number,
     filialId: number,
     contexto: ContextoPrecificacao,
   ): Promise<FornecedorSelecionado> {
     const candidatos =
       await this.contratoPrecificacaoRepository.buscarCandidatos(
+        empresaId,
         filialId,
         contexto.tipoCorridaId,
         contexto.dataCorrida,

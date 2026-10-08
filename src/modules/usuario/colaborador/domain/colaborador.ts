@@ -16,6 +16,7 @@ export class Colaborador extends Usuario {
     filialId?: number,
     caminhoFotoPerfil?: string,
     fotoPerfil?: string,
+    empresaId?: number,
   ) {
     super(
       nome,
@@ -29,6 +30,7 @@ export class Colaborador extends Usuario {
       undefined,
       caminhoFotoPerfil,
       fotoPerfil,
+      empresaId,
     );
   }
 }

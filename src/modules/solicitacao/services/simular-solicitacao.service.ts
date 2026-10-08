@@ -46,7 +46,7 @@ export class SimularSolicitacaoService {
       throw new SolicitanteNaoEncontradoException(input.solicitanteId);
     }
 
-    if (solicitante.filialId == null) {
+    if (solicitante.empresaId == null || solicitante.filialId == null) {
       throw new SolicitanteSemFilialException(input.solicitanteId);
     }
 
@@ -99,6 +99,7 @@ export class SimularSolicitacaoService {
     );
 
     const fornecedor = await this.selecionarFornecedorService.execute(
+      solicitante.empresaId,
       solicitante.filialId,
       {
         distanciaKm: rota.distanciaKm,

@@ -31,15 +31,20 @@ export class BuscarMotivoController {
   @Get('filial/:id')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<MotivoDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
-    const motivo = await this.buscarMotivoService.execute(id, filialId);
+    const motivo = await this.buscarMotivoService.execute(
+      id,
+      filialId,
+      empresaId,
+    );
 
     return { response: new MotivoDto(motivo) };
   }
