@@ -72,7 +72,7 @@ export class AtualizarFornecedorController {
     const fornecedor = await this.atualizarFornecedorService.execute(
       id,
       body.nome,
-      body.cnpjCpf ?? null,
+      body.cnpjCpf,
       filialId,
       empresaId,
     );
