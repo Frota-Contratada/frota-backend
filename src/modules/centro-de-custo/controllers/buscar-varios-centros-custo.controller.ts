@@ -36,17 +36,19 @@ export class BuscarVariosCentrosCustoController {
   @Get('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarVariosDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarCentrosCustoQueryDto,
   ): Promise<
     ResponseInterface<PaginatedResponseInterface<CentroCustoAdminDto>>
   > {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     const resultado = await this.buscarVariosCentrosCustoService.execute({
       ...query,
+      empresaId,
       filialId,
     });
 

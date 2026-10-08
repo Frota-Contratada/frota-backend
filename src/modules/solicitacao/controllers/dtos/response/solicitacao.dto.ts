@@ -35,6 +35,9 @@ export class ParadaDto {
 
 export class SolicitacaoCentroCustoDto {
   @ApiProperty({ example: 1 })
+  empresaId: number;
+
+  @ApiProperty({ example: 1 })
   filialId: number;
 
   @ApiProperty({ example: 101 })
@@ -61,6 +64,7 @@ export class SolicitacaoCentroCustoDto {
   motivoRecusa?: CatalogoItemDto;
 
   constructor(rateio: SolicitacaoCentroCusto) {
+    this.empresaId = rateio.empresaId;
     this.filialId = rateio.filialId;
     this.centroCustoId = rateio.centroCustoId;
     this.centroCustoNome = rateio.centroCustoNome;

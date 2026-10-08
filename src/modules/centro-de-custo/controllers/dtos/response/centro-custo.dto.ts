@@ -3,6 +3,9 @@ import { CentroCustoComAprovador } from '../../../services/buscar-centros-custo.
 
 export class CentroCustoDto {
   @ApiProperty({ example: 1 })
+  empresaId: number;
+
+  @ApiProperty({ example: 1 })
   filialId: number;
 
   @ApiProperty({ example: 101 })
@@ -18,12 +21,14 @@ export class CentroCustoDto {
   temAprovador: boolean;
 
   constructor(
+    empresaId: number,
     filialId: number,
     numero: number,
     nome: string,
     ativo: boolean,
     temAprovador: boolean,
   ) {
+    this.empresaId = empresaId;
     this.filialId = filialId;
     this.numero = numero;
     this.nome = nome;
@@ -33,6 +38,7 @@ export class CentroCustoDto {
 
   static aPartirDoDominio(item: CentroCustoComAprovador): CentroCustoDto {
     return new CentroCustoDto(
+      item.centroCusto.empresaId,
       item.centroCusto.filialId,
       item.centroCusto.id,
       item.centroCusto.nome,
