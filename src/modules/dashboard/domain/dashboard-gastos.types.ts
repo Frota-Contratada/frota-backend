@@ -4,6 +4,8 @@ export interface DashboardGastoIndicador {
 }
 
 export interface DashboardTopCentroCusto {
+  empresaId: number | null;
+  filialId: number | null;
   centroCustoId: number | null;
   centroCusto: string | null;
   gasto: number;
@@ -11,12 +13,16 @@ export interface DashboardTopCentroCusto {
 }
 
 export interface DashboardGastoCentroCusto {
+  empresaId: number;
+  filialId: number;
   centroCustoId: number;
   centroCusto: string;
   valor: number;
 }
 
 export interface DashboardCentroCustoResumo {
+  empresaId: number;
+  filialId: number;
   centroCustoId: number;
   centroCusto: string;
   responsavel: string;

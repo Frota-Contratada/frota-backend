@@ -26,6 +26,7 @@ export class CriarMotivoController {
       body.nome,
       body.tipo,
       body.filialId ?? undefined,
+      body.empresaId ?? undefined,
     );
 
     return { response: new MotivoDto(motivo) };
@@ -34,10 +35,11 @@ export class CriarMotivoController {
   @Post('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async criarNaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Body() body: CriarMotivoRequestDto,
   ): Promise<ResponseInterface<MotivoDto>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
@@ -45,6 +47,7 @@ export class CriarMotivoController {
       body.nome,
       body.tipo,
       filialId,
+      empresaId,
     );
 
     return { response: new MotivoDto(motivo) };

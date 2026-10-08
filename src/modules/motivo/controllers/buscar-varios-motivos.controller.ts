@@ -34,15 +34,17 @@ export class BuscarVariosMotivosController {
   @Get('filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarVariosDaFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarMotivosQueryDto,
   ): Promise<ResponseInterface<PaginatedResponseInterface<MotivoDto>>> {
-    if (!filialId) {
+    if (!empresaId || !filialId) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     const resultado = await this.buscarVariosMotivosService.execute({
       ...query,
+      empresaId,
       filialId,
     });
 

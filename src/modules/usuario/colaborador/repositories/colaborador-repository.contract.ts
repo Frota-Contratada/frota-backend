@@ -14,6 +14,7 @@ export abstract class ColaboradorRepositoryContract {
     nome?: string;
     cpf?: string;
     filialId?: number;
+    empresaId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ColaboradorSummary>>;
@@ -21,6 +22,7 @@ export abstract class ColaboradorRepositoryContract {
     nome?: string;
     cpf?: string;
     filialId?: number;
+    empresaId?: number;
   }): Promise<ColaboradorBigNumbers>;
   abstract atualizarCentroCusto(
     id: number,

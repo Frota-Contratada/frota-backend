@@ -4,5 +4,6 @@ export type AuthenticatedUser = {
   id: number;
   perfis: TipoPerfil[];
   filialId?: number;
+  empresaId?: number;
   fornecedorId?: number;
 };

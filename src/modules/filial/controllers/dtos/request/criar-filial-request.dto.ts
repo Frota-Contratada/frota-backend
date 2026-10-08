@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 
 const EnderecoSchema = z.object({
+  tipoLogradouro: z.string().max(10).optional(),
   logradouro: z.string().nonempty({ message: 'Informe o logradouro' }),
   numero: z.string().nonempty({ message: 'Informe o número' }),
   complemento: z.string().optional(),
@@ -14,6 +15,7 @@ const EnderecoSchema = z.object({
 });
 
 export const CriarFilialRequestSchema = z.object({
+  empresaId: z.number().int().positive(),
   nome: z.string().nonempty({ message: 'Informe o nome da filial' }),
   cnpj: z.string().length(14, { message: 'Informe um CNPJ com 14 dígitos' }),
   administradorId: z

@@ -33,6 +33,9 @@ export class TornarSolicitanteController {
     const colaborador = await this.tornarSolicitanteService.execute({
       colaboradorId: id,
       centroCustoId: body.centroCustoId,
+      empresaId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
+        ? undefined
+        : usuarioAtual.empresaId,
       filialId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
         ? undefined
         : usuarioAtual.filialId,

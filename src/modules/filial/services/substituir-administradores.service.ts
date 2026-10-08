@@ -5,8 +5,13 @@ import { FilialRepositoryContract } from '../repositories/filial-repository.cont
 export class SubstituirAdministradoresService {
   constructor(private readonly filialRepository: FilialRepositoryContract) {}
 
-  async execute(filialId: number, administradorIds: number[]): Promise<void> {
+  async execute(
+    empresaId: number,
+    filialId: number,
+    administradorIds: number[],
+  ): Promise<void> {
     await this.filialRepository.substituirAdministradores(
+      empresaId,
       filialId,
       administradorIds,
     );

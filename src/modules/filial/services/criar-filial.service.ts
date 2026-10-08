@@ -3,7 +3,6 @@ import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 import { FilialRepositoryContract } from '../repositories/filial-repository.contract';
 import { UsuarioRepositoryContract } from '@module/usuario/info/repositories/usuario-repository.contract';
-import { FilialNomeJaCadastradoException } from '../exceptions/filial-nome-ja-cadastrado.exception';
 import { FilialCnpjJaCadastradoException } from '../exceptions/filial-cnpj-ja-cadastrado.exception';
 import { AdministradorNaoEncontradoException } from '../exceptions/administrador-nao-encontrado.exception';
 
@@ -15,10 +14,12 @@ export class CriarFilialService {
   ) {}
 
   async execute(
+    empresaId: number,
     nome: string,
     cnpj: string,
     administradorId: number,
     endereco: {
+      tipoLogradouro?: string;
       logradouro: string;
       numero: string;
       bairro: string;
@@ -30,12 +31,6 @@ export class CriarFilialService {
       complemento?: string;
     },
   ): Promise<Filial> {
-    const nomeExiste = await this.filialRepository.existePorNome(nome);
-
-    if (nomeExiste) {
-      throw new FilialNomeJaCadastradoException(nome);
-    }
-
     const cnpjExiste = await this.filialRepository.existePorCnpj(cnpj);
 
     if (cnpjExiste) {
@@ -59,9 +54,10 @@ export class CriarFilialService {
       endereco.longitude,
       0,
       endereco.complemento,
+      endereco.tipoLogradouro,
     );
 
-    const filial = new Filial(nome, cnpj, enderecoObj);
+    const filial = new Filial(empresaId, nome, cnpj, enderecoObj);
 
     return this.filialRepository.criar(filial);
   }

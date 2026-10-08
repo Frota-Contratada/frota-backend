@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 export class CentroCusto {
   constructor(
+    public empresaId: number,
     public filialId: number,
     public id: number,
     public nome: string,

@@ -88,7 +88,7 @@ export class CriarSolicitacaoService {
       throw new SolicitanteNaoEncontradoException(input.solicitanteId);
     }
 
-    if (solicitante.filialId == null) {
+    if (solicitante.empresaId == null || solicitante.filialId == null) {
       throw new SolicitanteSemFilialException(input.solicitanteId);
     }
 
@@ -137,6 +137,7 @@ export class CriarSolicitacaoService {
     );
 
     const fornecedor = await this.selecionarFornecedorService.execute(
+      solicitante.empresaId,
       filialId,
       {
         distanciaKm: rota.distanciaKm,
@@ -151,6 +152,7 @@ export class CriarSolicitacaoService {
     );
 
     const centrosCusto = await this.resolverCentrosCusto(
+      solicitante.empresaId,
       filialId,
       input.centrosCustoIds,
     );
@@ -245,6 +247,7 @@ export class CriarSolicitacaoService {
   }
 
   private async resolverCentrosCusto(
+    empresaId: number,
     filialId: number,
     centrosCustoIds: number[],
   ): Promise<SolicitacaoCentroCusto[]> {
@@ -259,6 +262,7 @@ export class CriarSolicitacaoService {
       vistos.add(centroCustoId);
 
       const centroCusto = await this.centroCustoRepository.buscar(
+        empresaId,
         filialId,
         centroCustoId,
       );
@@ -272,6 +276,7 @@ export class CriarSolicitacaoService {
       }
 
       const aprovadorId = await this.centroCustoRepository.buscarAprovadorId(
+        empresaId,
         filialId,
         centroCustoId,
       );
@@ -282,6 +287,7 @@ export class CriarSolicitacaoService {
 
       rateios.push(
         new SolicitacaoCentroCusto(
+          empresaId,
           filialId,
           centroCustoId,
           aprovadorId,

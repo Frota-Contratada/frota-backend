@@ -135,6 +135,7 @@ export class PrismaSolicitacaoMapper {
         centrosCusto: entity.SolicitacaoCentroCusto.map(
           (rateio) =>
             new SolicitacaoCentroCusto(
+              rateio.nCdEmpresa.toNumber(),
               rateio.nCdFilial.toNumber(),
               rateio.nCdCentroCusto.toNumber(),
               rateio.nCdAprovador.toNumber(),

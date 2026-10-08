@@ -12,11 +12,13 @@ export class BuscarBigNumbersFornecedoresService {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
   }): Promise<FornecedorBigNumbers> {
     return this.fornecedorRepository.buscarBigNumbers({
       nome: filtros.nome,
       cnpjCpf: filtros.cnpjCpf,
       filialId: filtros.filialId,
+      empresaId: filtros.empresaId,
     });
   }
 }

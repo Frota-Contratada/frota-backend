@@ -9,6 +9,7 @@ export abstract class FornecedorRepositoryContract {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<FornecedorSummary>>;
@@ -16,12 +17,13 @@ export abstract class FornecedorRepositoryContract {
     nome?: string;
     cnpjCpf?: string;
     filialId?: number;
+    empresaId?: number;
   }): Promise<FornecedorBigNumbers>;
   abstract criar(fornecedor: Fornecedor): Promise<Fornecedor>;
   abstract atualizar(
     id: number,
     nome: string,
-    cnpjCpf: string,
+    cnpjCpf: string | null,
   ): Promise<Fornecedor>;
   abstract atualizarFoto(
     id: number,
@@ -29,6 +31,7 @@ export abstract class FornecedorRepositoryContract {
   ): Promise<Fornecedor>;
   abstract existePorNomeNaFilial(
     nome: string,
+    empresaId: number,
     filialId: number,
   ): Promise<boolean>;
   /**
@@ -46,6 +49,7 @@ export abstract class FornecedorRepositoryContract {
   ): Promise<boolean>;
   abstract pertenceAFilial(
     fornecedorId: number,
+    empresaId: number,
     filialId: number,
   ): Promise<boolean>;
 }

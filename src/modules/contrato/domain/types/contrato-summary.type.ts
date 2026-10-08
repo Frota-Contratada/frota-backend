@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import { StatusContrato } from '../../enums/status-contrato.enum';
 
 export type ContratoVinculoSummary = {
+  empresaId: number;
   filialId: number;
   filialNome: string;
   fornecedorId: number;

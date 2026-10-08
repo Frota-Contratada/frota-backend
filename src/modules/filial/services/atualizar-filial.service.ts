@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
-import { FilialNomeJaCadastradoException } from '../exceptions/filial-nome-ja-cadastrado.exception';
 import { FilialNaoEncontradaException } from '../exceptions/filial-nao-encontrada.exception';
 import { FilialRepositoryContract } from '../repositories/filial-repository.contract';
 
@@ -10,9 +9,11 @@ export class AtualizarFilialService {
   constructor(private readonly filialRepository: FilialRepositoryContract) {}
 
   async execute(
+    empresaId: number,
     id: number,
     nome: string,
     enderecoData: {
+      tipoLogradouro?: string;
       logradouro: string;
       numero: string;
       complemento?: string;
@@ -24,17 +25,10 @@ export class AtualizarFilialService {
       longitude: number;
     },
   ): Promise<Filial> {
-    const filialAtual = await this.filialRepository.buscar(id);
+    const filialAtual = await this.filialRepository.buscar(empresaId, id);
 
     if (!filialAtual) {
       throw new FilialNaoEncontradaException(id);
-    }
-
-    if (
-      filialAtual.nome !== nome &&
-      (await this.filialRepository.existePorNome(nome))
-    ) {
-      throw new FilialNomeJaCadastradoException(nome);
     }
 
     const endereco = new Endereco(
@@ -48,8 +42,9 @@ export class AtualizarFilialService {
       enderecoData.longitude,
       filialAtual.endereco.id,
       enderecoData.complemento,
+      enderecoData.tipoLogradouro ?? filialAtual.endereco.tipoLogradouro,
     );
 
-    return this.filialRepository.atualizar(id, nome, endereco);
+    return this.filialRepository.atualizar(empresaId, id, nome, endereco);
   }
 }

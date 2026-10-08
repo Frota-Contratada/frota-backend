@@ -32,15 +32,19 @@ export class BuscarDashboardAuditoriaController {
   @Get('auditoria/filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarComoAdminFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarDashboardQueryDto,
   ): Promise<ResponseInterface<DashboardAuditoriaDto>> {
-    if (filialId == null) {
+    if (empresaId == null || filialId == null) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     return this.montarResponse(
-      await this.buscarDashboardAuditoriaService.execute(query, { filialId }),
+      await this.buscarDashboardAuditoriaService.execute(query, {
+        empresaId,
+        filialId,
+      }),
     );
   }
 

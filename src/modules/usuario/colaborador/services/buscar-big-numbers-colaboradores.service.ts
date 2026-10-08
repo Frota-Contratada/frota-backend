@@ -12,10 +12,12 @@ export class BuscarBigNumbersColaboradoresService {
     nome?: string;
     cpf?: string;
     filialId?: number;
+    empresaId?: number;
   }): Promise<ColaboradorBigNumbers> {
     return this.colaboradorRepository.buscarBigNumbers({
       nome: filtros.nome,
       cpf: filtros.cpf,
+      empresaId: filtros.empresaId,
       filialId: filtros.filialId,
     });
   }

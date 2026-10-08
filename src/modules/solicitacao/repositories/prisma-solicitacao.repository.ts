@@ -177,6 +177,7 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
         await tx.solicitacaoCentroCusto.createMany({
           data: solicitacao.centrosCusto.map((rateio) => ({
             nCdSolicitacao: solicitacaoId,
+            nCdEmpresa: rateio.empresaId,
             nCdFilial: rateio.filialId,
             nCdCentroCusto: rateio.centroCustoId,
             nCdAprovador: rateio.aprovadorId,
@@ -342,8 +343,11 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       }
 
       const ehAprovadorDoCentroDoSolicitante =
+        solicitacao.Usuario.nCdEmpresa != null &&
         solicitacao.Usuario.nCdFilial != null &&
         solicitacao.Usuario.nCdCentroCusto != null &&
+        rateio.nCdEmpresa.toNumber() ===
+          solicitacao.Usuario.nCdEmpresa.toNumber() &&
         rateio.nCdFilial.toNumber() ===
           solicitacao.Usuario.nCdFilial.toNumber() &&
         rateio.nCdCentroCusto.toNumber() ===
@@ -362,6 +366,11 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
       }
 
       if (decisao.decisao === 'APROVAR' && decisao.fornecedorId != null) {
+        const empresaDoSolicitante = solicitacao.Usuario.nCdEmpresa;
+        const filialDoSolicitante = solicitacao.Usuario.nCdFilial;
+        if (empresaDoSolicitante == null || filialDoSolicitante == null) {
+          throw new AprovadorNaoAutorizadoException(id);
+        }
         if (decisao.contratoId == null || decisao.valorEstimado == null) {
           throw new FornecedorIndisponivelException(
             solicitacao.Usuario.nCdFilial?.toNumber() ?? 0,
@@ -387,7 +396,8 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
         });
         const vinculo = await tx.filialFornecedor.findFirst({
           where: {
-            nCdFilial: solicitacao.Usuario.nCdFilial ?? -1,
+            nCdEmpresa: empresaDoSolicitante,
+            nCdFilial: filialDoSolicitante,
             nCdFornecedor: decisao.fornecedorId,
             nCdContrato: decisao.contratoId,
             Contrato: {
@@ -429,8 +439,9 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
 
       await tx.solicitacaoCentroCusto.update({
         where: {
-          nCdSolicitacao_nCdFilial_nCdCentroCusto: {
+          nCdSolicitacao_nCdEmpresa_nCdFilial_nCdCentroCusto: {
             nCdSolicitacao: id,
+            nCdEmpresa: rateio.nCdEmpresa,
             nCdFilial: rateio.nCdFilial,
             nCdCentroCusto: rateio.nCdCentroCusto,
           },

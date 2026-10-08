@@ -10,6 +10,7 @@ export type BuscarMotivosFiltros = {
    * seja, a lista efetivamente disponível para aquela filial.
    */
   filialId?: number;
+  empresaId?: number;
   /** Quando `true`, restringe o resultado apenas aos motivos globais. */
   apenasGlobais?: boolean;
   /** Quando `true`, inclui também os motivos desativados. */
@@ -27,6 +28,7 @@ export type ExistePorNomeFiltros = {
    * que aquela filial enxerga.
    */
   filialId?: number;
+  empresaId?: number;
   /** Id desconsiderado na verificação. Usado na atualização. */
   ignorarId?: number;
 };

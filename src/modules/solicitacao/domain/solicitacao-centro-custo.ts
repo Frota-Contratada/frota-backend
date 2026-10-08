@@ -3,6 +3,7 @@ import { Motivo } from './motivo';
 
 export class SolicitacaoCentroCusto {
   constructor(
+    public empresaId: number,
     public filialId: number,
     public centroCustoId: number,
     public aprovadorId: number,

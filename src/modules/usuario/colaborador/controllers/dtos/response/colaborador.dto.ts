@@ -7,6 +7,7 @@ export class ColaboradorDto {
   email: string;
   cargo?: string;
   filialId?: number;
+  empresaId?: number;
   centroCustoId?: number;
   perfis: UsuarioPerfilDto[];
 
@@ -16,6 +17,7 @@ export class ColaboradorDto {
     this.email = colaborador.email;
     this.cargo = colaborador.cargo;
     this.filialId = colaborador.filialId;
+    this.empresaId = colaborador.empresaId;
     this.centroCustoId = colaborador.centroCustoId;
     this.perfis = colaborador.perfis.map(
       (perfil) => new UsuarioPerfilDto(perfil),

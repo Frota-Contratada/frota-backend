@@ -19,6 +19,7 @@ const USUARIO_APROVADOR = 1003;
 const FORNECEDOR = 1;
 const CONTRATO = 1;
 const FILIAL = 1;
+const EMPRESA_TECNICA_ID = 1;
 const CENTRO_CUSTO = 101;
 const TIPO_CORRIDA_TAXI = 1;
 const TIPO_VEICULO_CARRO = 2;
@@ -76,7 +77,8 @@ async function validarDependencias() {
     prisma.motivo.findUnique({ where: { nCdMotivo: MOTIVO_VIAGEM_TRABALHO } }),
     prisma.centroCusto.findUnique({
       where: {
-        nCdFilial_nCdCentroCusto: {
+        nCdEmpresa_nCdFilial_nCdCentroCusto: {
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: FILIAL,
           nCdCentroCusto: CENTRO_CUSTO,
         },
@@ -149,6 +151,7 @@ async function inserirSolicitacoes() {
       await tx.solicitacaoCentroCusto.create({
         data: {
           nCdSolicitacao: solicitacao.id,
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: FILIAL,
           nCdCentroCusto: CENTRO_CUSTO,
           nCdAprovador: USUARIO_APROVADOR,

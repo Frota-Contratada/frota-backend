@@ -25,6 +25,7 @@ export class AtualizarMotivoService {
     nome: string,
     tipo: TipoMotivo,
     filialId?: number,
+    empresaId?: number,
   ): Promise<Motivo> {
     const motivo = await this.motivoRepository.buscar(id);
 
@@ -33,7 +34,9 @@ export class AtualizarMotivoService {
     }
 
     if (filialId !== undefined) {
-      this.validarMotivoDaFilialService.execute(motivo, filialId);
+      if (empresaId === undefined)
+        throw new Error('empresaId is required for branch-scoped reasons');
+      this.validarMotivoDaFilialService.execute(motivo, empresaId, filialId);
     }
 
     if (!motivo.ativo) {
@@ -44,6 +47,7 @@ export class AtualizarMotivoService {
       nome,
       tipo,
       filialId: motivo.filialId,
+      empresaId: motivo.empresaId,
       ignorarId: id,
     });
 

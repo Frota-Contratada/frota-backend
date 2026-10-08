@@ -8,6 +8,7 @@ export class MotivoDto {
   tipo: TipoMotivo;
   /** Ausente quando o motivo é global. */
   filialId?: number;
+  empresaId?: number;
   global: boolean;
   dataAtivacao: DateTime;
   dataDesativacao?: DateTime;
@@ -17,6 +18,7 @@ export class MotivoDto {
     this.nome = motivo.nome;
     this.tipo = motivo.tipo;
     this.filialId = motivo.filialId;
+    this.empresaId = motivo.empresaId;
     this.global = motivo.global;
     this.dataAtivacao = motivo.dataAtivacao;
     this.dataDesativacao = motivo.dataDesativacao;

@@ -14,5 +14,6 @@ export class Usuario {
     public fornecedorId?: number,
     public caminhoFotoPerfil?: string,
     public fotoPerfil?: string,
+    public empresaId?: number,
   ) {}
 }

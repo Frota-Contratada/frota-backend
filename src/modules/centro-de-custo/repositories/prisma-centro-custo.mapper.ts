@@ -9,6 +9,7 @@ export class PrismaCentroCustoMapper {
     if (entity == null) return null;
 
     return new CentroCusto(
+      entity.nCdEmpresa.toNumber(),
       entity.nCdFilial.toNumber(),
       entity.nCdCentroCusto.toNumber(),
       entity.cNmCentroCusto,

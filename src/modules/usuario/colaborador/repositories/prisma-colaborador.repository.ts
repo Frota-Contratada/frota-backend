@@ -18,9 +18,14 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
     super();
   }
 
-  private filtroDeColaborador(filialId?: number): Prisma.UsuarioWhereInput {
+  private filtroDeColaborador(
+    empresaId?: number,
+    filialId?: number,
+  ): Prisma.UsuarioWhereInput {
     if (filialId) {
-      return { nCdFilial: filialId };
+      if (!empresaId)
+        throw new Error('empresaId is required for branch-scoped employees');
+      return { nCdEmpresa: empresaId, nCdFilial: filialId };
     }
 
     return {
@@ -31,10 +36,11 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
   private montarWhere(filtros: {
     nome?: string;
     cpf?: string;
+    empresaId?: number;
     filialId?: number;
   }): Prisma.UsuarioWhereInput {
     return {
-      ...this.filtroDeColaborador(filtros.filialId),
+      ...this.filtroDeColaborador(filtros.empresaId, filtros.filialId),
       dDesativacao: null,
       ...(filtros.nome ? { cNmUsuario: { contains: filtros.nome } } : {}),
       ...(filtros.cpf ? { cCPF: { contains: filtros.cpf } } : {}),
@@ -130,6 +136,7 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
+    empresaId?: number;
     filialId?: number;
     page: number;
     limit: number;
@@ -162,6 +169,7 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
   async buscarBigNumbers(filtros: {
     nome?: string;
     cpf?: string;
+    empresaId?: number;
     filialId?: number;
   }): Promise<ColaboradorBigNumbers> {
     const where = this.montarWhere(filtros);

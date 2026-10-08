@@ -7,7 +7,10 @@ import { Fornecedor } from '../domain/fornecedor';
 import { FornecedorSummary } from '../domain/types/fornecedor-summary.type';
 import { DateTime } from 'luxon';
 
-type PrismaVinculoComContrato = Pick<PrismaFilialFornecedor, 'nCdFilial'> & {
+type PrismaVinculoComContrato = Pick<
+  PrismaFilialFornecedor,
+  'nCdEmpresa' | 'nCdFilial'
+> & {
   Filial: { cNmFilial: string };
   Contrato: PrismaContrato;
 };
@@ -45,6 +48,7 @@ export class PrismaFornecedorMapper {
       quantidadeVeiculosAtivos: entity._count.Veiculo,
       contratosVigentes: entity.FilialFornecedor.map((vinculo) => ({
         contratoId: vinculo.Contrato.nCdContrato.toNumber(),
+        empresaId: vinculo.nCdEmpresa.toNumber(),
         filialId: vinculo.nCdFilial.toNumber(),
         filialNome: vinculo.Filial.cNmFilial,
         dataVigenciaInicio: DateTime.fromJSDate(

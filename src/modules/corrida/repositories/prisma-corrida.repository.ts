@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
-import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { CorridaAcessoNegadoException } from '../exceptions/corrida-acesso-negado.exception';
 import { CorridaNaoEncontradaException } from '../exceptions/corrida-nao-encontrada.exception';
@@ -96,14 +95,25 @@ export class PrismaCorridaRepository {
         },
       });
     }
-    if (perfis.has(TipoPerfil.ADMIN_FILIAL)) {
-      const filialId = usuario.filialId ?? -1;
+    if (
+      perfis.has(TipoPerfil.ADMIN_FILIAL) &&
+      usuario.empresaId != null &&
+      usuario.filialId != null
+    ) {
+      const empresaId = usuario.empresaId;
+      const filialId = usuario.filialId;
       escopos.push({
         OR: [
-          { Solicitacao: { Usuario: { nCdFilial: filialId } } },
           {
             Solicitacao: {
-              SolicitacaoCentroCusto: { some: { nCdFilial: filialId } },
+              Usuario: { nCdEmpresa: empresaId, nCdFilial: filialId },
+            },
+          },
+          {
+            Solicitacao: {
+              SolicitacaoCentroCusto: {
+                some: { nCdEmpresa: empresaId, nCdFilial: filialId },
+              },
             },
           },
         ],

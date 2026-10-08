@@ -23,8 +23,9 @@ export class AtualizarFornecedorService {
   async execute(
     id: number,
     nome: string,
-    cnpjCpf: string,
+    cnpjCpf: string | null,
     filialId?: number,
+    empresaId?: number,
   ): Promise<Fornecedor> {
     const fornecedor = await this.fornecedorRepository.buscar(id);
 
@@ -33,10 +34,19 @@ export class AtualizarFornecedorService {
     }
 
     if (filialId !== undefined) {
-      await this.validarFornecedorDaFilialService.execute(id, filialId);
+      if (empresaId === undefined)
+        throw new Error(
+          'empresaId is required for branch-scoped supplier updates',
+        );
+      await this.validarFornecedorDaFilialService.execute(
+        id,
+        empresaId,
+        filialId,
+      );
     }
 
     if (
+      cnpjCpf !== null &&
       fornecedor.cnpjCpf !== cnpjCpf &&
       (await this.fornecedorRepository.existePorCnpjCpf(cnpjCpf, id))
     ) {

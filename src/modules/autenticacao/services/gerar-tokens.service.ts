@@ -31,6 +31,7 @@ export class GerarTokensService {
         plataforma,
         perfis,
         filialId: usuario.filialId,
+        empresaId: usuario.empresaId,
         fornecedorId: usuario.fornecedorId,
       },
       { sub: usuario.id, plataforma, perfis },
@@ -53,7 +54,10 @@ export class GerarTokensService {
         .filter((vinculo): vinculo is TipoVinculo => vinculo !== undefined),
     );
 
-    if (vinculosExigidos.has(TipoVinculo.FILIAL) && !usuario.filialId) {
+    if (
+      vinculosExigidos.has(TipoVinculo.FILIAL) &&
+      (!usuario.empresaId || !usuario.filialId)
+    ) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 

@@ -5,6 +5,10 @@ import { BuscarFornecedoresQuerySchema } from './buscar-fornecedores-query.dto';
 export const BuscarFornecedoresAdminQuerySchema =
   BuscarFornecedoresQuerySchema.extend({
     filialId: z.coerce.number().int().positive().optional(),
+    empresaId: z.coerce.number().int().positive().optional(),
+  }).refine((filtros) => !filtros.filialId || !!filtros.empresaId, {
+    path: ['empresaId'],
+    message: 'Informe empresaId ao filtrar filialId',
   });
 
 export class BuscarFornecedoresAdminQueryDto extends createZodDto(

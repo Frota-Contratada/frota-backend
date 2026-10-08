@@ -21,9 +21,10 @@ export class TornarSolicitanteService {
   async execute(params: {
     colaboradorId: number;
     centroCustoId: number;
+    empresaId?: number;
     filialId?: number;
   }): Promise<Colaborador> {
-    const { colaboradorId, centroCustoId, filialId } = params;
+    const { colaboradorId, centroCustoId, empresaId, filialId } = params;
 
     const colaborador = await this.colaboradorRepository.buscar(colaboradorId);
 
@@ -31,15 +32,19 @@ export class TornarSolicitanteService {
       throw new ColaboradorNaoEncontradoException(colaboradorId);
     }
 
-    if (filialId && colaborador.filialId !== filialId) {
+    if (
+      filialId &&
+      (colaborador.empresaId !== empresaId || colaborador.filialId !== filialId)
+    ) {
       throw new ColaboradorDeOutraFilialException(colaboradorId);
     }
 
-    if (!colaborador.filialId) {
+    if (!colaborador.empresaId || !colaborador.filialId) {
       throw new ColaboradorSemFilialException(colaboradorId);
     }
 
     const centroCusto = await this.centroCustoRepository.buscar(
+      colaborador.empresaId,
       colaborador.filialId,
       centroCustoId,
     );
@@ -51,7 +56,10 @@ export class TornarSolicitanteService {
       );
     }
 
-    if (centroCusto.filialId !== colaborador.filialId) {
+    if (
+      centroCusto.empresaId !== colaborador.empresaId ||
+      centroCusto.filialId !== colaborador.filialId
+    ) {
       throw new CentroCustoDeOutraFilialException(
         centroCustoId,
         colaborador.filialId,
@@ -67,6 +75,7 @@ export class TornarSolicitanteService {
 
     const temAprovador =
       await this.centroCustoRepository.existeAprovadorNoCentroCusto(
+        colaborador.empresaId,
         colaborador.filialId,
         centroCustoId,
       );

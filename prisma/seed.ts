@@ -11,6 +11,8 @@ const prisma = new PrismaClient({
   adapter: new PrismaMssql(process.env.DATABASE_URL!),
 });
 
+/** Identifier used only by development seed data, never by corporate imports. */
+const EMPRESA_TECNICA_ID = 1;
 const SENHA_PADRAO = 'Teste@123';
 
 const FILIAL = {
@@ -523,6 +525,15 @@ async function semearEnderecos() {
 }
 
 async function semearFiliaisECentrosCusto() {
+  await prisma.empresa.upsert({
+    where: { nCdEmpresa: EMPRESA_TECNICA_ID },
+    update: {},
+    create: {
+      nCdEmpresa: EMPRESA_TECNICA_ID,
+      cNmEmpresa: 'Empresa de teste',
+      dAtivacao: new Date(),
+    },
+  });
   const filiais = [
     {
       id: FILIAL.LONDRINA,
@@ -549,13 +560,19 @@ async function semearFiliaisECentrosCusto() {
 
   for (const filial of filiais) {
     await prisma.filial.upsert({
-      where: { nCdFilial: filial.id },
+      where: {
+        nCdEmpresa_nCdFilial: {
+          nCdEmpresa: EMPRESA_TECNICA_ID,
+          nCdFilial: filial.id,
+        },
+      },
       update: {
         cNmFilial: filial.nome,
         nCdEndereco: filial.enderecoId,
         dDesativacao: null,
       },
       create: {
+        nCdEmpresa: EMPRESA_TECNICA_ID,
         nCdFilial: filial.id,
         cNmFilial: filial.nome,
         cCNPJ: filial.cnpj,
@@ -566,13 +583,15 @@ async function semearFiliaisECentrosCusto() {
     for (const centroCusto of filial.centrosCusto) {
       await prisma.centroCusto.upsert({
         where: {
-          nCdFilial_nCdCentroCusto: {
+          nCdEmpresa_nCdFilial_nCdCentroCusto: {
+            nCdEmpresa: EMPRESA_TECNICA_ID,
             nCdFilial: filial.id,
             nCdCentroCusto: centroCusto.id,
           },
         },
         update: { cNmCentroCusto: centroCusto.nome, dDesativacao: null },
         create: {
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: filial.id,
           nCdCentroCusto: centroCusto.id,
           cNmCentroCusto: centroCusto.nome,
@@ -772,6 +791,7 @@ async function semearUsuarios() {
       cNmUsuario: usuario.nome,
       cCargo: usuario.cargo,
       cCPF: usuario.cpf ?? null,
+      nCdEmpresa: usuario.filialId == null ? null : EMPRESA_TECNICA_ID,
       nCdFilial: usuario.filialId ?? null,
       nCdCentroCusto: usuario.centroCustoId ?? null,
       nCdFornecedor: usuario.fornecedorId ?? null,
@@ -855,7 +875,8 @@ async function semearContratos() {
     for (const filialId of contrato.filiais) {
       await prisma.filialFornecedor.upsert({
         where: {
-          nCdFilial_nCdFornecedor_nCdContrato: {
+          nCdEmpresa_nCdFilial_nCdFornecedor_nCdContrato: {
+            nCdEmpresa: EMPRESA_TECNICA_ID,
             nCdFilial: filialId,
             nCdFornecedor: contrato.fornecedorId,
             nCdContrato: contrato.id,
@@ -863,6 +884,7 @@ async function semearContratos() {
         },
         update: {},
         create: {
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: filialId,
           nCdFornecedor: contrato.fornecedorId,
           nCdContrato: contrato.id,
@@ -1205,8 +1227,9 @@ async function semearSolicitacoes() {
 
     await prisma.solicitacaoCentroCusto.upsert({
       where: {
-        nCdSolicitacao_nCdFilial_nCdCentroCusto: {
+        nCdSolicitacao_nCdEmpresa_nCdFilial_nCdCentroCusto: {
           nCdSolicitacao: solicitacao.id,
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: FILIAL_ID,
           nCdCentroCusto: solicitacao.centroCustoId,
         },
@@ -1218,6 +1241,7 @@ async function semearSolicitacoes() {
       },
       create: {
         nCdSolicitacao: solicitacao.id,
+        nCdEmpresa: EMPRESA_TECNICA_ID,
         nCdFilial: FILIAL_ID,
         nCdCentroCusto: solicitacao.centroCustoId,
         nCdAprovador: solicitacao.aprovadorId,
@@ -1769,8 +1793,9 @@ async function gravarCorridaHistorica(registro: CorridaHistorica) {
 
     await prisma.solicitacaoCentroCusto.upsert({
       where: {
-        nCdSolicitacao_nCdFilial_nCdCentroCusto: {
+        nCdSolicitacao_nCdEmpresa_nCdFilial_nCdCentroCusto: {
           nCdSolicitacao: registro.solicitacaoId,
+          nCdEmpresa: EMPRESA_TECNICA_ID,
           nCdFilial: registro.filialId,
           nCdCentroCusto: rateio.centroCustoId,
         },
@@ -1778,6 +1803,7 @@ async function gravarCorridaHistorica(registro: CorridaHistorica) {
       update: aprovacao,
       create: {
         nCdSolicitacao: registro.solicitacaoId,
+        nCdEmpresa: EMPRESA_TECNICA_ID,
         nCdFilial: registro.filialId,
         nCdCentroCusto: rateio.centroCustoId,
         ...aprovacao,

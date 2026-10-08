@@ -15,10 +15,12 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     super();
   }
 
-  async buscar(id: number): Promise<Filial | null> {
+  async buscar(empresaId: number, id: number): Promise<Filial | null> {
     return PrismaFilialMapper.toDomain(
       await this.prismaService.filial.findUnique({
-        where: { nCdFilial: id },
+        where: {
+          nCdEmpresa_nCdFilial: { nCdEmpresa: empresaId, nCdFilial: id },
+        },
         include: { Endereco: true },
       }),
     );
@@ -77,6 +79,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
         data: {
           nCdEndereco: proximoEnderecoId,
           cEndereco: filial.endereco.logradouro,
+          cTpLogradouro: filial.endereco.tipoLogradouro ?? null,
           cNumero: filial.endereco.numero,
           cComplemento: filial.endereco.complemento ?? null,
           cBairro: filial.endereco.bairro,
@@ -89,6 +92,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
       });
 
       const ultimaFilial = await tx.filial.aggregate({
+        where: { nCdEmpresa: filial.empresaId },
         _max: { nCdFilial: true },
       });
       const proximoFilialId =
@@ -97,6 +101,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
       return PrismaFilialMapper.toDomain(
         await tx.filial.create({
           data: {
+            nCdEmpresa: filial.empresaId,
             nCdFilial: proximoFilialId,
             cNmFilial: filial.nome,
             cCNPJ: filial.cnpj,
@@ -109,13 +114,16 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
   }
 
   async atualizar(
+    empresaId: number,
     id: number,
     nome: string,
     endereco: Endereco,
   ): Promise<Filial> {
     return this.prismaService.$transaction(async (tx) => {
       const filialAtual = await tx.filial.findUnique({
-        where: { nCdFilial: id },
+        where: {
+          nCdEmpresa_nCdFilial: { nCdEmpresa: empresaId, nCdFilial: id },
+        },
       });
 
       if (!filialAtual) {
@@ -123,7 +131,9 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
       }
 
       await tx.filial.update({
-        where: { nCdFilial: id },
+        where: {
+          nCdEmpresa_nCdFilial: { nCdEmpresa: empresaId, nCdFilial: id },
+        },
         data: { cNmFilial: nome },
       });
 
@@ -131,6 +141,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
         where: { nCdEndereco: filialAtual.nCdEndereco },
         data: {
           cEndereco: endereco.logradouro,
+          cTpLogradouro: endereco.tipoLogradouro ?? null,
           cNumero: endereco.numero,
           cComplemento: endereco.complemento ?? null,
           cBairro: endereco.bairro,
@@ -143,7 +154,9 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
       });
 
       const filialAtualizada = await tx.filial.findUnique({
-        where: { nCdFilial: id },
+        where: {
+          nCdEmpresa_nCdFilial: { nCdEmpresa: empresaId, nCdFilial: id },
+        },
         include: { Endereco: true },
       });
 
@@ -156,12 +169,15 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
   }
 
   async substituirAdministradores(
+    empresaId: number,
     filialId: number,
     administradorIds: number[],
   ): Promise<void> {
     await this.prismaService.$transaction(async (tx) => {
       const filial = await tx.filial.findUnique({
-        where: { nCdFilial: filialId },
+        where: {
+          nCdEmpresa_nCdFilial: { nCdEmpresa: empresaId, nCdFilial: filialId },
+        },
         select: { nCdFilial: true },
       });
 
@@ -201,6 +217,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
 
       await tx.usuario.updateMany({
         where: {
+          nCdEmpresa: empresaId,
           nCdFilial: filialId,
           UsuarioPerfil: {
             some: {
@@ -210,24 +227,20 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
             },
           },
         },
-        data: { nCdFilial: null },
+        data: { nCdEmpresa: null, nCdFilial: null, nCdCentroCusto: null },
       });
 
       if (idsUnicos.length > 0) {
         await tx.usuario.updateMany({
           where: { nCdUsuario: { in: idsUnicos } },
-          data: { nCdFilial: filialId },
+          data: {
+            nCdEmpresa: empresaId,
+            nCdFilial: filialId,
+            nCdCentroCusto: null,
+          },
         });
       }
     });
-  }
-
-  async existePorNome(nome: string): Promise<boolean> {
-    const resultado = await this.prismaService.filial.findUnique({
-      where: { cNmFilial: nome },
-      select: { nCdFilial: true },
-    });
-    return resultado !== null;
   }
 
   async existePorCnpj(cnpj: string): Promise<boolean> {
@@ -240,6 +253,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
 
   async existeUsuarioNaFilialComPerfil(
     usuarioId: number,
+    empresaId: number,
     filialId: number,
     tipoPerfil: TipoPerfil,
   ): Promise<boolean> {
@@ -248,6 +262,7 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     const resultado = await this.prismaService.usuario.findFirst({
       where: {
         nCdUsuario: usuarioId,
+        nCdEmpresa: empresaId,
         nCdFilial: filialId,
         dDesativacao: null,
         UsuarioPerfil: {

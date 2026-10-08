@@ -25,9 +25,11 @@ export class PrismaFilialMapper {
       entity.Endereco.nLongitude.toNumber(),
       entity.Endereco.nCdEndereco.toNumber(),
       entity.Endereco.cComplemento ?? undefined,
+      entity.Endereco.cTpLogradouro ?? undefined,
     );
 
     return new Filial(
+      entity.nCdEmpresa.toNumber(),
       entity.cNmFilial,
       entity.cCNPJ,
       endereco,

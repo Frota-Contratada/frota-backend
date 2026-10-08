@@ -92,7 +92,7 @@ CREATE TABLE [dbo].[Empresa] (
 );
 
 -- CreateIndex
-ALTER TABLE [dbo].[Fornecedor] ADD CONSTRAINT [UK_Fornecedor_BaseEstab] UNIQUE NONCLUSTERED ([nCdBaseFornecedor], [nCdEstabFornecedor]);
+CREATE UNIQUE NONCLUSTERED INDEX [UK_Fornecedor_BaseEstab] ON [dbo].[Fornecedor]([nCdBaseFornecedor], [nCdEstabFornecedor]) WHERE ([nCdBaseFornecedor] IS NOT NULL AND [nCdEstabFornecedor] IS NOT NULL);
 
 -- CreateIndex
 CREATE NONCLUSTERED INDEX [IX_Motivo_EscopoTipo] ON [dbo].[Motivo]([nCdEmpresa], [nCdFilial], [cTipoMotivo], [dDesativacao]);

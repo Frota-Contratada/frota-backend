@@ -19,7 +19,11 @@ export class DesativarMotivoService {
   /**
    * @param filialId Quando informado, exige que o motivo pertença à filial.
    */
-  async execute(id: number, filialId?: number): Promise<Motivo> {
+  async execute(
+    id: number,
+    filialId?: number,
+    empresaId?: number,
+  ): Promise<Motivo> {
     const motivo = await this.motivoRepository.buscar(id);
 
     if (!motivo) {
@@ -27,7 +31,9 @@ export class DesativarMotivoService {
     }
 
     if (filialId !== undefined) {
-      this.validarMotivoDaFilialService.execute(motivo, filialId);
+      if (empresaId === undefined)
+        throw new Error('empresaId is required for branch-scoped reasons');
+      this.validarMotivoDaFilialService.execute(motivo, empresaId, filialId);
     }
 
     if (!motivo.ativo) {

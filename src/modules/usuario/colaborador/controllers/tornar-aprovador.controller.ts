@@ -33,6 +33,9 @@ export class TornarAprovadorController {
     const colaborador = await this.tornarAprovadorService.execute({
       colaboradorId: id,
       centroCustoId: body.centroCustoId,
+      empresaId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
+        ? undefined
+        : usuarioAtual.empresaId,
       filialId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
         ? undefined
         : usuarioAtual.filialId,

@@ -9,12 +9,12 @@ import { MotivoGlobalNaoGerenciavelException } from '../exceptions/motivo-global
  */
 @Injectable()
 export class ValidarMotivoDaFilialService {
-  execute(motivo: Motivo, filialId: number): void {
+  execute(motivo: Motivo, empresaId: number, filialId: number): void {
     if (motivo.global) {
       throw new MotivoGlobalNaoGerenciavelException(motivo.id);
     }
 
-    if (motivo.filialId !== filialId) {
+    if (motivo.empresaId !== empresaId || motivo.filialId !== filialId) {
       throw new MotivoDeOutraFilialException(motivo.id, filialId);
     }
   }

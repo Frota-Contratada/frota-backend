@@ -23,15 +23,23 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
    * a consulta abrange globais e de todas as filiais.
    */
   private filtroDeEscopo(filtros: {
+    empresaId?: number;
     filialId?: number;
     apenasGlobais?: boolean;
   }): Prisma.MotivoWhereInput {
     if (filtros.apenasGlobais) {
-      return { nCdFilial: null };
+      return { nCdEmpresa: null, nCdFilial: null };
     }
 
     if (filtros.filialId !== undefined) {
-      return { OR: [{ nCdFilial: filtros.filialId }, { nCdFilial: null }] };
+      if (filtros.empresaId === undefined)
+        throw new Error('empresaId is required for branch-scoped reasons');
+      return {
+        OR: [
+          { nCdEmpresa: filtros.empresaId, nCdFilial: filtros.filialId },
+          { nCdEmpresa: null, nCdFilial: null },
+        ],
+      };
     }
 
     return {};
@@ -84,6 +92,7 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
         await this.prismaService.cliente.motivo.create({
           data: {
             nCdMotivo: proximoId,
+            nCdEmpresa: motivo.empresaId ?? null,
             nCdFilial: motivo.filialId ?? null,
             cNmMotivo: motivo.nome,
             cTipoMotivo: motivo.tipo,
@@ -118,6 +127,7 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
         cTipoMotivo: filtros.tipo,
         dDesativacao: null,
         ...this.filtroDeEscopo({
+          empresaId: filtros.empresaId,
           filialId: filtros.filialId,
           apenasGlobais: filtros.filialId === undefined,
         }),

@@ -30,6 +30,9 @@ export class TornarSolicitanteEmergenciaController {
   ): Promise<ResponseInterface<ColaboradorDto>> {
     const colaborador = await this.tornarSolicitanteEmergenciaService.execute({
       colaboradorId: id,
+      empresaId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
+        ? undefined
+        : usuarioAtual.empresaId,
       filialId: usuarioAtual.perfis.includes(TipoPerfil.ADMIN_MASTER)
         ? undefined
         : usuarioAtual.filialId,

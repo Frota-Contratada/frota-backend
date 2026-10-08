@@ -3,6 +3,7 @@ import { Endereco } from './endereco';
 
 export class Filial {
   constructor(
+    public empresaId: number,
     public nome: string,
     public cnpj: string,
     public endereco: Endereco,

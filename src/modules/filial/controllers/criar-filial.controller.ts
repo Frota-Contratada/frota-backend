@@ -15,6 +15,7 @@ export class CriarFilialController {
     @Body() body: CriarFilialRequestDto,
   ): Promise<ResponseInterface<FilialDto>> {
     const filial = await this.criarFilialService.execute(
+      body.empresaId,
       body.nome,
       body.cnpj,
       body.administradorId,

@@ -302,7 +302,7 @@ model Fornecedor {
   Usuario             Usuario[]
   Veiculo             Veiculo[]
 
-  @@unique([nCdBaseFornecedor, nCdEstabFornecedor], map: "UK_Fornecedor_BaseEstab")
+  @@unique([nCdBaseFornecedor, nCdEstabFornecedor], map: "UK_Fornecedor_BaseEstab", where: raw("[nCdBaseFornecedor] IS NOT NULL AND [nCdEstabFornecedor] IS NOT NULL"))
 }
 
 model ModalidadeContrato {

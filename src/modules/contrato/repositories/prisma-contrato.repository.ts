@@ -26,22 +26,26 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
 
   private filtroDeVinculo(filtros: {
     filialId?: number;
+    empresaId?: number;
     fornecedorId?: number;
   }): Prisma.FilialFornecedorWhereInput | undefined {
     if (!filtros.filialId && !filtros.fornecedorId) {
       return undefined;
     }
+    if (filtros.filialId && !filtros.empresaId)
+      throw new Error('empresaId is required for branch-scoped contracts');
 
     return {
-      ...(filtros.filialId ? { nCdFilial: filtros.filialId } : {}),
-      ...(filtros.fornecedorId
-        ? { nCdFornecedor: filtros.fornecedorId }
+      ...(filtros.filialId
+        ? { nCdEmpresa: filtros.empresaId, nCdFilial: filtros.filialId }
         : {}),
+      ...(filtros.fornecedorId ? { nCdFornecedor: filtros.fornecedorId } : {}),
     };
   }
 
   private montarWhere(filtros: {
     filialId?: number;
+    empresaId?: number;
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;

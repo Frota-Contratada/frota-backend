@@ -10,5 +10,6 @@ export class Endereco {
     public longitude: number,
     public id: number = 0,
     public complemento?: string,
+    public tipoLogradouro?: string,
   ) {}
 }

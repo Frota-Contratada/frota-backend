@@ -18,6 +18,7 @@ export class PrismaMotivoMapper {
       entity.dDesativacao == null
         ? undefined
         : DateTime.fromJSDate(entity.dDesativacao),
+      entity.nCdEmpresa == null ? undefined : entity.nCdEmpresa.toNumber(),
     );
   }
 }

@@ -16,24 +16,30 @@ export class CriarFornecedorService {
 
   async execute(
     nome: string,
-    cnpjCpf: string,
+    cnpjCpf: string | null,
+    empresaId: number,
     filialId: number,
   ): Promise<Fornecedor> {
-    const filial = await this.filialRepository.buscar(filialId);
+    const filial = await this.filialRepository.buscar(empresaId, filialId);
 
     if (!filial) {
       throw new FilialNaoEncontradaException(filialId);
     }
 
     const cnpjCpfExiste =
-      await this.fornecedorRepository.existePorCnpjCpf(cnpjCpf);
+      cnpjCpf !== null &&
+      (await this.fornecedorRepository.existePorCnpjCpf(cnpjCpf));
 
     if (cnpjCpfExiste) {
       throw new CnpjCpfJaCadastradoException(cnpjCpf);
     }
 
     const jaExisteNaFilial =
-      await this.fornecedorRepository.existePorNomeNaFilial(nome, filialId);
+      await this.fornecedorRepository.existePorNomeNaFilial(
+        nome,
+        empresaId,
+        filialId,
+      );
 
     if (jaExisteNaFilial) {
       throw new FornecedorJaCadastradoException(nome);

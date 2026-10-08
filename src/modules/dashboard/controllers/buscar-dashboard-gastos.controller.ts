@@ -32,15 +32,19 @@ export class BuscarDashboardGastosController {
   @Get('gastos/filial')
   @Perfis(TipoPerfil.ADMIN_FILIAL)
   async buscarComoAdminFilial(
+    @CurrentUser('empresaId') empresaId: number | undefined,
     @CurrentUser('filialId') filialId: number | undefined,
     @Query() query: BuscarDashboardQueryDto,
   ): Promise<ResponseInterface<DashboardGastosDto>> {
-    if (filialId == null) {
+    if (empresaId == null || filialId == null) {
       throw new VinculoDoUsuarioAusenteException(TipoVinculo.FILIAL);
     }
 
     return this.montarResponse(
-      await this.buscarDashboardGastosService.execute(query, { filialId }),
+      await this.buscarDashboardGastosService.execute(query, {
+        empresaId,
+        filialId,
+      }),
     );
   }
 

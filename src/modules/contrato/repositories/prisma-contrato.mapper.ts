@@ -5,6 +5,7 @@ import { ContratoSummary } from '../domain/types/contrato-summary.type';
 import { StatusContrato } from '../enums/status-contrato.enum';
 
 export const CONTRATO_VINCULO_SELECT = {
+  nCdEmpresa: true,
   nCdFilial: true,
   nCdFornecedor: true,
   Filial: { select: { cNmFilial: true } },
@@ -55,6 +56,7 @@ export class PrismaContratoMapper {
         limiteVenceEmBreve,
       ),
       vinculos: entity.FilialFornecedor.map((vinculo) => ({
+        empresaId: vinculo.nCdEmpresa.toNumber(),
         filialId: vinculo.nCdFilial.toNumber(),
         filialNome: vinculo.Filial.cNmFilial,
         fornecedorId: vinculo.nCdFornecedor.toNumber(),
