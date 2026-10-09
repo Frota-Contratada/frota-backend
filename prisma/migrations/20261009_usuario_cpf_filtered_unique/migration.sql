@@ -1,6 +1,7 @@
 -- Permit users without CPF while retaining uniqueness for populated values.
 -- The previous object is the unique constraint created by the initial migration.
 SET XACT_ABORT ON;
+SET QUOTED_IDENTIFIER ON;
 
 BEGIN TRY
     BEGIN TRANSACTION;
