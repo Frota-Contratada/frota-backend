@@ -8,7 +8,7 @@ const COMPANY = 30;
 const BRANCH = 704;
 const CENTER = 4704;
 const ID = Object.freeze({
-  address: [9001, 9002], motive: [9001, 9002, 9003],
+  address: [9001, 9002], motive: [9001, 9002, 9003, 9004],
   contract: [9001, 9002, 9003], user: [9001, 9002, 9003],
   vehicle: [9001, 9002, 9003],
   request: Array.from({ length: 31 }, (_, i) => 9001 + i),
@@ -164,6 +164,7 @@ function fixtureRows(ref, now = new Date()) {
     { nCdMotivo: ID.motive[0], nCdEmpresa: COMPANY, nCdFilial: BRANCH, cNmMotivo: `${MARK} - Viagem de trabalho`, cTipoMotivo: '1' },
     { nCdMotivo: ID.motive[1], nCdEmpresa: COMPANY, nCdFilial: BRANCH, cNmMotivo: `${MARK} - Cancelamento`, cTipoMotivo: '2' },
     { nCdMotivo: ID.motive[2], nCdEmpresa: COMPANY, nCdFilial: BRANCH, cNmMotivo: `${MARK} - Recusa`, cTipoMotivo: '3' },
+    { nCdMotivo: ID.motive[3], nCdEmpresa: COMPANY, nCdFilial: BRANCH, cNmMotivo: `${MARK} - Transporte de objeto`, cTipoMotivo: '4' },
   ];
   const contracts = ID.contract.map((id, i) => ({
     nCdContrato: id, cCaminhoArquivo: `contratos/phase7-web-${i + 1}.pdf`,
