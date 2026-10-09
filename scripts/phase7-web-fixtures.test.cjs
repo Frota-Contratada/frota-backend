@@ -21,6 +21,8 @@ test('synthetic requests, rides and suppliers remain internally consistent', () 
   assert.equal(data.requests.length, 31);
   assert.equal(data.rides.length, 24);
   assert.equal(data.contracts.length, 3);
+  assert.equal(data.motives.length, 4);
+  assert.equal(data.motives[3].cTipoMotivo, '4');
   assert.equal(data.drivers.length, 3);
   assert.equal(data.vehicles.length, 4);
   const requestById = new Map(data.requests.map((row) => [row.nCdSolicitacao, row]));
