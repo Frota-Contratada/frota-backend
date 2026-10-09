@@ -5,9 +5,6 @@ const { createInterface } = require('node:readline');
 const { existsSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const appRequire = createRequire(existsSync('/app/package.json') ? '/app/package.json' : join(__dirname, '..', 'package.json'));
-const { PrismaClient } = appRequire('@prisma/client');
-const { PrismaMssql } = appRequire('@prisma/adapter-mssql');
-const argon2 = appRequire('argon2');
 
 const ACCOUNTS = [
   ['admin.master@frota.com.br', 'Administrador Master', 'admin-master', 'global'],
@@ -60,6 +57,9 @@ async function readPassword() {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const scope = readScope(options['scope-file']);
+  const { PrismaClient } = appRequire('@prisma/client');
+  const { PrismaMssql } = appRequire('@prisma/adapter-mssql');
+  const argon2 = appRequire('argon2');
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is absent');
   const host = /^sqlserver:\/\/([^:;/]+)/i.exec(url)?.[1];
