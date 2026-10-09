@@ -468,7 +468,7 @@ model Usuario {
   cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
   cCargo                 String?                  @db.VarChar(100)
   cHashSenha             String?                  @db.VarChar(255)
-  cCPF                   String?                  @unique(map: "UK_Usuario_cCPF") @db.VarChar(11)
+  cCPF                   String?                  @unique(map: "UK_Usuario_cCPF", where: raw("[cCPF] IS NOT NULL")) @db.VarChar(11)
   cDisponivel            String                   @db.Char(1)
   dAtivacao              DateTime                 @default(now(), map: "DF_Usuario_dAtivacao") @db.DateTime
   dDesativacao           DateTime?                @db.DateTime
