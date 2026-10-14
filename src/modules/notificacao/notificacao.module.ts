@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@core/auth/auth.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { QueueModule } from '@core/queue/queue.module';
+import { AtualizarPreferenciasNotificacaoController } from './controllers/atualizar-preferencias-notificacao.controller';
+import { BuscarPreferenciasNotificacaoController } from './controllers/buscar-preferencias-notificacao.controller';
 import { ContarNotificacoesNaoLidasController } from './controllers/contar-notificacoes-nao-lidas.controller';
 import { ListarNotificacoesController } from './controllers/listar-notificacoes.controller';
 import { MarcarNotificacaoComoLidaController } from './controllers/marcar-notificacao-como-lida.controller';
@@ -11,8 +13,13 @@ import { NotificacaoQueueContract } from './queue/notificacao-queue.contract';
 import { BullMqNotificacaoQueue } from './queue/bullmq-notificacao.queue';
 import { ProcessarNotificacaoWorker } from './queue/processar-notificacao.worker';
 import { NotificacaoRepositoryContract } from './repositories/notificacao-repository.contract';
+import { PreferenciasNotificacaoRepositoryContract } from './repositories/preferencias-notificacao-repository.contract';
 import { RedisNotificacaoRepository } from './repositories/redis-notificacao.repository';
+import { RedisPreferenciasNotificacaoRepository } from './repositories/redis-preferencias-notificacao.repository';
 import { AgendarLembreteDaSolicitacaoService } from './services/agendar-lembrete-da-solicitacao.service';
+import { AtualizarPreferenciasNotificacaoService } from './services/atualizar-preferencias-notificacao.service';
+import { BuscarPreferenciasNotificacaoService } from './services/buscar-preferencias-notificacao.service';
+import { FiltrarNotificacoesPorPreferenciaService } from './services/filtrar-notificacoes-por-preferencia.service';
 import { CancelarNotificacoesDaSolicitacaoService } from './services/cancelar-notificacoes-da-solicitacao.service';
 import { ContarNotificacoesNaoLidasService } from './services/contar-notificacoes-nao-lidas.service';
 import { EnviarNotificacaoService } from './services/enviar-notificacao.service';
@@ -26,10 +33,15 @@ import { MarcarNotificacaoComoLidaService } from './services/marcar-notificacao-
   controllers: [
     ListarNotificacoesController,
     ContarNotificacoesNaoLidasController,
+    BuscarPreferenciasNotificacaoController,
+    AtualizarPreferenciasNotificacaoController,
     MarcarNotificacaoComoLidaController,
   ],
   providers: [
     AgendarLembreteDaSolicitacaoService,
+    AtualizarPreferenciasNotificacaoService,
+    BuscarPreferenciasNotificacaoService,
+    FiltrarNotificacoesPorPreferenciaService,
     CancelarNotificacoesDaSolicitacaoService,
     ContarNotificacoesNaoLidasService,
     EnviarNotificacaoService,
@@ -43,6 +55,10 @@ import { MarcarNotificacaoComoLidaService } from './services/marcar-notificacao-
     {
       provide: NotificacaoRepositoryContract,
       useClass: RedisNotificacaoRepository,
+    },
+    {
+      provide: PreferenciasNotificacaoRepositoryContract,
+      useClass: RedisPreferenciasNotificacaoRepository,
     },
     {
       provide: NotificacaoQueueContract,

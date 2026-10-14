@@ -95,7 +95,7 @@ export class PrismaContratoPrecificacaoMapper {
         ),
     );
 
-    if (valor == null || perguntaId == null || rotasFixas.length === 0) {
+    if (valor == null) {
       return undefined;
     }
 

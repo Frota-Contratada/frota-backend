@@ -33,8 +33,13 @@ export interface RegraAplicada {
 
 export interface ResultadoPrecificacao {
   valorEstimado: number;
-  rotaFixaId: number;
+  rotaFixaId?: number;
   regrasAplicadas: RegraAplicada[];
+}
+
+interface RegraAplicavel {
+  regra: Regra;
+  rotaFixaId?: number;
 }
 
 @Injectable()
@@ -50,19 +55,15 @@ export class CalcularValorEstimadoService {
     contrato: ContratoPrecificacao,
     contexto: ContextoPrecificacao,
   ): ResultadoPrecificacao | undefined {
-    const regrasAplicaveis: { regra: Regra; rotaFixaId: number }[] = [];
+    const regrasAplicaveis: RegraAplicavel[] = [];
 
     for (const regra of [...contrato.regras].sort(
       (uma, outra) => uma.prioridade - outra.prioridade,
     )) {
-      const rotaFixaId = this.regraSeAplica(regra, contexto);
-      if (rotaFixaId != null) {
-        regrasAplicaveis.push({ regra, rotaFixaId });
+      const aplicavel = this.regraSeAplica(regra, contexto);
+      if (aplicavel != null) {
+        regrasAplicaveis.push(aplicavel);
       }
-    }
-
-    if (regrasAplicaveis.length === 0) {
-      return undefined;
     }
 
     let valor = 0;
@@ -92,7 +93,8 @@ export class CalcularValorEstimadoService {
 
     return {
       valorEstimado: Math.round(valor * 100) / 100,
-      rotaFixaId: regrasAplicaveis[0].rotaFixaId,
+      rotaFixaId: regrasAplicaveis.find((item) => item.rotaFixaId != null)
+        ?.rotaFixaId,
       regrasAplicadas,
     };
   }
@@ -100,11 +102,10 @@ export class CalcularValorEstimadoService {
   private regraSeAplica(
     regra: Regra,
     contexto: ContextoPrecificacao,
-  ): number | undefined {
+  ): RegraAplicavel | undefined {
     const condicao = regra.condicao;
     if (condicao == null) return undefined;
 
-    const rotaFixaId = this.encontrarRotaFixa(condicao, contexto);
     const diaSemana = this.diaSemanaDaData(contexto.dataCorrida);
     const periodo = resolverPeriodo(contexto.dataCorrida);
 
@@ -119,12 +120,19 @@ export class CalcularValorEstimadoService {
     if (!condicao.tipoCorridaIds.includes(contexto.tipoCorridaId)) {
       return undefined;
     }
-    if (rotaFixaId == null) return undefined;
-    if (!this.perguntaFoiRespondidaComSim(regra, condicao, contexto)) {
+
+    const rotaFixaId = this.encontrarRotaFixa(condicao, contexto);
+    if (condicao.rotasFixas.length > 0 && rotaFixaId == null) {
+      return undefined;
+    }
+    if (
+      condicao.perguntaId != null &&
+      !this.perguntaFoiRespondidaComSim(regra, condicao, contexto)
+    ) {
       return undefined;
     }
 
-    return rotaFixaId;
+    return { regra, rotaFixaId };
   }
 
   private perguntaFoiRespondidaComSim(
