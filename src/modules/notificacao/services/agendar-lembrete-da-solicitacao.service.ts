@@ -103,7 +103,8 @@ export class AgendarLembreteDaSolicitacaoService {
     const agendamento: AgendamentoNotificacao = {
       id: agendamentoId,
       solicitacaoId,
-      jobId: `notificacao:${agendamentoId}`,
+      // O BullMQ recusa ":" no id do job, por ser o separador das suas chaves.
+      jobId: `notificacao-${agendamentoId}`,
       dispararEm: dispararEm.toISOString(),
       expiraEm: new Date(
         Math.max(dispararEm.getTime(), agora) + this.ttlEmMs,

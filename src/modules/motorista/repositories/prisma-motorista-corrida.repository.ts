@@ -299,6 +299,7 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
 
     return new MotoristaCorrida(
       corrida.nCdCorrida.toNumber(),
+      corrida.nCdSolicitacao.toNumber(),
       dataHoraPartida,
       this.formatarEndereco(
         corrida.Solicitacao.Endereco_Solicitacao_nCdEnderecoOrigemToEndereco,
