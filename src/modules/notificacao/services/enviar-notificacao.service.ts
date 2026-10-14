@@ -8,6 +8,7 @@ import {
 } from '../domain/notificacao';
 import { NotificacaoEventsService } from '../gateways/notificacao-events.service';
 import { NotificacaoRepositoryContract } from '../repositories/notificacao-repository.contract';
+import { FiltrarNotificacoesPorPreferenciaService } from './filtrar-notificacoes-por-preferencia.service';
 
 /**
  * Entrega notificações na hora, sem passar pela fila de agendamento.
@@ -25,6 +26,7 @@ export class EnviarNotificacaoService {
     private readonly configService: ConfigService,
     private readonly notificacaoRepository: NotificacaoRepositoryContract,
     private readonly notificacaoEvents: NotificacaoEventsService,
+    private readonly filtrarPorPreferencia: FiltrarNotificacoesPorPreferenciaService,
   ) {
     const dias = Number(
       this.configService.get<string>('NOTIFICACOES_TTL_DIAS') ?? 30,
@@ -36,7 +38,8 @@ export class EnviarNotificacaoService {
     solicitacaoId: number,
     notificacoes: NotificacaoConteudo[],
   ): Promise<void> {
-    if (notificacoes.length === 0) return;
+    const permitidas = await this.filtrarPorPreferencia.execute(notificacoes);
+    if (permitidas.length === 0) return;
 
     const agora = Date.now();
     const entrega: AgendamentoNotificacao = {
@@ -45,7 +48,7 @@ export class EnviarNotificacaoService {
       jobId: '',
       dispararEm: new Date(agora).toISOString(),
       expiraEm: new Date(agora + this.ttlEmMs).toISOString(),
-      notificacoes,
+      notificacoes: permitidas,
       status: StatusAgendamentoNotificacao.ENTREGUE,
     };
 

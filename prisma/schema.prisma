@@ -457,35 +457,50 @@ model TipoVeiculo {
 }
 
 model Usuario {
-  nCdUsuario             Decimal                  @id(map: "PK_Usuario") @db.Decimal(10, 0)
-  cNmUsuario             String                   @db.VarChar(100)
-  nCdEmpresa             Decimal?                 @db.Decimal(10, 0)
-  nCdFilial              Decimal?                 @db.Decimal(10, 0)
-  nCdFornecedor          Decimal?                 @db.Decimal(10, 0)
-  nCdCentroCusto         Decimal?                 @db.Decimal(10, 0)
-  cCdSeara               String?                  @db.VarChar(255)
-  cCaminhoFotoPerfil     String?                  @db.VarChar(255)
-  cEmail                 String                   @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
-  cCargo                 String?                  @db.VarChar(100)
-  cHashSenha             String?                  @db.VarChar(255)
-  cCPF                   String?                  @unique(map: "UK_Usuario_cCPF", where: raw("[cCPF] IS NOT NULL")) @db.VarChar(11)
-  cDisponivel            String                   @db.Char(1)
-  dAtivacao              DateTime                 @default(now(), map: "DF_Usuario_dAtivacao") @db.DateTime
-  dDesativacao           DateTime?                @db.DateTime
-  Contrato               Contrato[]
-  Corrida                Corrida[]
-  Solicitacao            Solicitacao[]
-  SolicitacaoCentroCusto SolicitacaoCentroCusto[]
-  CentroCusto            CentroCusto?             @relation(fields: [nCdEmpresa, nCdFilial, nCdCentroCusto], references: [nCdEmpresa, nCdFilial, nCdCentroCusto], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_CentroCusto")
-  Filial                 Filial?                  @relation("UsuarioFilial", fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
-  Fornecedor             Fornecedor?              @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
-  UsuarioPerfil          UsuarioPerfil[]
-  PinUsuario             PinUsuario[]
-  RecusaCorrida          RecusaCorrida[]
-  CorridaPosicao         CorridaPosicao[]
+  nCdUsuario                    Decimal                        @id(map: "PK_Usuario") @db.Decimal(10, 0)
+  cNmUsuario                    String                         @db.VarChar(100)
+  nCdEmpresa                    Decimal?                       @db.Decimal(10, 0)
+  nCdFilial                     Decimal?                       @db.Decimal(10, 0)
+  nCdFornecedor                 Decimal?                       @db.Decimal(10, 0)
+  nCdCentroCusto                Decimal?                       @db.Decimal(10, 0)
+  cCdSeara                      String?                        @db.VarChar(255)
+  cCaminhoFotoPerfil            String?                        @db.VarChar(255)
+  cEmail                        String                         @unique(map: "UK_Usuario_cEmail") @db.VarChar(100)
+  cCargo                        String?                        @db.VarChar(100)
+  cHashSenha                    String?                        @db.VarChar(255)
+  cCPF                          String?                        @unique(map: "UK_Usuario_cCPF", where: raw("[cCPF] IS NOT NULL")) @db.VarChar(11)
+  cDisponivel                   String                         @db.Char(1)
+  dAtivacao                     DateTime                       @default(now(), map: "DF_Usuario_dAtivacao") @db.DateTime
+  dDesativacao                  DateTime?                      @db.DateTime
+  Contrato                      Contrato[]
+  Corrida                       Corrida[]
+  Solicitacao                   Solicitacao[]
+  SolicitacaoCentroCusto        SolicitacaoCentroCusto[]
+  CentroCusto                   CentroCusto?                   @relation(fields: [nCdEmpresa, nCdFilial, nCdCentroCusto], references: [nCdEmpresa, nCdFilial, nCdCentroCusto], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_CentroCusto")
+  Filial                        Filial?                        @relation("UsuarioFilial", fields: [nCdEmpresa, nCdFilial], references: [nCdEmpresa, nCdFilial], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Filial")
+  Fornecedor                    Fornecedor?                    @relation(fields: [nCdFornecedor], references: [nCdFornecedor], onDelete: NoAction, onUpdate: NoAction, map: "FK_Usuario_Fornecedor")
+  UsuarioPerfil                 UsuarioPerfil[]
+  PinUsuario                    PinUsuario[]
+  RecusaCorrida                 RecusaCorrida[]
+  CorridaPosicao                CorridaPosicao[]
+  UsuarioPreferenciaNotificacao UsuarioPreferenciaNotificacao?
 
   @@index([cEmail, cDisponivel], map: "IX_Usuario_LoginRumo")
   @@index([nCdEmpresa, nCdFilial, nCdCentroCusto], map: "IX_Usuario_CentroCusto")
+}
+
+model UsuarioPreferenciaNotificacao {
+  nCdUsuario            Decimal  @id(map: "PK_UsuarioPreferenciaNotificacao") @db.Decimal(10, 0)
+  cPushAtivo            String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cPushAtivo") @db.Char(1)
+  cLembreteViagem       String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cLembreteViagem") @db.Char(1)
+  cCorridaConfirmada    String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cCorridaConfirmada") @db.Char(1)
+  cSolicitacaoEncerrada String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cSolicitacaoEncerrada") @db.Char(1)
+  cCorridaCancelada     String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cCorridaCancelada") @db.Char(1)
+  cAprovacaoPendente    String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cAprovacaoPendente") @db.Char(1)
+  cDecisaoFornecedor    String   @default("S", map: "DF_UsuarioPreferenciaNotificacao_cDecisaoFornecedor") @db.Char(1)
+  dCriacao              DateTime @default(now(), map: "DF_UsuarioPreferenciaNotificacao_dCriacao") @db.DateTime2
+  dAtualizacao          DateTime @updatedAt @db.DateTime2
+  Usuario               Usuario  @relation(fields: [nCdUsuario], references: [nCdUsuario], onDelete: Cascade, onUpdate: NoAction, map: "FK_UsuarioPreferenciaNotificacao_Usuario")
 }
 
 model UsuarioPerfil {
