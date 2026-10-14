@@ -111,6 +111,29 @@ describe('AgendarLembreteDaSolicitacaoService', () => {
     expect(repository.salvarAgendamento).not.toHaveBeenCalled();
   });
 
+  it('gera um jobId que o BullMQ aceita, sem ":"', async () => {
+    const { service, repository, queue } = criarService();
+
+    await service.execute({
+      solicitacaoId: 10,
+      dataCorrida: daquiA(300),
+      destinatarioIds: [1],
+      destinatariosLembreteFinal: [6],
+    });
+
+    const enfileirados = queue.enfileirar.mock.calls.map(
+      ([input]: [{ jobId: string }]) => input.jobId,
+    );
+
+    expect(enfileirados).toHaveLength(2);
+    for (const jobId of enfileirados) {
+      expect(jobId).not.toContain(':');
+    }
+    for (const agendamento of agendamentosSalvos(repository)) {
+      expect(agendamento.jobId).not.toContain(':');
+    }
+  });
+
   it('limpa os lembretes pendentes antes de reagendar', async () => {
     const { service, cancelarNotificacoes } = criarService();
 

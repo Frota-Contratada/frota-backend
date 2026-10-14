@@ -87,6 +87,29 @@ const TIPO_VEICULO = { MOTO: 1, CARRO: 2, VAN: 3 };
 const FORNECEDOR = { AURORA: 1, ROTA_CERTA: 2, VIA_NORTE: 3 };
 const CONTRATO = { AURORA: 1, ROTA_CERTA: 2, VIA_NORTE: 3 };
 
+/** Condição de regra no formato que o motor de precificação lê hoje. */
+const CONDICAO_COMPLETA = 'CONDICAO_COMPLETA';
+const CONDICAO = 1;
+const ROTA_FIXA = 1;
+const PERGUNTA_ROTA_FIXA = 1;
+const TEXTO_PERGUNTA_ROTA_FIXA = 'A viagem segue a rota fixa contratada?';
+
+enum DiaSemanaSeed {
+  SEGUNDA = 'SEGUNDA',
+  TERCA = 'TERCA',
+  QUARTA = 'QUARTA',
+  QUINTA = 'QUINTA',
+  SEXTA = 'SEXTA',
+  SABADO = 'SABADO',
+  DOMINGO = 'DOMINGO',
+}
+
+enum PeriodoSeed {
+  MATUTINO = 'MATUTINO',
+  VESPERTINO = 'VESPERTINO',
+  NOTURNO = 'NOTURNO',
+}
+
 const TIPO_MOTIVO = {
   SOLICITACAO: '1',
   CANCELAMENTO: '2',
@@ -941,29 +964,116 @@ async function semearContratos() {
       });
     }
 
-    const condicoes = [
-      { regraId: 3, id: 1, tipo: 'hora-inicio', valor: '22:00' },
-    ];
+    await semearCondicoesDasRegras(contrato.id);
+  }
+}
 
-    for (const condicao of condicoes) {
-      await prisma.condicaoRegra.upsert({
-        where: {
-          nCdContrato_nCdRegra_nCdCondicao: {
-            nCdContrato: contrato.id,
-            nCdRegra: condicao.regraId,
-            nCdCondicao: condicao.id,
-          },
-        },
-        update: { cTipoCondicao: condicao.tipo, cValor: condicao.valor },
-        create: {
-          nCdContrato: contrato.id,
+/**
+ * Precificação: cada regra só entra na conta quando sua CondicaoRegra está
+ * completa — dias, períodos, tipos de veículo e de corrida, uma rota fixa que
+ * bate com origem e destino da solicitação, e uma pergunta respondida com SIM.
+ * Sem isso nenhum contrato precifica e a criação de solicitação falha com
+ * "Nenhum fornecedor com contrato vigente".
+ */
+async function semearCondicoesDasRegras(contratoId: number) {
+  await prisma.perguntaContrato.upsert({
+    where: {
+      nCdContrato_nCdPergunta: {
+        nCdContrato: contratoId,
+        nCdPergunta: PERGUNTA_ROTA_FIXA,
+      },
+    },
+    update: { cPergunta: TEXTO_PERGUNTA_ROTA_FIXA },
+    create: {
+      nCdContrato: contratoId,
+      nCdPergunta: PERGUNTA_ROTA_FIXA,
+      cPergunta: TEXTO_PERGUNTA_ROTA_FIXA,
+    },
+  });
+
+  await prisma.rotaFixa.upsert({
+    where: {
+      nCdContrato_nCdRota: { nCdContrato: contratoId, nCdRota: ROTA_FIXA },
+    },
+    update: {},
+    create: {
+      nCdContrato: contratoId,
+      nCdRota: ROTA_FIXA,
+      nCdEnderecoOrigem: PONTO.FILIAL.id,
+      nCdEnderecoDestino: PONTO.AEROPORTO.id,
+    },
+  });
+
+  const todosOsDias = Object.values(DiaSemanaSeed);
+  const condicoes = [
+    // Bandeirada e valor por km valem sempre.
+    { regraId: 1, periodos: Object.values(PeriodoSeed) },
+    { regraId: 2, periodos: Object.values(PeriodoSeed) },
+    // O adicional percentual continua restrito ao período noturno.
+    { regraId: 3, periodos: [PeriodoSeed.NOTURNO] },
+  ];
+
+  for (const condicao of condicoes) {
+    const valor = JSON.stringify({
+      aplicaOutroQuando: 'SIM',
+      diasSemana: todosOsDias,
+      periodos: condicao.periodos,
+      tipoVeiculoIds: Object.values(TIPO_VEICULO),
+      tipoCorridaIds: Object.values(TIPO_CORRIDA),
+    });
+
+    await prisma.condicaoRegra.upsert({
+      where: {
+        nCdContrato_nCdRegra_nCdCondicao: {
+          nCdContrato: contratoId,
           nCdRegra: condicao.regraId,
-          nCdCondicao: condicao.id,
-          cTipoCondicao: condicao.tipo,
-          cValor: condicao.valor,
+          nCdCondicao: CONDICAO,
         },
-      });
-    }
+      },
+      update: { cTipoCondicao: CONDICAO_COMPLETA, cValor: valor },
+      create: {
+        nCdContrato: contratoId,
+        nCdRegra: condicao.regraId,
+        nCdCondicao: CONDICAO,
+        cTipoCondicao: CONDICAO_COMPLETA,
+        cValor: valor,
+      },
+    });
+
+    await prisma.condicaoRegraRotaFixa.upsert({
+      where: {
+        nCdContrato_nCdRegra_nCdCondicao_nCdRota: {
+          nCdContrato: contratoId,
+          nCdRegra: condicao.regraId,
+          nCdCondicao: CONDICAO,
+          nCdRota: ROTA_FIXA,
+        },
+      },
+      update: {},
+      create: {
+        nCdContrato: contratoId,
+        nCdRegra: condicao.regraId,
+        nCdCondicao: CONDICAO,
+        nCdRota: ROTA_FIXA,
+      },
+    });
+
+    await prisma.condicaoRegraOutro.upsert({
+      where: {
+        nCdContrato_nCdRegra_nCdCondicao: {
+          nCdContrato: contratoId,
+          nCdRegra: condicao.regraId,
+          nCdCondicao: CONDICAO,
+        },
+      },
+      update: { nCdPergunta: PERGUNTA_ROTA_FIXA },
+      create: {
+        nCdContrato: contratoId,
+        nCdRegra: condicao.regraId,
+        nCdCondicao: CONDICAO,
+        nCdPergunta: PERGUNTA_ROTA_FIXA,
+      },
+    });
   }
 }
 

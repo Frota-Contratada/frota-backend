@@ -225,6 +225,20 @@ export class SolicitacaoDto {
   @ApiProperty({ type: () => EnderecoDto })
   destino: EnderecoDto;
 
+  @ApiProperty({
+    description:
+      'Local de partida em uma linha, pronto para exibir. Mesmo conteúdo de origem.descricao.',
+    example: 'Avenida Higienópolis, 1100 - Centro',
+  })
+  localPartida: string;
+
+  @ApiProperty({
+    description:
+      'Local de destino em uma linha, pronto para exibir. Mesmo conteúdo de destino.descricao.',
+    example: 'Avenida Santos Dumont, 100 - Aeroporto',
+  })
+  localDestino: string;
+
   @ApiProperty({ type: () => [ParadaDto] })
   paradas: ParadaDto[];
 
@@ -298,6 +312,8 @@ export class SolicitacaoDto {
     this.fornecedorNome = solicitacao.fornecedorNome;
     this.origem = new EnderecoDto(solicitacao.origem);
     this.destino = new EnderecoDto(solicitacao.destino);
+    this.localPartida = solicitacao.origem.descricao;
+    this.localDestino = solicitacao.destino.descricao;
     this.paradas = solicitacao.paradas.map((parada) => new ParadaDto(parada));
     this.motivoSolicitacao = CatalogoItemDto.aPartirDoMotivo(
       solicitacao.motivoSolicitacao,

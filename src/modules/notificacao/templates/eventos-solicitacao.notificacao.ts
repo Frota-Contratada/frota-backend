@@ -166,6 +166,32 @@ export class CorridaCanceladaNotificacao extends NotificacaoSistema<ContextoCorr
   }
 }
 
+export interface ContextoCorridaRecusadaPeloMotorista extends ContextoEventoSolicitacao {
+  corridaId: number;
+}
+
+export class CorridaRecusadaPeloMotoristaNotificacao extends NotificacaoSistema<ContextoCorridaRecusadaPeloMotorista> {
+  readonly tipo = TipoNotificacao.CORRIDA_RECUSADA_MOTORISTA;
+
+  preparar(
+    contexto: ContextoCorridaRecusadaPeloMotorista,
+  ): NotificacaoConteudo[] {
+    return this.paraCadaDestinatario(contexto.destinatarioIds, {
+      titulo: 'Corrida recusada pelo motorista',
+      mensagem: `O motorista recusou a corrida de ${this.formatarDataHora(
+        contexto.dataCorrida,
+      )} e ela aguarda uma nova atribuição.${motivoEmTexto(contexto.motivo)}`,
+      dados: {
+        solicitacaoId: contexto.solicitacaoId,
+        corridaId: contexto.corridaId,
+        dataCorrida: contexto.dataCorrida.toISOString(),
+        motivo: contexto.motivo,
+      },
+      acao: acaoDaSolicitacao(contexto.solicitacaoId),
+    });
+  }
+}
+
 function motivoEmTexto(motivo?: string): string {
   return motivo ? ` Motivo: ${motivo}.` : '';
 }

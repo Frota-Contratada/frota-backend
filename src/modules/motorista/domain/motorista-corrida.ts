@@ -13,6 +13,7 @@ export class MotoristaCorridaParada {
 export class MotoristaCorrida {
   constructor(
     public id: number,
+    public solicitacaoId: number,
     public dataHoraPartida: DateTime,
     public origem: string,
     public destino: string,

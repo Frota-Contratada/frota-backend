@@ -3,6 +3,7 @@ import { NotificacaoConteudo } from '../domain/notificacao';
 import {
   ContextoEventoSolicitacao,
   CorridaCanceladaNotificacao,
+  CorridaRecusadaPeloMotoristaNotificacao,
   SolicitacaoAguardandoFornecedorNotificacao,
   SolicitacaoCanceladaNotificacao,
   SolicitacaoCriadaNotificacao,
@@ -38,6 +39,8 @@ export class NotificarSolicitacaoService {
     new SolicitacaoRecusadaPeloFornecedorNotificacao();
   private readonly canceladaTemplate = new SolicitacaoCanceladaNotificacao();
   private readonly corridaCanceladaTemplate = new CorridaCanceladaNotificacao();
+  private readonly corridaRecusadaPeloMotoristaTemplate =
+    new CorridaRecusadaPeloMotoristaNotificacao();
 
   constructor(
     private readonly resolverEnvolvidos: ResolverEnvolvidosDaSolicitacaoService,
@@ -143,6 +146,35 @@ export class NotificarSolicitacaoService {
             envolvidos,
             opcoes.canceladaPorId,
           ),
+          corridaId: envolvidos.corridaId,
+          motivo: opcoes.motivo,
+        });
+      },
+      { incluirCorridasCanceladas: true },
+    );
+  }
+
+  /**
+   * O motorista recusou a corrida: ela foi cancelada e a solicitação voltou a
+   * aguardar o fornecedor. Avisa quem precisa agir (fornecedor) e quem perdeu a
+   * confirmação (solicitante), nunca o motorista que recusou.
+   */
+  async corridaRecusadaPeloMotorista(
+    solicitacaoId: number,
+    opcoes: { motoristaId?: number; motivo?: string } = {},
+  ): Promise<void> {
+    await this.disparar(
+      solicitacaoId,
+      'corrida recusada pelo motorista',
+      (envolvidos) => {
+        if (envolvidos.corridaId == null) return [];
+
+        return this.corridaRecusadaPeloMotoristaTemplate.preparar({
+          ...this.contextoBase(envolvidos),
+          destinatarioIds: [
+            envolvidos.solicitanteId,
+            ...envolvidos.fornecedorIds,
+          ].filter((usuarioId) => usuarioId !== opcoes.motoristaId),
           corridaId: envolvidos.corridaId,
           motivo: opcoes.motivo,
         });
