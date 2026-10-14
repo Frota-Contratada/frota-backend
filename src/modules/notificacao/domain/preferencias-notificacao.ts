@@ -22,7 +22,10 @@ export const TIPOS_POR_CATEGORIA: Record<
     TipoNotificacao.SOLICITACAO_RECUSADA_FORNECEDOR,
     TipoNotificacao.SOLICITACAO_CANCELADA,
   ],
-  [CategoriaNotificacao.CORRIDA_CANCELADA]: [TipoNotificacao.CORRIDA_CANCELADA],
+  [CategoriaNotificacao.CORRIDA_CANCELADA]: [
+    TipoNotificacao.CORRIDA_CANCELADA,
+    TipoNotificacao.CORRIDA_RECUSADA_MOTORISTA,
+  ],
   [CategoriaNotificacao.APROVACAO_PENDENTE]: [
     TipoNotificacao.SOLICITACAO_CRIADA,
   ],

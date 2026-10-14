@@ -14,8 +14,8 @@ import { BullMqNotificacaoQueue } from './queue/bullmq-notificacao.queue';
 import { ProcessarNotificacaoWorker } from './queue/processar-notificacao.worker';
 import { NotificacaoRepositoryContract } from './repositories/notificacao-repository.contract';
 import { PreferenciasNotificacaoRepositoryContract } from './repositories/preferencias-notificacao-repository.contract';
-import { PrismaPreferenciasNotificacaoRepository } from './repositories/prisma-preferencias-notificacao.repository';
 import { RedisNotificacaoRepository } from './repositories/redis-notificacao.repository';
+import { RedisPreferenciasNotificacaoRepository } from './repositories/redis-preferencias-notificacao.repository';
 import { AgendarLembreteDaSolicitacaoService } from './services/agendar-lembrete-da-solicitacao.service';
 import { AtualizarPreferenciasNotificacaoService } from './services/atualizar-preferencias-notificacao.service';
 import { BuscarPreferenciasNotificacaoService } from './services/buscar-preferencias-notificacao.service';
@@ -58,7 +58,7 @@ import { MarcarNotificacaoComoLidaService } from './services/marcar-notificacao-
     },
     {
       provide: PreferenciasNotificacaoRepositoryContract,
-      useClass: PrismaPreferenciasNotificacaoRepository,
+      useClass: RedisPreferenciasNotificacaoRepository,
     },
     {
       provide: NotificacaoQueueContract,
