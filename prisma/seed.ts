@@ -969,11 +969,9 @@ async function semearContratos() {
 }
 
 /**
- * Precificação: cada regra só entra na conta quando sua CondicaoRegra está
- * completa — dias, períodos, tipos de veículo e de corrida, uma rota fixa que
- * bate com origem e destino da solicitação, e uma pergunta respondida com SIM.
- * Sem isso nenhum contrato precifica e a criação de solicitação falha com
- * "Nenhum fornecedor com contrato vigente".
+ * Precificação: cada regra entra na conta quando dias, períodos e tipos de
+ * veículo e de corrida batem. Rota fixa e pergunta só restringem a regra
+ * quando estão vinculadas; aqui apenas o adicional noturno exige a rota fixa.
  */
 async function semearCondicoesDasRegras(contratoId: number) {
   await prisma.perguntaContrato.upsert({
@@ -1006,11 +1004,11 @@ async function semearCondicoesDasRegras(contratoId: number) {
 
   const todosOsDias = Object.values(DiaSemanaSeed);
   const condicoes = [
-    // Bandeirada e valor por km valem sempre.
-    { regraId: 1, periodos: Object.values(PeriodoSeed) },
-    { regraId: 2, periodos: Object.values(PeriodoSeed) },
-    // O adicional percentual continua restrito ao período noturno.
-    { regraId: 3, periodos: [PeriodoSeed.NOTURNO] },
+    // Bandeirada e valor por km valem em qualquer trajeto.
+    { regraId: 1, periodos: Object.values(PeriodoSeed), rotaFixa: false },
+    { regraId: 2, periodos: Object.values(PeriodoSeed), rotaFixa: false },
+    // O adicional percentual continua restrito ao período noturno na rota fixa.
+    { regraId: 3, periodos: [PeriodoSeed.NOTURNO], rotaFixa: true },
   ];
 
   for (const condicao of condicoes) {
@@ -1039,6 +1037,17 @@ async function semearCondicoesDasRegras(contratoId: number) {
         cValor: valor,
       },
     });
+
+    if (!condicao.rotaFixa) {
+      const daCondicao = {
+        nCdContrato: contratoId,
+        nCdRegra: condicao.regraId,
+        nCdCondicao: CONDICAO,
+      };
+      await prisma.condicaoRegraRotaFixa.deleteMany({ where: daCondicao });
+      await prisma.condicaoRegraOutro.deleteMany({ where: daCondicao });
+      continue;
+    }
 
     await prisma.condicaoRegraRotaFixa.upsert({
       where: {

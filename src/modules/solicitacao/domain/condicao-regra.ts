@@ -26,6 +26,6 @@ export class CondicaoRegra {
     public rotasFixas: RotaFixaRegra[],
     public tipoVeiculoIds: number[],
     public tipoCorridaIds: number[],
-    public perguntaId: number,
+    public perguntaId?: number,
   ) {}
 }
