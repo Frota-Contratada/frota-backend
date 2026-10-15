@@ -11,6 +11,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { NotificacaoEventsService } from './notificacao-events.service';
+import { hmlCorsOrigins } from '../../../common/config/hml-cors-origins';
 
 type SocketEvents = Record<string, (...args: unknown[]) => void>;
 type AuthenticatedSocket = Socket<
@@ -24,7 +25,7 @@ type AuthenticatedSocket = Socket<
 @WebSocketGateway({
   namespace: '/notificacoes',
   transports: ['websocket', 'polling'],
-  cors: { origin: true, credentials: true },
+  cors: { origin: hmlCorsOrigins(), credentials: true },
 })
 export class NotificacaoGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;

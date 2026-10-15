@@ -8,6 +8,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import { Server, ServerOptions } from 'socket.io';
+import { hmlCorsOrigins } from './common/config/hml-cors-origins';
 
 Settings.defaultZone = process.env.TZ ?? 'UTC';
 
@@ -17,7 +18,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: true,
+    origin: hmlCorsOrigins(),
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
@@ -32,7 +33,7 @@ async function bootstrap() {
         const server = super.createIOServer(port, {
           ...options,
           cors: {
-            origin: true,
+            origin: hmlCorsOrigins(),
             credentials: true,
             methods: ['GET', 'POST'],
           },
