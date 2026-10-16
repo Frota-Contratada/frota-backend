@@ -837,9 +837,16 @@ async function semearUsuarios() {
       dDesativacao: null,
     };
 
+    // Na DEMO, o arquivo local de credenciais é a fonte de verdade. Reaplicar a
+    // senha derivada mantém banco e arquivo sincronizados após rebuild/restore.
+    // Fora da DEMO, o seed continua preservando senhas já configuradas.
+    const dadosAtualizacao =
+      process.env.DEMO_MODE === 'true'
+        ? dados
+        : { ...dados, cHashSenha: undefined };
     await prisma.usuario.upsert({
       where: { nCdUsuario: usuario.id },
-      update: dados,
+      update: dadosAtualizacao,
       create: { nCdUsuario: usuario.id, cEmail: usuario.email, ...dados },
     });
 
