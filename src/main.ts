@@ -47,22 +47,27 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ZodValidationPipe());
 
-  const config = new DocumentBuilder()
-    .setTitle('Backend Gestão de Frota Contratada')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'Informe o access token JWT.',
-      },
-      'bearer',
-    )
-    .build();
+  if (process.env.ENABLE_SWAGGER === 'true') {
+    const config = new DocumentBuilder()
+      .setTitle('Backend Gestão de Frota Contratada')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Informe o access token JWT.',
+        },
+        'bearer',
+      )
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
 
-  SwaggerModule.setup('docs', app, document);
+  app.getHttpAdapter().get('/health', (_request, response) => {
+    response.status(200).json({ status: 'ok' });
+  });
 
   const port = Number.parseInt(process.env.BACKEND_PORT ?? '3000', 10);
   await app.listen(port);

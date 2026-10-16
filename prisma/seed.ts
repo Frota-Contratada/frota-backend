@@ -3,6 +3,7 @@
 // pnpm prisma db seed
 
 import * as argon2 from 'argon2';
+import { createHash } from 'node:crypto';
 import { PrismaMssql } from '@prisma/adapter-mssql';
 import { PrismaClient } from '@prisma/client';
 import { DateTime } from 'luxon';
@@ -13,7 +14,21 @@ const prisma = new PrismaClient({
 
 /** Identifier used only by development seed data, never by corporate imports. */
 const EMPRESA_TECNICA_ID = 1;
-const SENHA_PADRAO = 'Teste@123';
+const DEMO_SEED_PASSWORD_SECRET = process.env.DEMO_SEED_PASSWORD_SECRET;
+
+if (!DEMO_SEED_PASSWORD_SECRET || DEMO_SEED_PASSWORD_SECRET.length < 32) {
+  throw new Error(
+    'DEMO_SEED_PASSWORD_SECRET deve conter ao menos 32 caracteres aleatórios.',
+  );
+}
+
+function senhaDemo(email: string): string {
+  const digest = createHash('sha256')
+    .update(`${DEMO_SEED_PASSWORD_SECRET}:${email}`)
+    .digest('base64url')
+    .slice(0, 20);
+  return `D!${digest}aA1`;
+}
 
 const FILIAL = {
   LONDRINA: 1,
@@ -625,8 +640,6 @@ async function semearFiliaisECentrosCusto() {
 }
 
 async function semearUsuarios() {
-  const senha = await argon2.hash(SENHA_PADRAO);
-
   const usuarios = [
     {
       id: USUARIO.ADMIN,
@@ -810,6 +823,7 @@ async function semearUsuarios() {
   ];
 
   for (const usuario of usuarios) {
+    const senha = await argon2.hash(senhaDemo(usuario.email));
     const dados = {
       cNmUsuario: usuario.nome,
       cCargo: usuario.cargo,
@@ -2001,7 +2015,12 @@ async function limparHistorico() {
 }
 
 async function semearHistorico(): Promise<number> {
-  await limparHistorico();
+  // Na DEMO pública, dados criados durante a apresentação precisam sobreviver
+  // aos reinícios. O histórico usa IDs fixos e upserts, então a limpeza ampla
+  // (2000..9999) é desnecessária e apagaria solicitações reais da demonstração.
+  if (process.env.DEMO_MODE !== 'true') {
+    await limparHistorico();
+  }
 
   const sortear = criarSorteio(SEMENTE_HISTORICO);
   let solicitacaoId = PRIMEIRA_SOLICITACAO_HISTORICO;
@@ -2060,7 +2079,7 @@ async function main() {
   const solicitacoesHistoricas = await semearHistorico();
 
   console.log('Seed concluído.');
-  console.log(`Senha de todos os usuários de teste: ${SENHA_PADRAO}`);
+  console.log('Usuários DEMO semeados com senhas locais únicas.');
   console.log('');
   console.log('Acessos por perfil:');
   console.log('  admin-master:      admin.master@frota.com.br');

@@ -23,6 +23,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN pnpm prisma generate
+RUN pnpm exec tsc prisma/seed.ts \
+    --outDir dist-seed \
+    --module commonjs \
+    --target ES2022 \
+    --moduleResolution node \
+    --esModuleInterop \
+    --skipLibCheck
 RUN pnpm run build
 
 
@@ -44,6 +51,7 @@ ENV BACKEND_PORT=${BACKEND_PORT}
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist-seed ./dist-seed
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/package.json ./package.json

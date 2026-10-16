@@ -63,7 +63,7 @@ export class TomTomRouteService {
   private readonly timeoutMs: number;
 
   constructor(config: ConfigService) {
-    this.apiKey = config.getOrThrow<string>('TOMTOM_API_KEY');
+    this.apiKey = config.get<string>('TOMTOM_API_KEY') ?? '';
     const configuredTimeout = Number(
       config.get<string>('TOMTOM_TIMEOUT_MS') ?? 8_000,
     );
@@ -78,6 +78,12 @@ export class TomTomRouteService {
     destination: RouteWaypoint,
     version: number,
   ): Promise<CanonicalRoute> {
+    if (!this.apiKey) {
+      if (process.env.DEMO_MODE === 'true') {
+        return this.calculateDemoRoute(origin, stops, destination, version);
+      }
+      throw new TomTomFalhaException();
+    }
     const waypoints = [origin, ...stops, destination];
     const locations = waypoints.map((p) => `${p.lat},${p.lng}`).join(':');
     const url = new URL(
@@ -179,6 +185,60 @@ export class TomTomRouteService {
           };
         },
       ),
+    };
+  }
+
+  private calculateDemoRoute(
+    origin: RouteWaypoint,
+    stops: RouteWaypoint[],
+    destination: RouteWaypoint,
+    version: number,
+  ): CanonicalRoute {
+    const waypoints = [origin, ...stops, destination];
+    let distanceMeters = 0;
+    for (let index = 1; index < waypoints.length; index += 1) {
+      const previous = waypoints[index - 1];
+      const current = waypoints[index];
+      const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+      const latitudeDelta = toRadians(current.lat - previous.lat);
+      const longitudeDelta = toRadians(current.lng - previous.lng);
+      const startLatitude = toRadians(previous.lat);
+      const endLatitude = toRadians(current.lat);
+      const haversine =
+        Math.sin(latitudeDelta / 2) ** 2 +
+        Math.sin(longitudeDelta / 2) ** 2 *
+          Math.cos(startLatitude) *
+          Math.cos(endLatitude);
+      distanceMeters +=
+        2 * 6_371_000 * Math.asin(Math.min(1, Math.sqrt(haversine)));
+    }
+
+    return {
+      routeId: randomUUID(),
+      version,
+      calculatedAt: new Date().toISOString(),
+      origin,
+      stops,
+      destination,
+      coordinates: waypoints.map(({ lat, lng }) => ({ lat, lng })),
+      distanceMeters: Math.round(distanceMeters),
+      durationSeconds: Math.max(60, Math.round(distanceMeters / 11.11)),
+      trafficDelaySeconds: 0,
+      trafficSections: [],
+      instructions: [
+        {
+          id: 'demo-route',
+          instruction: 'Rota DEMO aproximada sem provedor externo.',
+          streetName: destination.label,
+          distanceMeters: Math.round(distanceMeters),
+          durationSeconds: Math.max(60, Math.round(distanceMeters / 11.11)),
+          type: 'demo',
+          modifier: null,
+          icon: null,
+          location: { lat: destination.lat, lng: destination.lng },
+          coordinateIndex: waypoints.length - 1,
+        },
+      ],
     };
   }
 
