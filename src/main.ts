@@ -9,6 +9,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import { Server, ServerOptions } from 'socket.io';
 import { hmlCorsOrigins } from './common/config/hml-cors-origins';
+import type { Request, Response } from 'express';
 
 Settings.defaultZone = process.env.TZ ?? 'UTC';
 
@@ -65,9 +66,11 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document);
   }
 
-  app.getHttpAdapter().get('/health', (_request, response) => {
-    response.status(200).json({ status: 'ok' });
-  });
+  app
+    .getHttpAdapter()
+    .get('/health', (_request: Request, response: Response) => {
+      response.status(200).json({ status: 'ok' });
+    });
 
   const port = Number.parseInt(process.env.BACKEND_PORT ?? '3000', 10);
   await app.listen(port);
