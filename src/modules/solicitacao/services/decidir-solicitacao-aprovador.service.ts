@@ -122,9 +122,9 @@ export class DecidirSolicitacaoAprovadorService {
       return undefined;
     }
 
-    if (fornecedorId == null || fornecedorId === solicitacao.fornecedorId) {
-      return undefined;
-    }
+    // Sem escolha do aprovador, mantém o fornecedor selecionado na criação,
+    // revalidado abaixo contra os contratos vigentes da filial.
+    const fornecedorEscolhidoId = fornecedorId ?? solicitacao.fornecedorId;
 
     if (solicitante?.nCdEmpresa == null || solicitante.nCdFilial == null) {
       throw new FornecedorIndisponivelException(0, solicitacao.tipoCorrida.id);
@@ -138,7 +138,7 @@ export class DecidirSolicitacaoAprovadorService {
         solicitacao.dataCorrida,
       );
     const candidato = candidatos.find(
-      (item) => item.fornecedorId === fornecedorId,
+      (item) => item.fornecedorId === fornecedorEscolhidoId,
     );
 
     if (candidato == null) {
