@@ -43,6 +43,8 @@ const CAMPO_VALOR_POR_TIPO_REGRA = {
   [TipoRegra.VALOR_KM]: 'valorKm',
   [TipoRegra.VALOR_FIXO]: 'valorFixo',
   [TipoRegra.PERCENTUAL]: 'percentual',
+  // Valor por hora de espera.
+  [TipoRegra.TEMPO_ESPERA]: 'valorFixo',
 } as const;
 
 /** Campos aceitos além do obrigatório: a regra de km aceita bandeirada. */
@@ -50,6 +52,7 @@ const CAMPOS_OPCIONAIS_POR_TIPO_REGRA: Record<TipoRegra, readonly string[]> = {
   [TipoRegra.VALOR_KM]: ['valorFixo'],
   [TipoRegra.VALOR_FIXO]: [],
   [TipoRegra.PERCENTUAL]: [],
+  [TipoRegra.TEMPO_ESPERA]: [],
 };
 
 const CAMPOS_DE_VALOR = ['valorKm', 'valorFixo', 'percentual'] as const;
