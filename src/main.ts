@@ -9,7 +9,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import { Server, ServerOptions } from 'socket.io';
 
-Settings.defaultZone = process.env.TZ ?? 'UTC';
+Settings.defaultZone = process.env.TIME_ZONE ?? 'UTC';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
