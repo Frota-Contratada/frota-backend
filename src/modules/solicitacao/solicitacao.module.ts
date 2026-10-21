@@ -17,6 +17,11 @@ import { DecidirSolicitacaoFornecedorController } from './controllers/decidir-so
 import { DecidirSolicitacaoAprovadorController } from './controllers/decidir-solicitacao-aprovador.controller';
 import { BuscarSolicitacoesAprovadorController } from './controllers/buscar-solicitacoes-aprovador.controller';
 import { SimularSolicitacaoController } from './controllers/simular-solicitacao.controller';
+import { CalcularRotaController } from './controllers/calcular-rota.controller';
+import { BuscarSugestoesEnderecoController } from './controllers/buscar-sugestoes-endereco.controller';
+import { GeocodificacaoModule } from '@integration/geocodificacao/geocodificacao.module';
+import { CalcularRotaSolicitacaoService } from './services/calcular-rota-solicitacao.service';
+import { BuscarSugestoesEnderecoService } from './services/buscar-sugestoes-endereco.service';
 import { CatalogoSolicitacaoRepositoryContract } from './repositories/catalogo-solicitacao-repository.contract';
 import { ContratoPrecificacaoRepositoryContract } from './repositories/contrato-precificacao-repository.contract';
 import { PrismaCatalogoSolicitacaoRepository } from './repositories/prisma-catalogo-solicitacao.repository';
@@ -43,6 +48,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     PrismaModule,
     AuthModule,
     RotaModule,
+    GeocodificacaoModule,
     UsuarioInfoModule,
     ColaboradorModule,
     CentroDeCustoModule,
@@ -52,6 +58,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
   ],
   controllers: [
     BuscarCatalogosController,
+    CalcularRotaController,
+    BuscarSugestoesEnderecoController,
     BuscarViagensAgendadasController,
     SimularSolicitacaoController,
     CriarSolicitacaoController,
@@ -64,6 +72,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
   providers: [
     CriarSolicitacaoService,
     SimularSolicitacaoService,
+    CalcularRotaSolicitacaoService,
+    BuscarSugestoesEnderecoService,
     BuscarSolicitacaoService,
     BuscarVariasSolicitacoesService,
     BuscarSolicitacoesParaAprovacaoService,
