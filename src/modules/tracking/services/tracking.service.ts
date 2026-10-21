@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { calcularValorPorRegras } from '@module/solicitacao/domain/calculo-valor-regras';
 import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
 import {
   CanonicalRoute,
@@ -491,6 +492,8 @@ export class TrackingService {
     regras: Array<{
       nValorCobrado: Prisma.Decimal;
       Regra: {
+        nCdRegra?: Prisma.Decimal;
+        nCdTipoRegra?: Prisma.Decimal;
         iPrioridade: number;
         nValorKm: Prisma.Decimal | null;
         nValorFixo: Prisma.Decimal | null;
@@ -499,21 +502,23 @@ export class TrackingService {
     }>,
     quilometragem: number,
   ): number {
-    if (regras.length === 0) {
+    const resultado = calcularValorPorRegras(
+      regras.map((item, indice) => ({
+        id: item.Regra.nCdRegra?.toNumber() ?? indice,
+        prioridade: item.Regra.iPrioridade,
+        tipoRegraId: item.Regra.nCdTipoRegra?.toNumber(),
+        valorFixo: item.Regra.nValorFixo?.toNumber(),
+        valorKm: item.Regra.nValorKm?.toNumber(),
+        percentual: item.Regra.nPercentual?.toNumber(),
+      })),
+      quilometragem,
+    );
+
+    if (resultado == null) {
       throw new CorridaSemRegrasException();
     }
 
-    let valor = 0;
-    for (const item of [...regras].sort(
-      (uma, outra) => uma.Regra.iPrioridade - outra.Regra.iPrioridade,
-    )) {
-      let cobrado = item.Regra.nValorFixo?.toNumber() ?? 0;
-      cobrado += (item.Regra.nValorKm?.toNumber() ?? 0) * quilometragem;
-      cobrado += valor * ((item.Regra.nPercentual?.toNumber() ?? 0) / 100);
-      valor += cobrado;
-    }
-
-    return Math.round(valor * 100) / 100;
+    return resultado.valor;
   }
 
   async completeStop(

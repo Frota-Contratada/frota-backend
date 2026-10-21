@@ -18,9 +18,10 @@ const enderecoSchema = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
+/** Critério omitido ou lista vazia não restringe a regra. */
 export const CondicaoRegraRequestSchema = z.object({
-  diasSemana: z.array(z.enum(DiaSemana)).min(1),
-  periodos: z.array(z.enum(Periodo)).min(1),
+  diasSemana: z.array(z.enum(DiaSemana)).default([]),
+  periodos: z.array(z.enum(Periodo)).default([]),
   rotasFixas: z
     .array(
       z.object({
@@ -28,12 +29,14 @@ export const CondicaoRegraRequestSchema = z.object({
         destino: enderecoSchema,
       }),
     )
-    .min(1),
-  tipoVeiculoIds: z.array(idSchema).min(1),
-  tipoCorridaIds: z.array(idSchema).min(1),
-  outro: z.object({
-    pergunta: z.string().trim().min(1).max(255),
-  }),
+    .default([]),
+  tipoVeiculoIds: z.array(idSchema).default([]),
+  tipoCorridaIds: z.array(idSchema).default([]),
+  outro: z
+    .object({
+      pergunta: z.string().trim().min(1).max(255),
+    })
+    .optional(),
 });
 
 const CAMPO_VALOR_POR_TIPO_REGRA = {
@@ -41,6 +44,13 @@ const CAMPO_VALOR_POR_TIPO_REGRA = {
   [TipoRegra.VALOR_FIXO]: 'valorFixo',
   [TipoRegra.PERCENTUAL]: 'percentual',
 } as const;
+
+/** Campos aceitos além do obrigatório: a regra de km aceita bandeirada. */
+const CAMPOS_OPCIONAIS_POR_TIPO_REGRA: Record<TipoRegra, readonly string[]> = {
+  [TipoRegra.VALOR_KM]: ['valorFixo'],
+  [TipoRegra.VALOR_FIXO]: [],
+  [TipoRegra.PERCENTUAL]: [],
+};
 
 const CAMPOS_DE_VALOR = ['valorKm', 'valorFixo', 'percentual'] as const;
 
@@ -51,10 +61,11 @@ export const RegraRequestSchema = z
     valorKm: z.number().nonnegative().optional(),
     valorFixo: z.number().nonnegative().optional(),
     percentual: z.number().positive().max(999.99).optional(),
-    condicao: CondicaoRegraRequestSchema,
+    condicao: CondicaoRegraRequestSchema.optional(),
   })
   .superRefine((regra, ctx) => {
     const campoEsperado = CAMPO_VALOR_POR_TIPO_REGRA[regra.tipo];
+    const camposOpcionais = CAMPOS_OPCIONAIS_POR_TIPO_REGRA[regra.tipo];
 
     for (const campo of CAMPOS_DE_VALOR) {
       const preenchido = regra[campo] !== undefined;
@@ -67,7 +78,11 @@ export const RegraRequestSchema = z
         });
       }
 
-      if (campo !== campoEsperado && preenchido) {
+      if (
+        campo !== campoEsperado &&
+        !camposOpcionais.includes(campo) &&
+        preenchido
+      ) {
         ctx.addIssue({
           code: 'custom',
           path: [campo],
