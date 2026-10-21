@@ -504,6 +504,7 @@ model Veiculo {
   nCdFornecedor Decimal     @db.Decimal(10, 0)
   nCdTpVeiculo  Decimal     @db.Decimal(10, 0)
   cPlaca        String      @unique(map: "UK_Veiculo_cPlaca") @db.VarChar(7)
+  cModelo       String?     @db.VarChar(60)
   dAtivacao     DateTime    @default(now(), map: "DF_Veiculo_dAtivacao") @db.DateTime
   dDesativacao  DateTime?   @db.DateTime
   Corrida       Corrida[]

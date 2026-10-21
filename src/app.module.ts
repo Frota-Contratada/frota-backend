@@ -19,6 +19,7 @@ import { TrackingModule } from '@module/tracking/tracking.module';
 import { NotificacaoModule } from '@module/notificacao/notificacao.module';
 import { DashboardModule } from '@module/dashboard/dashboard.module';
 import { CorridaModule } from '@module/corrida/corrida.module';
+import { VeiculoModule } from '@module/veiculo/veiculo.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { CorridaModule } from '@module/corrida/corrida.module';
     NotificacaoModule,
     TrackingModule,
     DashboardModule,
+    VeiculoModule,
     CorridaModule,
     RouterModule.register([
       {
@@ -107,6 +109,10 @@ import { CorridaModule } from '@module/corrida/corrida.module';
       {
         path: 'dashboard',
         module: DashboardModule,
+      },
+      {
+        path: 'veiculos',
+        module: VeiculoModule,
       },
     ]),
   ],
