@@ -2,7 +2,9 @@ import { DateTime } from 'luxon';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { Solicitacao } from '../domain/solicitacao';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
+import { TipoCorridaEnum } from '../enums/tipo-corrida.enum';
 import { BeneficiarioInvalidoException } from '../exceptions/beneficiario-invalido.exception';
+import { CorridaEmergencialNaoAutorizadaException } from '../exceptions/corrida-emergencial-nao-autorizada.exception';
 import {
   CriarSolicitacaoInput,
   CriarSolicitacaoService,
@@ -48,7 +50,7 @@ describe('CriarSolicitacaoService', () => {
     2003: { id: 2003, nome: 'Sem CPF', empresaId: 30, filialId: 704 },
   };
 
-  const criarService = () => {
+  const criarService = (tipoCorrida = { id: 1, nome: 'Táxi' }) => {
     const solicitacaoRepository = {
       existeConflitoDeHorario: jest.fn().mockResolvedValue(false),
       criar: jest.fn((solicitacao: Solicitacao) =>
@@ -63,7 +65,7 @@ describe('CriarSolicitacaoService', () => {
     const service = new CriarSolicitacaoService(
       solicitacaoRepository as never,
       {
-        buscarTipoCorrida: jest.fn().mockResolvedValue({ id: 1, nome: 'Táxi' }),
+        buscarTipoCorrida: jest.fn().mockResolvedValue(tipoCorrida),
         buscarMotivo: jest.fn().mockResolvedValue({
           id: 9001,
           nome: 'Viagem de trabalho',
@@ -124,6 +126,25 @@ describe('CriarSolicitacaoService', () => {
     repositorio.criar.mock.calls[0][0].passageiros.map(
       (passageiro) => passageiro.cpf,
     );
+
+  const emergencial = { id: TipoCorridaEnum.EMERGENCIAL, nome: 'Emergencial' };
+
+  it('recusa corrida emergencial de quem não é solicitante de emergência', async () => {
+    const { service, solicitacaoRepository } = criarService(emergencial);
+
+    await expect(
+      service.execute(input(1002, [TipoPerfil.SOLICITANTE])),
+    ).rejects.toBeInstanceOf(CorridaEmergencialNaoAutorizadaException);
+    expect(solicitacaoRepository.criar).not.toHaveBeenCalled();
+  });
+
+  it('aceita corrida emergencial do solicitante de emergência', async () => {
+    const { service, solicitacaoRepository } = criarService(emergencial);
+
+    await service.execute(input(1002, [TipoPerfil.SOLICITANTE_EMERGENCIA]));
+
+    expect(solicitacaoRepository.criar).toHaveBeenCalled();
+  });
 
   it('usa o beneficiário como passageiro principal', async () => {
     const { service, solicitacaoRepository } = criarService();
