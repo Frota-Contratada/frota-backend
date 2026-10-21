@@ -12,6 +12,9 @@ import { BuscarBigNumbersContratosService } from './services/buscar-big-numbers-
 import { VisualizarContratoService } from './services/visualizar-contrato.service';
 import { SubstituirRegrasController } from './controllers/substituir-regras.controller';
 import { SubstituirRegrasService } from './services/substituir-regras.service';
+import { PublicarContratoController } from './controllers/publicar-contrato.controller';
+import { PublicarContratoService } from './services/publicar-contrato.service';
+import { ValidarAcessoAoContratoService } from './services/validar-acesso-ao-contrato.service';
 
 @Module({
   imports: [PrismaModule, StorageModule],
@@ -20,6 +23,7 @@ import { SubstituirRegrasService } from './services/substituir-regras.service';
     BuscarVariosContratosController,
     VisualizarContratoController,
     SubstituirRegrasController,
+    PublicarContratoController,
   ],
   providers: [
     CriarContratoService,
@@ -27,6 +31,8 @@ import { SubstituirRegrasService } from './services/substituir-regras.service';
     BuscarBigNumbersContratosService,
     VisualizarContratoService,
     SubstituirRegrasService,
+    PublicarContratoService,
+    ValidarAcessoAoContratoService,
     {
       provide: ContratoRepositoryContract,
       useClass: PrismaContratoRepository,

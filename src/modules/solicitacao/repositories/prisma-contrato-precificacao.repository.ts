@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { SituacaoContrato } from '../../contrato/enums/situacao-contrato.enum';
 import { ContratoPrecificacaoRepositoryContract } from './contrato-precificacao-repository.contract';
 import {
   INCLUDE_REGRA_PRECIFICACAO,
@@ -28,6 +29,7 @@ export class PrismaContratoPrecificacaoRepository extends ContratoPrecificacaoRe
         nCdFilial: filialId,
         Fornecedor: { dDesativacao: null },
         Contrato: {
+          cSituacao: SituacaoContrato.PUBLICADO,
           dVigenciaInicio: { lte: dia },
           OR: [{ dVigenciaFim: null }, { dVigenciaFim: { gte: dia } }],
           ModalidadeContrato: { some: { nCdTipoCorrida: tipoCorridaId } },

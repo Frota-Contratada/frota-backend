@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { Endereco } from '../../filial/domain/endereco';
 import {
   CondicaoOutro,
@@ -8,39 +9,50 @@ import {
 import { Regra } from '../domain/regra';
 import type { RegraRequest } from '../controllers/dtos/request/substituir-regras-request.dto';
 import { ContratoRepositoryContract } from '../repositories/contrato-repository.contract';
+import { ValidarAcessoAoContratoService } from './validar-acesso-ao-contrato.service';
 
 @Injectable()
 export class SubstituirRegrasService {
-  constructor(private readonly contratoRepository: ContratoRepositoryContract) {}
+  constructor(
+    private readonly contratoRepository: ContratoRepositoryContract,
+    private readonly validarAcessoAoContrato: ValidarAcessoAoContratoService,
+  ) {}
 
-  async execute(contratoId: number, regras: RegraRequest[]): Promise<void> {
+  async execute(
+    contratoId: number,
+    regras: RegraRequest[],
+    usuario: AuthenticatedUser,
+  ): Promise<void> {
+    await this.validarAcessoAoContrato.execute(contratoId, usuario);
+
     await this.contratoRepository.substituirRegras(
       contratoId,
-      regras.map((regra) =>
-        new Regra(
-          contratoId,
-          0,
-          regra.prioridade,
-          regra.tipo,
-          new CondicaoRegra(
+      regras.map(
+        (regra) =>
+          new Regra(
+            contratoId,
             0,
-            regra.condicao.diasSemana,
-            regra.condicao.periodos,
-            regra.condicao.rotasFixas.map(
-              (rota) =>
-                new CondicaoRotaFixa(
-                  this.criarEndereco(rota.origem),
-                  this.criarEndereco(rota.destino),
-                ),
+            regra.prioridade,
+            regra.tipo,
+            new CondicaoRegra(
+              0,
+              regra.condicao.diasSemana,
+              regra.condicao.periodos,
+              regra.condicao.rotasFixas.map(
+                (rota) =>
+                  new CondicaoRotaFixa(
+                    this.criarEndereco(rota.origem),
+                    this.criarEndereco(rota.destino),
+                  ),
+              ),
+              regra.condicao.tipoVeiculoIds,
+              regra.condicao.tipoCorridaIds,
+              new CondicaoOutro(regra.condicao.outro.pergunta),
             ),
-            regra.condicao.tipoVeiculoIds,
-            regra.condicao.tipoCorridaIds,
-            new CondicaoOutro(regra.condicao.outro.pergunta),
+            regra.valorKm,
+            regra.valorFixo,
+            regra.percentual,
           ),
-          regra.valorKm,
-          regra.valorFixo,
-          regra.percentual,
-        ),
       ),
     );
   }

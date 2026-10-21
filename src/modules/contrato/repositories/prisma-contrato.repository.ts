@@ -3,15 +3,20 @@ import { Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { FilialNaoEncontradaException } from '@module/filial/exceptions/filial-nao-encontrada.exception';
+import { FornecedorNaoEncontradoException } from '@module/fornecedor/exceptions/fornecedor-nao-encontrado.exception';
+import { TipoCorridaNaoEncontradoException } from '@module/solicitacao/exceptions/tipo-corrida-nao-encontrado.exception';
 import { Contrato } from '../domain/contrato';
 import { Regra } from '../domain/regra';
 import { ContratoBigNumbers } from '../domain/types/contrato-big-numbers.type';
 import { ContratoSummary } from '../domain/types/contrato-summary.type';
+import { VinculoContrato } from '../domain/vinculo-contrato';
 import { SituacaoContrato } from '../enums/situacao-contrato.enum';
 import { DIAS_PARA_VENCER_EM_BREVE } from '../enums/status-contrato.enum';
 import { TIPO_REGRA_ID } from '../enums/tipo-regra.enum';
 import { ContratoNaoEditavelException } from '../exceptions/contrato-nao-editavel.exception';
 import { ContratoNaoEncontradoException } from '../exceptions/contrato-nao-encontrado.exception';
+import { ContratoNaoPublicavelException } from '../exceptions/contrato-nao-publicavel.exception';
 import { ContratoRepositoryContract } from './contrato-repository.contract';
 import {
   CONTRATO_VINCULO_SELECT,
@@ -70,8 +75,50 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
     };
   }
 
-  async criar(contrato: Contrato): Promise<Contrato> {
+  async criar(
+    contrato: Contrato,
+    vinculo: VinculoContrato,
+    tipoCorridaIds: number[],
+  ): Promise<Contrato> {
     return this.prismaService.$transaction(async (tx) => {
+      const fornecedor = await tx.fornecedor.findUnique({
+        where: { nCdFornecedor: vinculo.fornecedorId },
+        select: { nCdFornecedor: true },
+      });
+
+      if (!fornecedor) {
+        throw new FornecedorNaoEncontradoException(vinculo.fornecedorId);
+      }
+
+      const filial = await tx.filial.findUnique({
+        where: {
+          nCdEmpresa_nCdFilial: {
+            nCdEmpresa: vinculo.empresaId,
+            nCdFilial: vinculo.filialId,
+          },
+        },
+        select: { nCdFilial: true },
+      });
+
+      if (!filial) {
+        throw new FilialNaoEncontradaException(vinculo.filialId);
+      }
+
+      const tiposCorrida = await tx.tipoCorrida.findMany({
+        where: { nCdTipoCorrida: { in: tipoCorridaIds } },
+        select: { nCdTipoCorrida: true },
+      });
+      const tipoCorridaAusente = tipoCorridaIds.find(
+        (tipoCorridaId) =>
+          !tiposCorrida.some(
+            (tipo) => tipo.nCdTipoCorrida.toNumber() === tipoCorridaId,
+          ),
+      );
+
+      if (tipoCorridaAusente != null) {
+        throw new TipoCorridaNaoEncontradoException(tipoCorridaAusente);
+      }
+
       const ultimoContrato = await tx.contrato.aggregate({
         _max: { nCdContrato: true },
       });
@@ -87,6 +134,22 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
         },
       });
 
+      await tx.filialFornecedor.create({
+        data: {
+          nCdEmpresa: vinculo.empresaId,
+          nCdFilial: vinculo.filialId,
+          nCdFornecedor: vinculo.fornecedorId,
+          nCdContrato: proximoId,
+        },
+      });
+
+      await tx.modalidadeContrato.createMany({
+        data: tipoCorridaIds.map((tipoCorridaId) => ({
+          nCdContrato: proximoId,
+          nCdTipoCorrida: tipoCorridaId,
+        })),
+      });
+
       return PrismaContratoMapper.toDomain(registro);
     });
   }
@@ -97,6 +160,71 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
         where: { nCdContrato: id },
       }),
     );
+  }
+
+  async buscarVinculos(id: number): Promise<VinculoContrato[]> {
+    const vinculos = await this.prismaService.filialFornecedor.findMany({
+      where: { nCdContrato: id },
+      select: { nCdEmpresa: true, nCdFilial: true, nCdFornecedor: true },
+    });
+
+    return vinculos.map(
+      (vinculo) =>
+        new VinculoContrato(
+          vinculo.nCdEmpresa.toNumber(),
+          vinculo.nCdFilial.toNumber(),
+          vinculo.nCdFornecedor.toNumber(),
+        ),
+    );
+  }
+
+  async publicar(id: number): Promise<Contrato> {
+    return this.prismaService.$transaction(async (tx) => {
+      const contrato = await tx.contrato.findUnique({
+        where: { nCdContrato: id },
+        select: {
+          cSituacao: true,
+          _count: { select: { Regra: true, FilialFornecedor: true } },
+        },
+      });
+
+      if (!contrato) {
+        throw new ContratoNaoEncontradoException(id);
+      }
+
+      const situacao = contrato.cSituacao as SituacaoContrato;
+
+      if (situacao !== SituacaoContrato.RASCUNHO) {
+        throw new ContratoNaoPublicavelException(
+          id,
+          'ele não está em rascunho',
+        );
+      }
+
+      if (contrato._count.FilialFornecedor === 0) {
+        throw new ContratoNaoPublicavelException(
+          id,
+          'ele não está vinculado a uma filial e a um fornecedor',
+        );
+      }
+
+      if (contrato._count.Regra === 0) {
+        throw new ContratoNaoPublicavelException(
+          id,
+          'ele não possui regras de preço',
+        );
+      }
+
+      return PrismaContratoMapper.toDomain(
+        await tx.contrato.update({
+          where: { nCdContrato: id },
+          data: {
+            cSituacao: SituacaoContrato.PUBLICADO,
+            dAlteracao: new Date(),
+          },
+        }),
+      );
+    });
   }
 
   async substituirRegras(contratoId: number, regras: Regra[]): Promise<void> {

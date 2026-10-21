@@ -2,6 +2,7 @@ import { Contrato as PrismaContrato, Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { Contrato } from '../domain/contrato';
 import { ContratoSummary } from '../domain/types/contrato-summary.type';
+import { SituacaoContrato } from '../enums/situacao-contrato.enum';
 import { StatusContrato } from '../enums/status-contrato.enum';
 
 export const CONTRATO_VINCULO_SELECT = {
@@ -31,6 +32,7 @@ export class PrismaContratoMapper {
         ? undefined
         : DateTime.fromJSDate(entity.dVigenciaFim),
       DateTime.fromJSDate(entity.dAlteracao),
+      entity.cSituacao as SituacaoContrato,
     );
   }
 
