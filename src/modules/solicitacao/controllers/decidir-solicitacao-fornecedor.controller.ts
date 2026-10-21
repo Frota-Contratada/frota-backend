@@ -5,6 +5,7 @@ import z from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { SolicitacaoDto } from './dtos/response/solicitacao.dto';
 import { DecisaoFornecedorRequestDto } from './dtos/request/decisao-fornecedor-request.dto';
@@ -19,12 +20,12 @@ export class DecidirSolicitacaoFornecedorController {
   @Post(':id/decisao-fornecedor')
   @Perfis(TipoPerfil.ADMIN_FORNECEDOR)
   async handle(
-    @CurrentUser('fornecedorId') fornecedorId: number,
+    @CurrentUser() usuario: AuthenticatedUser,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
     @Body() body: DecisaoFornecedorRequestDto,
   ): Promise<ResponseInterface<SolicitacaoDto>> {
-    const solicitacao = await this.service.execute(id, fornecedorId, {
+    const solicitacao = await this.service.execute(id, usuario, {
       decisao: body.decisao,
       motoristaId: body.motoristaId,
       veiculoId: body.veiculoId,
