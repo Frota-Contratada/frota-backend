@@ -24,10 +24,12 @@ export class CriarSolicitacaoController {
   @ApiRespostaDe(SolicitacaoDto, { status: HttpStatus.CREATED })
   async handle(
     @CurrentUser('id') solicitanteId: number,
+    @CurrentUser('perfis') perfisSolicitante: TipoPerfil[],
     @Body() body: CriarSolicitacaoRequestDto,
   ): Promise<ResponseInterface<SolicitacaoDto>> {
     const solicitacao = await this.criarSolicitacaoService.execute({
       solicitanteId,
+      perfisSolicitante,
       dataCorrida: DateTime.fromISO(body.dataCorrida),
       tipoCorridaId: body.tipoCorridaId,
       tipoVeiculoId: body.tipoVeiculoId,
