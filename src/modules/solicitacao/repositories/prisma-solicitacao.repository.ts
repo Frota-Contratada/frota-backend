@@ -30,7 +30,6 @@ import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { SolicitacaoHorarioDuplicadoException } from '../exceptions/solicitacao-horario-duplicado.exception';
 import { SolicitacaoNaoPodeSerDecididaPeloFornecedorException } from '../exceptions/solicitacao-nao-pode-ser-decidida-pelo-fornecedor.exception';
-import { FornecedorObrigatorioException } from '../exceptions/fornecedor-obrigatorio.exception';
 import { FornecedorIndisponivelException } from '../exceptions/fornecedor-indisponivel.exception';
 import { MotoristaOuVeiculoIndisponivelException } from '../exceptions/motorista-ou-veiculo-indisponivel.exception';
 import { AprovadorNaoAutorizadoException } from '../exceptions/aprovador-nao-autorizado.exception';
@@ -355,14 +354,6 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
 
       if (decisao.fornecedorId != null && !ehAprovadorDoCentroDoSolicitante) {
         throw new AprovadorNaoAutorizadoException(id);
-      }
-
-      if (
-        decisao.decisao === 'APROVAR' &&
-        ehAprovadorDoCentroDoSolicitante &&
-        decisao.fornecedorId == null
-      ) {
-        throw new FornecedorObrigatorioException();
       }
 
       if (decisao.decisao === 'APROVAR' && decisao.fornecedorId != null) {

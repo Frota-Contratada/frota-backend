@@ -5,7 +5,6 @@ import { Solicitacao } from '../domain/solicitacao';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { FornecedorIndisponivelException } from '../exceptions/fornecedor-indisponivel.exception';
-import { FornecedorObrigatorioException } from '../exceptions/fornecedor-obrigatorio.exception';
 import { AprovadorNaoAutorizadoException } from '../exceptions/aprovador-nao-autorizado.exception';
 import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
 import {
@@ -123,8 +122,8 @@ export class DecidirSolicitacaoAprovadorService {
       return undefined;
     }
 
-    if (fornecedorId == null) {
-      throw new FornecedorObrigatorioException();
+    if (fornecedorId == null || fornecedorId === solicitacao.fornecedorId) {
+      return undefined;
     }
 
     if (solicitante?.nCdEmpresa == null || solicitante.nCdFilial == null) {
