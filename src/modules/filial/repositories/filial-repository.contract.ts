@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoFilial } from '../enums/ordenacao-filial.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { Filial } from '../domain/filial';
@@ -10,6 +12,8 @@ export abstract class FilialRepositoryContract {
     cnpj?: string;
     /** Busca pelo termo na cidade OU no bairro do endereço da filial. */
     endereco?: string;
+    ordenarPor?: CampoOrdenacaoFilial;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Filial>>;

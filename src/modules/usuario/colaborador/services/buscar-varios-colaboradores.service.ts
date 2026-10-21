@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoColaborador } from '../enums/ordenacao-colaborador.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { StorageServiceContract } from '@core/storage/contracts/storage-service.contract';
 import { ColaboradorSummary } from '../domain/types/colaborador-summary.type';
@@ -18,6 +20,8 @@ export class BuscarVariosColaboradoresService {
     cpf?: string;
     filialId?: number;
     empresaId?: number;
+    ordenarPor?: CampoOrdenacaoColaborador;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ColaboradorSummary>> {

@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoContrato } from '../enums/ordenacao-contrato.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Contrato } from '../domain/contrato';
 import { Regra } from '../domain/regra';
@@ -14,6 +16,8 @@ export abstract class ContratoRepositoryContract {
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;
+    ordenarPor?: CampoOrdenacaoContrato;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ContratoSummary>>;

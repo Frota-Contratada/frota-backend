@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoFornecedor } from '../enums/ordenacao-fornecedor.enum';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
@@ -8,6 +10,22 @@ import { FornecedorBigNumbers } from '../domain/types/fornecedor-big-numbers.typ
 import { FornecedorSummary } from '../domain/types/fornecedor-summary.type';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { PrismaFornecedorMapper } from './prisma-fornecedor.mapper';
+
+const ORDENACAO_FORNECEDOR: Record<
+  CampoOrdenacaoFornecedor,
+  (direcao: DirecaoOrdenacao) => Prisma.FornecedorOrderByWithRelationInput
+> = {
+  [CampoOrdenacaoFornecedor.NOME]: (direcao) => ({ cNmFornecedor: direcao }),
+  [CampoOrdenacaoFornecedor.SITUACAO]: (direcao) => ({
+    cSituacaoCadastro: direcao,
+  }),
+  [CampoOrdenacaoFornecedor.DATA_CADASTRO]: (direcao) => ({
+    dCadastro: direcao,
+  }),
+  [CampoOrdenacaoFornecedor.DATA_ATIVACAO]: (direcao) => ({
+    dAtivacao: direcao,
+  }),
+};
 
 @Injectable()
 export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
@@ -48,6 +66,8 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
     cnpjCpf?: string;
     filialId?: number;
     empresaId?: number;
+    ordenarPor?: CampoOrdenacaoFornecedor;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<FornecedorSummary>> {
@@ -79,7 +99,12 @@ export class PrismaFornecedorRepository extends FornecedorRepositoryContract {
         where,
         skip,
         take: filtros.limit,
-        orderBy: { cNmFornecedor: 'asc' },
+        orderBy:
+          filtros.ordenarPor == null
+            ? { cNmFornecedor: 'asc' }
+            : ORDENACAO_FORNECEDOR[filtros.ordenarPor](
+                filtros.direcao ?? DirecaoOrdenacao.ASC,
+              ),
         include: {
           _count: { select: { Veiculo: { where: { dDesativacao: null } } } },
           FilialFornecedor: {
