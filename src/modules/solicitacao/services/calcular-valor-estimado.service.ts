@@ -66,6 +66,8 @@ export class CalcularValorEstimadoService {
       }
     }
 
+    if (regrasAplicaveis.length === 0) return undefined;
+
     let valor = 0;
     const regrasAplicadas: RegraAplicada[] = [];
 
