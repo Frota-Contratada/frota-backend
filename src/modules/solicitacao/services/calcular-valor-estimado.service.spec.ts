@@ -117,4 +117,53 @@ describe('CalcularValorEstimadoService', () => {
 
     expect(service.avaliar(contrato, contexto)?.valorEstimado).toBe(38.5);
   });
+
+  it('resolve o período pelo horário de Brasília, não pelo UTC', () => {
+    const somente = (periodo: Periodo) =>
+      new CondicaoRegra(1, [], [periodo], [], [], []);
+    const contrato = new ContratoPrecificacao(10, 1, 'Fornecedor', [
+      regra(
+        1,
+        1,
+        TipoRegra.VALOR_FIXO,
+        { valorFixo: 99 },
+        somente(Periodo.VESPERTINO),
+      ),
+      regra(
+        2,
+        2,
+        TipoRegra.VALOR_FIXO,
+        { valorFixo: 30 },
+        somente(Periodo.MATUTINO),
+      ),
+    ]);
+
+    // 13h UTC = 10h em Brasília: manhã.
+    expect(
+      service.avaliar(contrato, {
+        ...contexto,
+        dataCorrida: DateTime.fromISO('2026-10-21T13:00:00Z', { zone: 'utc' }),
+      })?.valorEstimado,
+    ).toBe(30);
+  });
+
+  it('resolve o dia da semana pelo horário de Brasília', () => {
+    const contrato = new ContratoPrecificacao(10, 1, 'Fornecedor', [
+      regra(
+        1,
+        1,
+        TipoRegra.VALOR_FIXO,
+        { valorFixo: 50 },
+        new CondicaoRegra(1, [DiaSemana.QUARTA], [], [], [], []),
+      ),
+    ]);
+
+    // Quinta 01h UTC = quarta 22h em Brasília.
+    expect(
+      service.avaliar(contrato, {
+        ...contexto,
+        dataCorrida: DateTime.fromISO('2026-10-22T01:00:00Z', { zone: 'utc' }),
+      })?.valorEstimado,
+    ).toBe(50);
+  });
 });

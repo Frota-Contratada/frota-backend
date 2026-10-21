@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { fusoHorarioOperacao } from '@common/config/fuso-horario';
 import { DiaSemana } from '../../contrato/enums/dia-semana.enum';
 import { resolverPeriodo } from '../../contrato/enums/periodo.enum';
 import { calcularValorPorRegras } from '../domain/calculo-valor-regras';
@@ -102,8 +103,10 @@ export class CalcularValorEstimadoService {
     const condicao = regra.condicao;
     if (condicao == null) return { regra };
 
-    const diaSemana = this.diaSemanaDaData(contexto.dataCorrida);
-    const periodo = resolverPeriodo(contexto.dataCorrida);
+    // Período e dia da semana seguem o horário local da operação, não o UTC.
+    const horarioLocal = contexto.dataCorrida.setZone(fusoHorarioOperacao());
+    const diaSemana = this.diaSemanaDaData(horarioLocal);
+    const periodo = resolverPeriodo(horarioLocal);
 
     if (!this.permite(condicao.diasSemana, diaSemana)) return undefined;
     if (!this.permite(condicao.periodos, periodo)) return undefined;
