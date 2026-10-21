@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AutenticacaoRepositoryContract } from '../repositories/autenticacao/autenticacao-repository.contract';
+import { EmailNaoCadastradoException } from '../exceptions/email-nao-cadastrado.exception';
 
 @Injectable()
 export class VerificarPrimeiroAcessoService {
@@ -11,10 +12,10 @@ export class VerificarPrimeiroAcessoService {
     const autenticacao =
       await this.autenticacaoRepository.buscarPorEmail(email);
 
-    if (autenticacao?.senha) {
-      return false;
+    if (autenticacao == null) {
+      throw new EmailNaoCadastradoException();
     }
 
-    return true;
+    return !autenticacao.senha;
   }
 }
