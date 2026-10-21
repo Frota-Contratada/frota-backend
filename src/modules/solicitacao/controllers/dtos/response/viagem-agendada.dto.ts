@@ -34,7 +34,7 @@ export class ViagemAgendadaDto {
 
   @ApiProperty({
     description:
-      'Em andamento quando há corrida em execução; pendente de aprovação enquanto a solicitação aguarda aprovação.',
+      'Aguardando aprovação enquanto a solicitação estiver pendente; depois, derivado da existência de uma corrida em execução.',
     enum: StatusViagem,
     example: StatusViagem.AGENDADA,
   })
@@ -63,7 +63,11 @@ export class ViagemAgendadaDto {
       solicitacao.dataChegadaEstimada?.toISO() ?? undefined;
     this.origem = solicitacao.origem.descricao;
     this.destino = solicitacao.destino.descricao;
-    this.status = ViagemAgendadaDto.statusDaViagem(solicitacao);
+    this.status = solicitacao.emAndamento
+      ? StatusViagem.EM_ANDAMENTO
+      : solicitacao.status === StatusSolicitacao.PENDENTE
+        ? StatusViagem.AGUARDANDO_APROVACAO
+        : StatusViagem.AGENDADA;
     this.tipoCorrida = solicitacao.tipoCorrida.nome;
     this.valorEstimado = solicitacao.valorEstimado;
     this.motoristaNome = solicitacao.corrida?.motoristaNome;
@@ -72,13 +76,5 @@ export class ViagemAgendadaDto {
 
   static aPartirDoDominio(solicitacao: Solicitacao): ViagemAgendadaDto {
     return new ViagemAgendadaDto(solicitacao);
-  }
-
-  private static statusDaViagem(solicitacao: Solicitacao): StatusViagem {
-    if (solicitacao.emAndamento) return StatusViagem.EM_ANDAMENTO;
-    if (solicitacao.status === StatusSolicitacao.PENDENTE) {
-      return StatusViagem.PENDENTE_APROVACAO;
-    }
-    return StatusViagem.AGENDADA;
   }
 }

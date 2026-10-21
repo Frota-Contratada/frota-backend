@@ -51,19 +51,19 @@ describe('ViagemAgendadaDto', () => {
     expect(dto.corridaId).not.toBe(String(dto.solicitacaoId));
   });
 
-  it('marca como pendente de aprovação a solicitação ainda não aprovada', () => {
+  it('marca a solicitação pendente como aguardando aprovação', () => {
     const dto = ViagemAgendadaDto.aPartirDoDominio(criarSolicitacao(false));
 
-    expect(dto.status).toBe(StatusViagem.PENDENTE_APROVACAO);
+    expect(dto.status).toBe(StatusViagem.AGUARDANDO_APROVACAO);
   });
 
-  it('marca como agendada a solicitação aprovada sem corrida em execução', () => {
+  it('marca a solicitação aprovada sem corrida iniciada como agendada', () => {
     const solicitacao = criarSolicitacao(false);
     solicitacao.status = StatusSolicitacao.APROVADA;
 
-    const dto = ViagemAgendadaDto.aPartirDoDominio(solicitacao);
-
-    expect(dto.status).toBe(StatusViagem.AGENDADA);
+    expect(ViagemAgendadaDto.aPartirDoDominio(solicitacao).status).toBe(
+      StatusViagem.AGENDADA,
+    );
   });
 
   it('omite corridaId enquanto não existir corrida', () => {
