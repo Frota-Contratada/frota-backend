@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { Solicitacao } from '../domain/solicitacao';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
+import { CancelamentoNaoPermitidoException } from '../exceptions/cancelamento-nao-permitido.exception';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
-import { SolicitacaoDeOutroSolicitanteException } from '../exceptions/solicitacao-de-outro-solicitante.exception';
 import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
@@ -22,7 +24,7 @@ export class CancelarSolicitacaoService {
   async execute(
     id: number,
     motivoCancelamentoId: number,
-    solicitanteId?: number,
+    usuario: AuthenticatedUser,
   ): Promise<Solicitacao> {
     const solicitacao = await this.solicitacaoRepository.buscar(id);
 
@@ -30,8 +32,8 @@ export class CancelarSolicitacaoService {
       throw new SolicitacaoNaoEncontradaException(id);
     }
 
-    if (solicitanteId != null && solicitacao.solicitanteId !== solicitanteId) {
-      throw new SolicitacaoDeOutroSolicitanteException(id);
+    if (!this.podeCancelar(solicitacao, usuario)) {
+      throw new CancelamentoNaoPermitidoException(id);
     }
 
     if (!solicitacao.cancelavel) {
@@ -51,10 +53,37 @@ export class CancelarSolicitacaoService {
     );
     await this.cancelarNotificacoesDaSolicitacao.execute(id);
     await this.notificarSolicitacao.solicitacaoCancelada(id, {
-      canceladaPorId: solicitanteId,
+      canceladaPorId: usuario.id,
       motivo: motivo.nome,
     });
 
     return cancelada;
+  }
+
+  private podeCancelar(
+    solicitacao: Solicitacao,
+    usuario: AuthenticatedUser,
+  ): boolean {
+    if (usuario.perfis.includes(TipoPerfil.ADMIN_MASTER)) return true;
+
+    if (solicitacao.solicitanteId === usuario.id) return true;
+
+    if (
+      usuario.perfis.includes(TipoPerfil.APROVADOR) &&
+      solicitacao.centrosCusto.some(
+        (rateio) => rateio.aprovadorId === usuario.id,
+      )
+    ) {
+      return true;
+    }
+
+    return (
+      usuario.perfis.includes(TipoPerfil.ADMIN_FILIAL) &&
+      solicitacao.centrosCusto.some(
+        (rateio) =>
+          rateio.empresaId === usuario.empresaId &&
+          rateio.filialId === usuario.filialId,
+      )
+    );
   }
 }

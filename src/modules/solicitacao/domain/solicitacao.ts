@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { StatusAprovacao } from '../enums/status-aprovacao.enum';
+import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { CorridaSolicitacao } from './corrida-solicitacao';
 import { Endereco } from './endereco';
@@ -111,6 +112,12 @@ export class Solicitacao {
       this.status === StatusSolicitacao.PENDENTE ||
       this.status === StatusSolicitacao.APROVADA;
 
-    return statusPermiteCancelamento && this.corrida == null;
+    // A corrida alocada ainda pode ser desfeita enquanto não for iniciada.
+    const corridaPermiteCancelamento =
+      this.corrida == null ||
+      this.corrida.status === StatusCorrida.AGENDADA ||
+      this.corrida.status === StatusCorrida.CANCELADA;
+
+    return statusPermiteCancelamento && corridaPermiteCancelamento;
   }
 }
