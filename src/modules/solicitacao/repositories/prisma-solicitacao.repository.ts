@@ -509,7 +509,9 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     const registros = await this.prismaService.solicitacao.findMany({
       where: {
         nCdSolicitante: filtros.solicitanteId,
-        cStatus: StatusSolicitacao.APROVADA,
+        cStatus: {
+          in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+        },
         dCorrida: {
           gte: filtros.inicio.startOf('day').toJSDate(),
           lte: filtros.fim.endOf('day').toJSDate(),

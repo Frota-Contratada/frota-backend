@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Solicitacao } from '../../../domain/solicitacao';
+import { StatusSolicitacao } from '../../../enums/status-solicitacao.enum';
 import { StatusViagem } from '../../../enums/status-viagem.enum';
 
 export class ViagemAgendadaDto {
@@ -33,7 +34,7 @@ export class ViagemAgendadaDto {
 
   @ApiProperty({
     description:
-      'Derivado da existência de uma corrida em execução para a solicitação.',
+      'Em andamento quando há corrida em execução; pendente de aprovação enquanto a solicitação aguarda aprovação.',
     enum: StatusViagem,
     example: StatusViagem.AGENDADA,
   })
@@ -62,9 +63,7 @@ export class ViagemAgendadaDto {
       solicitacao.dataChegadaEstimada?.toISO() ?? undefined;
     this.origem = solicitacao.origem.descricao;
     this.destino = solicitacao.destino.descricao;
-    this.status = solicitacao.emAndamento
-      ? StatusViagem.EM_ANDAMENTO
-      : StatusViagem.AGENDADA;
+    this.status = ViagemAgendadaDto.statusDaViagem(solicitacao);
     this.tipoCorrida = solicitacao.tipoCorrida.nome;
     this.valorEstimado = solicitacao.valorEstimado;
     this.motoristaNome = solicitacao.corrida?.motoristaNome;
@@ -73,5 +72,13 @@ export class ViagemAgendadaDto {
 
   static aPartirDoDominio(solicitacao: Solicitacao): ViagemAgendadaDto {
     return new ViagemAgendadaDto(solicitacao);
+  }
+
+  private static statusDaViagem(solicitacao: Solicitacao): StatusViagem {
+    if (solicitacao.emAndamento) return StatusViagem.EM_ANDAMENTO;
+    if (solicitacao.status === StatusSolicitacao.PENDENTE) {
+      return StatusViagem.PENDENTE_APROVACAO;
+    }
+    return StatusViagem.AGENDADA;
   }
 }
