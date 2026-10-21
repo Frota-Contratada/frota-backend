@@ -96,6 +96,7 @@ export class SimularSolicitacaoService {
         latitude: endereco.latitude,
         longitude: endereco.longitude,
       })),
+      { partida: input.dataCorrida },
     );
 
     const fornecedor = await this.selecionarFornecedorService.execute(
