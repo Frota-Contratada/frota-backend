@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { Solicitacao } from '../domain/solicitacao';
+import { TipoMotivo } from '../enums/tipo-motivo.enum';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoDeOutroSolicitanteException } from '../exceptions/solicitacao-de-outro-solicitante.exception';
 import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
@@ -40,7 +41,7 @@ export class CancelarSolicitacaoService {
     const motivo =
       await this.catalogoRepository.buscarMotivo(motivoCancelamentoId);
 
-    if (!motivo) {
+    if (!motivo || motivo.tipo !== TipoMotivo.CANCELAMENTO) {
       throw new MotivoNaoEncontradoException(motivoCancelamentoId);
     }
 
