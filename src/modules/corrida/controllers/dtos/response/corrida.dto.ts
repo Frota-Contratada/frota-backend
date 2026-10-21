@@ -28,6 +28,23 @@ export class CorridaVeiculoDto {
   }
 }
 
+export class CorridaDespesaDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty({ example: 'PEDAGIO' })
+  tipo: string;
+
+  @ApiProperty()
+  valor: number;
+
+  constructor(id: number, tipo: string, valor: number) {
+    this.id = id;
+    this.tipo = tipo;
+    this.valor = valor;
+  }
+}
+
 export class CorridaDto {
   @ApiProperty()
   id: number;
@@ -65,6 +82,12 @@ export class CorridaDto {
   @ApiProperty()
   veiculo: CorridaVeiculoDto;
 
+  @ApiProperty({
+    type: [CorridaDespesaDto],
+    description: 'Ped�gios e outras despesas inclu�das no valor final.',
+  })
+  despesas: CorridaDespesaDto[];
+
   static fromRecord(record: {
     nCdCorrida: { toNumber(): number };
     nCdSolicitacao: { toNumber(): number };
@@ -86,6 +109,11 @@ export class CorridaDto {
       dCorrida: Date;
       Usuario: { nCdUsuario: { toNumber(): number }; cNmUsuario: string };
     };
+    DespesaCorrida?: Array<{
+      nCdDespesa: { toNumber(): number };
+      cTipoDespesa: string;
+      nValorDespesa: { toNumber(): number };
+    }>;
   }): CorridaDto {
     const dto = new CorridaDto();
     dto.id = record.nCdCorrida.toNumber();
@@ -115,6 +143,14 @@ export class CorridaDto {
     dto.veiculo = new CorridaVeiculoDto(
       record.Veiculo.nCdVeiculo.toNumber(),
       record.Veiculo.cPlaca,
+    );
+    dto.despesas = (record.DespesaCorrida ?? []).map(
+      (despesa) =>
+        new CorridaDespesaDto(
+          despesa.nCdDespesa.toNumber(),
+          despesa.cTipoDespesa,
+          despesa.nValorDespesa.toNumber(),
+        ),
     );
     return dto;
   }
