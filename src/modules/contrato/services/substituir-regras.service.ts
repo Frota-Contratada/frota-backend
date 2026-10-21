@@ -11,36 +11,43 @@ import { ContratoRepositoryContract } from '../repositories/contrato-repository.
 
 @Injectable()
 export class SubstituirRegrasService {
-  constructor(private readonly contratoRepository: ContratoRepositoryContract) {}
+  constructor(
+    private readonly contratoRepository: ContratoRepositoryContract,
+  ) {}
 
   async execute(contratoId: number, regras: RegraRequest[]): Promise<void> {
     await this.contratoRepository.substituirRegras(
       contratoId,
-      regras.map((regra) =>
-        new Regra(
-          contratoId,
-          0,
-          regra.prioridade,
-          regra.tipo,
-          new CondicaoRegra(
+      regras.map(
+        (regra) =>
+          new Regra(
+            contratoId,
             0,
-            regra.condicao.diasSemana,
-            regra.condicao.periodos,
-            regra.condicao.rotasFixas.map(
-              (rota) =>
-                new CondicaoRotaFixa(
-                  this.criarEndereco(rota.origem),
-                  this.criarEndereco(rota.destino),
+            regra.prioridade,
+            regra.tipo,
+            regra.condicao == null
+              ? undefined
+              : new CondicaoRegra(
+                  0,
+                  regra.condicao.diasSemana,
+                  regra.condicao.periodos,
+                  regra.condicao.rotasFixas.map(
+                    (rota) =>
+                      new CondicaoRotaFixa(
+                        this.criarEndereco(rota.origem),
+                        this.criarEndereco(rota.destino),
+                      ),
+                  ),
+                  regra.condicao.tipoVeiculoIds,
+                  regra.condicao.tipoCorridaIds,
+                  regra.condicao.outro == null
+                    ? undefined
+                    : new CondicaoOutro(regra.condicao.outro.pergunta),
                 ),
-            ),
-            regra.condicao.tipoVeiculoIds,
-            regra.condicao.tipoCorridaIds,
-            new CondicaoOutro(regra.condicao.outro.pergunta),
+            regra.valorKm,
+            regra.valorFixo,
+            regra.percentual,
           ),
-          regra.valorKm,
-          regra.valorFixo,
-          regra.percentual,
-        ),
       ),
     );
   }

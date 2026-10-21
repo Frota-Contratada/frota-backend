@@ -11,16 +11,19 @@ export class CondicaoRotaFixa {
 }
 
 /**
- * Pergunta obrigatória da condição. A regra é aplicável somente quando a
- * resposta da solicitação para essa pergunta for SIM.
+ * Pergunta opcional da condição. Quando existe, a regra é aplicável somente
+ * quando a resposta da solicitação para essa pergunta for SIM.
  */
 export class CondicaoOutro {
-  constructor(public pergunta: string, public id: number = 0) {}
+  constructor(
+    public pergunta: string,
+    public id: number = 0,
+  ) {}
 }
 
 /**
- * Uma regra possui exatamente uma condição completa. Os critérios preenchidos
- * são combinados com AND; os itens de cada lista são alternativas (OR).
+ * Condição opcional de uma regra. Os critérios preenchidos são combinados com
+ * AND; os itens de cada lista são alternativas (OR). Lista vazia não restringe.
  */
 export class CondicaoRegra {
   constructor(
@@ -30,6 +33,6 @@ export class CondicaoRegra {
     public rotasFixas: CondicaoRotaFixa[],
     public tipoVeiculoIds: number[],
     public tipoCorridaIds: number[],
-    public outro: CondicaoOutro,
+    public outro?: CondicaoOutro,
   ) {}
 }
