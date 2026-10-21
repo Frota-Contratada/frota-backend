@@ -13,7 +13,7 @@ const prisma = new PrismaClient({
   adapter: new PrismaMssql(databaseUrl),
 });
 
-const ZONA = process.env.TZ ?? 'UTC';
+const ZONA = process.env.TIME_ZONE ?? 'UTC';
 const USUARIO_PASSAGEIRO = 1002;
 const USUARIO_APROVADOR = 1003;
 const FORNECEDOR = 1;
