@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DateTime } from 'luxon';
+import { fusoHorarioOperacao } from '@common/config/fuso-horario';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ResponseInterface } from '@common/interfaces/response-interface';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
@@ -23,8 +24,8 @@ export class BuscarViagensController {
   ): Promise<ResponseInterface<MotoristaCorridaDto[]>> {
     const viagens = await this.buscarViagensService.execute(
       motoristaId,
-      DateTime.fromISO(query.inicio),
-      DateTime.fromISO(query.fim),
+      DateTime.fromISO(query.inicio, { zone: fusoHorarioOperacao() }),
+      DateTime.fromISO(query.fim, { zone: fusoHorarioOperacao() }),
     );
 
     return {
