@@ -51,7 +51,7 @@ export class BuscarFornecedoresCandidatosService {
         solicitacao.dataCorrida,
       );
 
-    return contratos
+    const candidatos = contratos
       .flatMap((contrato) => {
         const resultado = this.calcularValorEstimadoService.avaliar(contrato, {
           distanciaKm: solicitacao.distanciaEstimadaKm,
@@ -89,5 +89,25 @@ export class BuscarFornecedoresCandidatosService {
             ];
       })
       .sort((um, outro) => um.valorEstimado - outro.valorEstimado);
+
+    // Fornecedor com mais de um contrato vigente aparece uma vez: com o
+    // contrato gravado na solicitação ou, se não for ele, com o de menor valor.
+    const porFornecedor = new Map<number, FornecedorCandidato>();
+
+    for (const candidato of candidatos) {
+      const atual = porFornecedor.get(candidato.fornecedorId);
+
+      if (
+        atual == null ||
+        (candidato.contratoId === solicitacao.contratoId &&
+          atual.contratoId !== solicitacao.contratoId)
+      ) {
+        porFornecedor.set(candidato.fornecedorId, candidato);
+      }
+    }
+
+    return [...porFornecedor.values()].sort(
+      (um, outro) => um.valorEstimado - outro.valorEstimado,
+    );
   }
 }

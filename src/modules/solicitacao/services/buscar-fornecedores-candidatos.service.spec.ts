@@ -7,6 +7,7 @@ describe('BuscarFornecedoresCandidatosService', () => {
     const solicitacao = {
       solicitanteId: 1002,
       fornecedorId: 20,
+      contratoId: 2,
       centrosCusto: [{ aprovadorId: 1003 }],
       distanciaEstimadaKm: 10,
       dataCorrida: DateTime.fromISO('2026-10-21T10:00:00.000-03:00'),
@@ -70,6 +71,28 @@ describe('BuscarFornecedoresCandidatosService', () => {
     ).toEqual([
       [20, 40, true],
       [10, 80, false],
+    ]);
+  });
+
+  it('mostra uma vez o fornecedor com mais de um contrato vigente', async () => {
+    const { service, contratoPrecificacaoRepository } = criarService();
+    contratoPrecificacaoRepository.buscarCandidatos.mockResolvedValue([
+      { fornecedorId: 10, fornecedorNome: 'Caro', contratoId: 1 },
+      { fornecedorId: 10, fornecedorNome: 'Caro', contratoId: 4 },
+      { fornecedorId: 20, fornecedorNome: 'Barato', contratoId: 5 },
+      { fornecedorId: 20, fornecedorNome: 'Barato', contratoId: 2 },
+    ]);
+
+    const candidatos = await service.execute(8, 1003);
+
+    expect(
+      candidatos.map((candidato) => [
+        candidato.fornecedorId,
+        candidato.contratoId,
+      ]),
+    ).toEqual([
+      [20, 2],
+      [10, 1],
     ]);
   });
 
