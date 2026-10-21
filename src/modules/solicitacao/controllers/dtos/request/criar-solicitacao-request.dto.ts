@@ -54,6 +54,8 @@ export const CriarSolicitacaoRequestSchema = z
       .array(RespostaPerguntaRequestSchema)
       .max(50)
       .default([]),
+    // Colaborador que usará a corrida, quando não for quem solicita.
+    beneficiarioId: z.number().int().positive().optional(),
   })
   .superRefine((body, ctx) => {
     const vistas = new Set<string>();

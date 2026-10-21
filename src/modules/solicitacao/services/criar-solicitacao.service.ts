@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { RotaServiceContract } from '@core/rota/contracts/rota-service.contract';
+import { Usuario } from '@module/usuario/info/domain/usuario';
 import { UsuarioRepositoryContract } from '@module/usuario/info/repositories/usuario-repository.contract';
 import { ColaboradorRepositoryContract } from '@module/usuario/colaborador/repositories/colaborador-repository.contract';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
@@ -25,6 +26,7 @@ import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-
 import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
 import { AcompanhanteDuplicadoException } from '../exceptions/acompanhante-duplicado.exception';
 import { AcompanhanteNaoEncontradoException } from '../exceptions/acompanhante-nao-encontrado.exception';
+import { BeneficiarioInvalidoException } from '../exceptions/beneficiario-invalido.exception';
 import { CapacidadeVeiculoInsuficienteException } from '../exceptions/capacidade-veiculo-insuficiente.exception';
 import { CentroCustoDuplicadoException } from '../exceptions/centro-custo-duplicado.exception';
 import { DataCorridaInvalidaException } from '../exceptions/data-corrida-invalida.exception';
@@ -60,6 +62,10 @@ export interface CriarSolicitacaoInput {
   centrosCustoIds: number[];
   cpfsAcompanhantes: string[];
   respostasPerguntas: RespostaPerguntaPrecificacao[];
+  /** Colaborador que usará a corrida, quando não for quem solicita. */
+  beneficiarioId?: number;
+  /** Perfis vigentes de quem solicita. */
+  perfis: TipoPerfil[];
 }
 
 @Injectable()
@@ -157,9 +163,14 @@ export class CriarSolicitacaoService {
       input.centrosCustoIds,
     );
 
+    const passageiroPrincipal = await this.resolverPassageiroPrincipal(
+      solicitante,
+      input.beneficiarioId,
+    );
+
     const passageiros = await this.resolverPassageiros(
       motivoSolicitacao,
-      solicitante.cpf,
+      passageiroPrincipal,
       input.cpfsAcompanhantes,
     );
 
@@ -204,11 +215,78 @@ export class CriarSolicitacaoService {
     );
 
     const criada = await this.solicitacaoRepository.criar(solicitacao);
+
+    // O aprovador de todo o rateio não precisa aprovar a própria solicitação:
+    // ela segue direto para o fornecedor.
+    if (this.aprovaTodosOsRateios(input, centrosCusto)) {
+      const aprovada = await this.solicitacaoRepository.aprovarTodosOsRateios(
+        criada.id,
+      );
+      aprovada.duracaoEstimadaMinutos = rota.duracaoMinutos;
+      await this.notificarSolicitacao.solicitacaoAguardandoFornecedor(
+        aprovada.id,
+      );
+
+      return aprovada;
+    }
+
     criada.duracaoEstimadaMinutos = rota.duracaoMinutos;
 
     await this.notificarSolicitacao.solicitacaoCriada(criada.id);
 
     return criada;
+  }
+
+  private aprovaTodosOsRateios(
+    input: CriarSolicitacaoInput,
+    centrosCusto: SolicitacaoCentroCusto[],
+  ): boolean {
+    return (
+      input.perfis.includes(TipoPerfil.APROVADOR) &&
+      centrosCusto.length > 0 &&
+      centrosCusto.every((rateio) => rateio.aprovadorId === input.solicitanteId)
+    );
+  }
+
+  private async resolverPassageiroPrincipal(
+    solicitante: Usuario,
+    beneficiarioId?: number,
+  ): Promise<{ cpf?: string; nome?: string; solicitante: boolean }> {
+    if (beneficiarioId == null || beneficiarioId === solicitante.id) {
+      return { cpf: solicitante.cpf, solicitante: true };
+    }
+
+    const beneficiario = await this.usuarioRepository.buscar(beneficiarioId);
+
+    if (!beneficiario) {
+      throw new BeneficiarioInvalidoException(
+        beneficiarioId,
+        'colaborador não encontrado',
+      );
+    }
+
+    if (
+      beneficiario.empresaId !== solicitante.empresaId ||
+      beneficiario.filialId !== solicitante.filialId
+    ) {
+      throw new BeneficiarioInvalidoException(
+        beneficiarioId,
+        'ele não pertence à filial de quem solicita',
+      );
+    }
+
+    if (!beneficiario.cpf) {
+      throw new BeneficiarioInvalidoException(
+        beneficiarioId,
+        'ele não tem CPF cadastrado',
+      );
+    }
+
+    return {
+      cpf: beneficiario.cpf,
+      nome: beneficiario.nome,
+      solicitante: false,
+    };
   }
 
   private validarCapacidade(
@@ -302,7 +380,7 @@ export class CriarSolicitacaoService {
 
   private async resolverPassageiros(
     motivoSolicitacao: Motivo,
-    cpfSolicitante: string | undefined,
+    principal: { cpf?: string; nome?: string; solicitante: boolean },
     cpfsAcompanhantes: string[],
   ): Promise<SolicitacaoPassageiro[]> {
     if (motivoSolicitacao.tipo === TipoMotivo.OBJETO_TRANSPORTADO) {
@@ -312,11 +390,15 @@ export class CriarSolicitacaoService {
     const passageiros: SolicitacaoPassageiro[] = [];
     const vistos = new Set<string>();
 
-    if (cpfSolicitante) {
+    if (principal.cpf) {
       passageiros.push(
-        new SolicitacaoPassageiro(cpfSolicitante, undefined, true),
+        new SolicitacaoPassageiro(
+          principal.cpf,
+          principal.nome,
+          principal.solicitante,
+        ),
       );
-      vistos.add(cpfSolicitante);
+      vistos.add(principal.cpf);
     }
 
     for (const cpf of cpfsAcompanhantes) {
