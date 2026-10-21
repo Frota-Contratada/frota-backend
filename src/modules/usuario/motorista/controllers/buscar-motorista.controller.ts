@@ -35,6 +35,8 @@ export class BuscarMotoristaController {
               motorista.email,
               motorista.cpf,
               motorista.fornecedorId,
+              motorista.telefone,
+              motorista.dataAtivacao.toISO() ?? undefined,
             ),
         ),
       },
@@ -55,6 +57,8 @@ export class BuscarMotoristaController {
         motorista.email,
         motorista.cpf,
         motorista.fornecedorId,
+        motorista.telefone,
+        motorista.dataAtivacao.toISO() ?? undefined,
       ),
     };
   }

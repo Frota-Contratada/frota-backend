@@ -4,6 +4,8 @@ export class MotoristaDto {
   email: string;
   cpf?: string;
   fornecedorId?: number;
+  telefone?: string;
+  dataAtivacao?: string;
 
   constructor(
     id: number,
@@ -11,11 +13,15 @@ export class MotoristaDto {
     email: string,
     cpf?: string,
     fornecedorId?: number,
+    telefone?: string,
+    dataAtivacao?: string,
   ) {
     this.id = id;
     this.nome = nome;
     this.email = email;
     this.cpf = cpf;
     this.fornecedorId = fornecedorId;
+    this.telefone = telefone;
+    this.dataAtivacao = dataAtivacao;
   }
 }

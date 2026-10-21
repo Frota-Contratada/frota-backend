@@ -3,6 +3,7 @@ import { PaginatedResponseInterface } from '@common/interfaces/paginated-respons
 import { MotoristaRepositoryContract } from './motorista-repository.contract';
 import { Motorista } from '../domain/motorista';
 import { PrismaService } from '@core/prisma/services/prisma.service';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { PrismaMotoristaMapper } from './prisma-motorista.mapper';
 
 @Injectable()
@@ -64,18 +65,28 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
       });
       const proximoId = (ultimoUsuario._max.nCdUsuario?.toNumber() ?? 0) + 1;
 
-      return PrismaMotoristaMapper.toDomain(
-        await tx.usuario.create({
-          data: {
-            nCdUsuario: proximoId,
-            cNmUsuario: motorista.nome,
-            cEmail: motorista.email,
-            cCPF: motorista.cpf,
-            nCdFornecedor: motorista.fornecedorId,
-            cDisponivel: 'S',
-          },
-        }),
-      );
+      const registro = await tx.usuario.create({
+        data: {
+          nCdUsuario: proximoId,
+          cNmUsuario: motorista.nome,
+          cEmail: motorista.email,
+          cCPF: motorista.cpf,
+          cTelefone: motorista.telefone ?? null,
+          nCdFornecedor: motorista.fornecedorId,
+          cDisponivel: 'S',
+        },
+      });
+
+      // Sem o perfil o motorista não entra no app nem na alocação.
+      await tx.usuarioPerfil.create({
+        data: {
+          nCdUsuario: proximoId,
+          cTipoPerfil: TipoPerfil.MOTORISTA,
+          dInicioVigencia: new Date(),
+        },
+      });
+
+      return PrismaMotoristaMapper.toDomain(registro);
     });
   }
 }

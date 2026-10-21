@@ -10,6 +10,7 @@ export class Motorista extends Usuario {
     public fornecedorId: number,
     cpf?: string,
     dataDesativacao?: DateTime,
+    public telefone?: string,
   ) {
     super(nome, email, dataAtivacao, id, cpf, dataDesativacao);
   }
