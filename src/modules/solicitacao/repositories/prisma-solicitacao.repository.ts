@@ -23,6 +23,7 @@ import { RespostaPergunta } from '../domain/resposta-pergunta-solicitacao';
 import { Solicitacao } from '../domain/solicitacao';
 import { TipoCorrida } from '../domain/tipo-corrida';
 import { OrdenacaoSolicitacao } from '../enums/ordenacao-solicitacao.enum';
+import { SituacaoContrato } from '../../contrato/enums/situacao-contrato.enum';
 import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { StatusAprovacao } from '../enums/status-aprovacao.enum';
@@ -392,6 +393,7 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
             nCdFornecedor: decisao.fornecedorId,
             nCdContrato: decisao.contratoId,
             Contrato: {
+              cSituacao: SituacaoContrato.PUBLICADO,
               dVigenciaInicio: { lte: inicio },
               OR: [{ dVigenciaFim: null }, { dVigenciaFim: { gte: inicio } }],
               ModalidadeContrato: {

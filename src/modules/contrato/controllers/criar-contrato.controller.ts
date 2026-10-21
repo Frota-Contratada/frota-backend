@@ -10,6 +10,8 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { ResponseInterface } from '@common/interfaces/response-interface';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import type { ArquivoRecebidoInterface } from '@core/storage/interfaces/arquivo-recebido.interface';
 import { CriarContratoRequestDto } from './dtos/request/criar-contrato-request.dto';
 import { ContratoDto } from './dtos/response/contrato.dto';
@@ -22,6 +24,7 @@ export class CriarContratoController {
   constructor(private readonly criarContratoService: CriarContratoService) {}
 
   @Post()
+  @Perfis(TipoPerfil.ADMIN_FILIAL)
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CriarContratoRequestDto })
   @UseInterceptors(FileInterceptor('arquivo'))
@@ -31,9 +34,15 @@ export class CriarContratoController {
     @UploadedFile() arquivo?: ArquivoRecebidoInterface,
   ): Promise<ResponseInterface<ContratoDto>> {
     const contrato = await this.criarContratoService.execute(
-      currentUser.id,
-      body.dataVigenciaInicio,
-      body.dataVigenciaFim,
+      currentUser,
+      {
+        dataVigenciaInicio: body.dataVigenciaInicio,
+        dataVigenciaFim: body.dataVigenciaFim,
+        empresaId: body.empresaId,
+        filialId: body.filialId,
+        fornecedorId: body.fornecedorId,
+        tipoCorridaIds: body.tipoCorridaIds,
+      },
       arquivo,
     );
 
