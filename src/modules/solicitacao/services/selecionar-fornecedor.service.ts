@@ -11,7 +11,7 @@ export interface FornecedorSelecionado {
   fornecedorNome: string;
   contratoId: number;
   valorEstimado: number;
-  rotaFixaId: number;
+  rotaFixaId?: number;
 }
 
 @Injectable()

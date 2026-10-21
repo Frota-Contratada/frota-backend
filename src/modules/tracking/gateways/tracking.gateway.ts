@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { TrackingPositionSchema } from '../controllers/dtos/request/tracking-position-request.dto';
 import { TrackingService } from '../services/tracking.service';
 import { TrackingEventsService } from '../services/tracking-events.service';
+import { hmlCorsOrigins } from '../../../common/config/hml-cors-origins';
 
 type SocketEvents = Record<string, (...args: unknown[]) => void>;
 type AuthenticatedSocket = Socket<
@@ -38,7 +39,7 @@ const LocationSchema = z.object({
 @Public()
 @WebSocketGateway({
   transports: ['websocket', 'polling'],
-  cors: { origin: true, credentials: true },
+  cors: { origin: hmlCorsOrigins(), credentials: true },
 })
 export class TrackingGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer() server: Server;

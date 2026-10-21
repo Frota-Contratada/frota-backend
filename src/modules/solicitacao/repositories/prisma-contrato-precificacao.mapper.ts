@@ -5,6 +5,8 @@ import { CondicaoRegra, RotaFixaRegra } from '../domain/condicao-regra';
 import { ContratoPrecificacao } from '../domain/contrato-precificacao';
 import { Regra } from '../domain/regra';
 
+const CONDICAO_INVALIDA = Symbol('condicao-invalida');
+
 export const INCLUDE_REGRA_PRECIFICACAO = {
   TipoRegra: true,
   CondicaoRegra: {
@@ -48,20 +50,27 @@ export class PrismaContratoPrecificacaoMapper {
   static toDomain(
     entity: PrismaFilialFornecedorComContrato,
   ): ContratoPrecificacao {
-    const regras = entity.Contrato.Regra.map(
-      (regra) =>
+    const regras = entity.Contrato.Regra.flatMap((regra) => {
+      const condicao = this.paraCondicao(regra.CondicaoRegra);
+
+      // Condição gravada mas ilegível: a regra fica fora da precificação em
+      // vez de passar a valer para qualquer corrida.
+      if (condicao === CONDICAO_INVALIDA) return [];
+
+      return [
         new Regra(
           regra.nCdContrato.toNumber(),
           regra.nCdRegra.toNumber(),
           regra.iPrioridade,
           regra.nCdTipoRegra.toNumber(),
-          this.paraCondicao(regra.CondicaoRegra),
+          condicao,
           regra.nValorFixo == null ? undefined : regra.nValorFixo.toNumber(),
           regra.nValorKm == null ? undefined : regra.nValorKm.toNumber(),
           regra.nPercentual == null ? undefined : regra.nPercentual.toNumber(),
           regra.TipoRegra.cNmRegra,
         ),
-    );
+      ];
+    });
 
     return new ContratoPrecificacao(
       entity.nCdContrato.toNumber(),
@@ -73,9 +82,11 @@ export class PrismaContratoPrecificacaoMapper {
 
   private static paraCondicao(
     entity: PrismaCondicaoRegra | null,
-  ): CondicaoRegra | undefined {
-    if (entity == null || entity.cTipoCondicao !== 'CONDICAO_COMPLETA') {
-      return undefined;
+  ): CondicaoRegra | typeof CONDICAO_INVALIDA | undefined {
+    if (entity == null) return undefined;
+
+    if (entity.cTipoCondicao !== 'CONDICAO_COMPLETA') {
+      return CONDICAO_INVALIDA;
     }
 
     const valor = this.lerValorDaCondicao(entity.cValor);
@@ -95,8 +106,8 @@ export class PrismaContratoPrecificacaoMapper {
         ),
     );
 
-    if (valor == null || perguntaId == null || rotasFixas.length === 0) {
-      return undefined;
+    if (valor == null) {
+      return CONDICAO_INVALIDA;
     }
 
     return new CondicaoRegra(
@@ -124,7 +135,8 @@ export class PrismaContratoPrecificacaoMapper {
 
       const dados = parsed as Record<string, unknown>;
       if (
-        dados.aplicaOutroQuando !== 'SIM' ||
+        (dados.aplicaOutroQuando !== undefined &&
+          dados.aplicaOutroQuando !== 'SIM') ||
         !this.ehListaDeEnum(dados.diasSemana, Object.values(DiaSemana)) ||
         !this.ehListaDeEnum(dados.periodos, Object.values(Periodo)) ||
         !this.ehListaDeIds(dados.tipoVeiculoIds) ||
@@ -150,7 +162,6 @@ export class PrismaContratoPrecificacaoMapper {
   ): valor is string[] {
     return (
       Array.isArray(valor) &&
-      valor.length > 0 &&
       valor.every((item) => typeof item === 'string' && opcoes.includes(item))
     );
   }
@@ -158,7 +169,6 @@ export class PrismaContratoPrecificacaoMapper {
   private static ehListaDeIds(valor: unknown): valor is number[] {
     return (
       Array.isArray(valor) &&
-      valor.length > 0 &&
       valor.every(
         (item) =>
           typeof item === 'number' && Number.isInteger(item) && item > 0,
