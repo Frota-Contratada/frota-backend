@@ -5,6 +5,7 @@ import { Motivo } from '../../../domain/motivo';
 import { Solicitacao } from '../../../domain/solicitacao';
 import { TipoCorrida } from '../../../domain/tipo-corrida';
 import { StatusCorrida } from '../../../enums/status-corrida.enum';
+import { StatusSolicitacao } from '../../../enums/status-solicitacao.enum';
 import { TipoMotivo } from '../../../enums/tipo-motivo.enum';
 import { StatusViagem } from '../../../enums/status-viagem.enum';
 import { ViagemAgendadaDto } from './viagem-agendada.dto';
@@ -48,6 +49,21 @@ describe('ViagemAgendadaDto', () => {
       status: StatusViagem.EM_ANDAMENTO,
     });
     expect(dto.corridaId).not.toBe(String(dto.solicitacaoId));
+  });
+
+  it('marca a solicitação pendente como aguardando aprovação', () => {
+    const dto = ViagemAgendadaDto.aPartirDoDominio(criarSolicitacao(false));
+
+    expect(dto.status).toBe(StatusViagem.AGUARDANDO_APROVACAO);
+  });
+
+  it('marca a solicitação aprovada sem corrida iniciada como agendada', () => {
+    const solicitacao = criarSolicitacao(false);
+    solicitacao.status = StatusSolicitacao.APROVADA;
+
+    expect(ViagemAgendadaDto.aPartirDoDominio(solicitacao).status).toBe(
+      StatusViagem.AGENDADA,
+    );
   });
 
   it('omite corridaId enquanto não existir corrida', () => {
