@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { StatusCorrida } from '@module/solicitacao/enums/status-corrida.enum';
+import { TipoMotivo } from '@module/motivo/enums/tipo-motivo.enum';
+import { valoresPersistidosDoTipoMotivo } from '@module/motivo/enums/codigo-tipo-motivo';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
@@ -54,7 +56,9 @@ export class CancelarCorridaService {
         const motivo = await tx.motivo.findFirst({
           where: {
             nCdMotivo: motivoCancelamentoId,
-            cTipoMotivo: '2',
+            cTipoMotivo: {
+              in: valoresPersistidosDoTipoMotivo(TipoMotivo.CANCELAMENTO),
+            },
             dAtivacao: { lte: new Date() },
             OR: [{ dDesativacao: null }, { dDesativacao: { gt: new Date() } }],
           },

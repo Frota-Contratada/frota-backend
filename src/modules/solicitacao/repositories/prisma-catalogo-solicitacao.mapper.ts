@@ -7,6 +7,7 @@ import { Motivo } from '../domain/motivo';
 import { TipoCorrida } from '../domain/tipo-corrida';
 import { TipoVeiculo } from '../domain/tipo-veiculo';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
+import { codigoDoValorPersistido } from '@module/motivo/enums/codigo-tipo-motivo';
 
 export class PrismaCatalogoSolicitacaoMapper {
   static motivoToDomain(entity: PrismaMotivo): Motivo;
@@ -54,9 +55,10 @@ export class PrismaCatalogoSolicitacaoMapper {
 
   private static paraTipoMotivo(valor: string): TipoMotivo {
     const tipos = Object.values(TipoMotivo) as string[];
+    const codigo = codigoDoValorPersistido(valor);
 
-    return tipos.includes(valor)
-      ? (valor as TipoMotivo)
+    return tipos.includes(codigo)
+      ? (codigo as TipoMotivo)
       : TipoMotivo.SOLICITACAO;
   }
 }
