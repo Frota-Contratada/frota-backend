@@ -1,5 +1,7 @@
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
+import { TipoMotivo } from '../enums/tipo-motivo.enum';
 import { CancelamentoNaoPermitidoException } from '../exceptions/cancelamento-nao-permitido.exception';
+import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
 import { CancelarSolicitacaoService } from './cancelar-solicitacao.service';
 
@@ -15,7 +17,10 @@ describe('CancelarSolicitacaoService', () => {
       cancelar: jest.fn().mockResolvedValue(solicitacao),
     };
     const catalogoRepository = {
-      buscarMotivo: jest.fn().mockResolvedValue({ nome: 'Reunião cancelada' }),
+      buscarMotivo: jest.fn().mockResolvedValue({
+        nome: 'Reunião cancelada',
+        tipo: TipoMotivo.CANCELAMENTO,
+      }),
     };
     const notificarSolicitacao = { solicitacaoCancelada: jest.fn() };
     const service = new CancelarSolicitacaoService(
@@ -25,8 +30,27 @@ describe('CancelarSolicitacaoService', () => {
       notificarSolicitacao as never,
     );
 
-    return { service, solicitacaoRepository, notificarSolicitacao };
+    return {
+      service,
+      solicitacaoRepository,
+      catalogoRepository,
+      notificarSolicitacao,
+    };
   };
+
+  it('recusa motivo que não é de cancelamento', async () => {
+    const { service, solicitacaoRepository, catalogoRepository } =
+      criarService();
+    catalogoRepository.buscarMotivo.mockResolvedValue({
+      nome: 'Reunião externa',
+      tipo: TipoMotivo.SOLICITACAO,
+    });
+
+    await expect(
+      service.execute(8, 9001, { id: 1002, perfis: [TipoPerfil.SOLICITANTE] }),
+    ).rejects.toBeInstanceOf(MotivoNaoEncontradoException);
+    expect(solicitacaoRepository.cancelar).not.toHaveBeenCalled();
+  });
 
   it.each([
     ['o solicitante dono', { id: 1002, perfis: [TipoPerfil.SOLICITANTE] }],

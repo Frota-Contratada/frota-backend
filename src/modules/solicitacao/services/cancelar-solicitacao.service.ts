@@ -4,6 +4,7 @@ import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { Solicitacao } from '../domain/solicitacao';
+import { TipoMotivo } from '../enums/tipo-motivo.enum';
 import { CancelamentoNaoPermitidoException } from '../exceptions/cancelamento-nao-permitido.exception';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoNaoCancelavelException } from '../exceptions/solicitacao-nao-cancelavel.exception';
@@ -42,7 +43,7 @@ export class CancelarSolicitacaoService {
     const motivo =
       await this.catalogoRepository.buscarMotivo(motivoCancelamentoId);
 
-    if (!motivo) {
+    if (!motivo || motivo.tipo !== TipoMotivo.CANCELAMENTO) {
       throw new MotivoNaoEncontradoException(motivoCancelamentoId);
     }
 

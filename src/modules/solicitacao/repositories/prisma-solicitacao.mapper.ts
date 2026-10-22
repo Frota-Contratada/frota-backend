@@ -17,6 +17,7 @@ import { StatusAprovacao } from '../enums/status-aprovacao.enum';
 import { StatusCorrida } from '../enums/status-corrida.enum';
 import { StatusSolicitacao } from '../enums/status-solicitacao.enum';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
+import { codigoDoValorPersistido } from '@module/motivo/enums/codigo-tipo-motivo';
 
 export const INCLUDE_SOLICITACAO = {
   Endereco_Solicitacao_nCdEnderecoOrigemToEndereco: true,
@@ -238,7 +239,7 @@ export class PrismaSolicitacaoMapper {
   }
 
   private static paraTipoMotivo(valor: string): TipoMotivo {
-    const tipo = valor.trim();
+    const tipo = codigoDoValorPersistido(valor);
     const validos = Object.values(TipoMotivo) as string[];
 
     return validos.includes(tipo)

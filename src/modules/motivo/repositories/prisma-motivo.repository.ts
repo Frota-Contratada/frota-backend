@@ -6,6 +6,10 @@ import { PrismaService } from '@core/prisma/services/prisma.service';
 import { Motivo } from '../domain/motivo';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
 import {
+  codigoDoTipoMotivo,
+  valoresPersistidosDoTipoMotivo,
+} from '../enums/codigo-tipo-motivo';
+import {
   BuscarMotivosFiltros,
   ExistePorNomeFiltros,
   MotivoRepositoryContract,
@@ -60,7 +64,9 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
       ...this.filtroDeEscopo(filtros),
       ...(filtros.incluirInativos ? {} : { dDesativacao: null }),
       ...(filtros.nome ? { cNmMotivo: { contains: filtros.nome } } : {}),
-      ...(filtros.tipo ? { cTipoMotivo: filtros.tipo } : {}),
+      ...(filtros.tipo
+        ? { cTipoMotivo: { in: valoresPersistidosDoTipoMotivo(filtros.tipo) } }
+        : {}),
     };
     const skip = (filtros.page - 1) * filtros.limit;
 
@@ -95,7 +101,7 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
             nCdEmpresa: motivo.empresaId ?? null,
             nCdFilial: motivo.filialId ?? null,
             cNmMotivo: motivo.nome,
-            cTipoMotivo: motivo.tipo,
+            cTipoMotivo: codigoDoTipoMotivo(motivo.tipo),
           },
         }),
       );
@@ -106,7 +112,7 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
     return PrismaMotivoMapper.toDomain(
       await this.prismaService.cliente.motivo.update({
         where: { nCdMotivo: id },
-        data: { cNmMotivo: nome, cTipoMotivo: tipo },
+        data: { cNmMotivo: nome, cTipoMotivo: codigoDoTipoMotivo(tipo) },
       }),
     );
   }
@@ -124,7 +130,7 @@ export class PrismaMotivoRepository extends MotivoRepositoryContract {
     const motivo = await this.prismaService.cliente.motivo.findFirst({
       where: {
         cNmMotivo: filtros.nome,
-        cTipoMotivo: filtros.tipo,
+        cTipoMotivo: { in: valoresPersistidosDoTipoMotivo(filtros.tipo) },
         dDesativacao: null,
         ...this.filtroDeEscopo({
           empresaId: filtros.empresaId,
