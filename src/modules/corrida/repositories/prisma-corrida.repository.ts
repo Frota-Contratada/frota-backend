@@ -12,6 +12,7 @@ const INCLUDE_CORRIDA = {
   Usuario: true,
   Veiculo: { include: { Fornecedor: true } },
   Solicitacao: { include: { Usuario: true } },
+  DespesaCorrida: true,
 } satisfies Prisma.CorridaInclude;
 
 export type PrismaCorridaCompleta = Prisma.CorridaGetPayload<{

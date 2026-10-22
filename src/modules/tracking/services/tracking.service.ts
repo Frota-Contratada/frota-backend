@@ -14,7 +14,9 @@ import {
   TrackingPosition,
   TrackingSnapshot,
 } from '../domain/tracking.types';
+import { TipoDespesa } from '../domain/tipo-despesa';
 import { CorridaSemRegrasException } from '../exceptions/corrida-sem-regras.exception';
+import { DespesaCorridaNaoPermitidaException } from '../exceptions/despesa-corrida-nao-permitida.exception';
 import { CorridaSemPosicoesException } from '../exceptions/corrida-sem-posicoes.exception';
 import { CorridaTrackingInativaException } from '../exceptions/corrida-tracking-inativa.exception';
 import { IdempotencyEmProcessamentoException } from '../exceptions/idempotency-em-processamento.exception';
@@ -360,6 +362,8 @@ export class TrackingService {
               where: { cOrigem: 'V', nCdUsuario: null },
               orderBy: { dPosicao: 'asc' },
             },
+            CorridaEspera: true,
+            DespesaCorrida: true,
           },
         });
         if (!current) throw new TrackingCorridaNaoEncontradaException(tripId);
@@ -382,10 +386,20 @@ export class TrackingService {
           current.dInicioCorrida,
           finishedAt,
         );
-        const valorFinal = this.calcularValorFinal(
-          current.RegraCorrida,
-          quilometragem,
-        );
+        // Espera e despesas (pedágio, estacionamento) entram no valor final.
+        const valorFinal =
+          Math.round(
+            (this.calcularValorFinal(
+              current.RegraCorrida,
+              quilometragem,
+              this.calcularMinutosEspera(
+                current.CorridaEspera ?? [],
+                finishedAt,
+              ),
+            ) +
+              this.somarDespesas(current.DespesaCorrida ?? [])) *
+              100,
+          ) / 100;
 
         await tx.corridaEspera.updateMany({
           where: { nCdCorrida: tripId, dFim: null },
@@ -501,6 +515,7 @@ export class TrackingService {
       };
     }>,
     quilometragem: number,
+    minutosEspera: number,
   ): number {
     const resultado = calcularValorPorRegras(
       regras.map((item, indice) => ({
@@ -512,6 +527,7 @@ export class TrackingService {
         percentual: item.Regra.nPercentual?.toNumber(),
       })),
       quilometragem,
+      minutosEspera,
     );
 
     if (resultado == null) {
@@ -519,6 +535,113 @@ export class TrackingService {
     }
 
     return resultado.valor;
+  }
+
+  private calcularMinutosEspera(
+    esperas: Array<{ dInicio: Date; dFim: Date | null }>,
+    fim: Date,
+  ): number {
+    const milissegundos = esperas.reduce(
+      (total, espera) =>
+        total +
+        Math.max(0, (espera.dFim ?? fim).getTime() - espera.dInicio.getTime()),
+      0,
+    );
+
+    return milissegundos / 60_000;
+  }
+
+  private somarDespesas(
+    despesas: Array<{ nValorDespesa: Prisma.Decimal }>,
+  ): number {
+    return (
+      Math.round(
+        despesas.reduce(
+          (total, despesa) => total + despesa.nValorDespesa.toNumber(),
+          0,
+        ) * 100,
+      ) / 100
+    );
+  }
+
+  /**
+   * Registra pedágio ou outra despesa da corrida. Em corrida finalizada, o
+   * valor final é atualizado na mesma transação.
+   */
+  async addExpense(
+    tripId: number,
+    user: AuthenticatedUser,
+    expense: { tipo: TipoDespesa; valor: number },
+  ): Promise<{
+    id: number;
+    tipo: TipoDespesa;
+    valor: number;
+    incluidaEm: string;
+    valorFinalCorrida: number | null;
+  }> {
+    const trip = await this.loadTrip(tripId);
+    this.assertCanRegisterExpense(trip, user);
+
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.corrida.findUnique({
+        where: { nCdCorrida: tripId },
+        select: { cStatus: true, nValorFinal: true },
+      });
+      if (!current) throw new TrackingCorridaNaoEncontradaException(tripId);
+      const status = current.cStatus.trim() as StatusCorrida;
+      if (
+        status !== StatusCorrida.INICIADA &&
+        status !== StatusCorrida.FINALIZADA
+      ) {
+        throw new DespesaCorridaNaoPermitidaException(tripId);
+      }
+
+      const ultima = await tx.despesaCorrida.aggregate({
+        _max: { nCdDespesa: true },
+      });
+      const despesa = await tx.despesaCorrida.create({
+        data: {
+          nCdDespesa: (ultima._max.nCdDespesa?.toNumber() ?? 0) + 1,
+          nCdCorrida: tripId,
+          cTipoDespesa: expense.tipo,
+          nValorDespesa: expense.valor,
+        },
+      });
+
+      let valorFinalCorrida: number | null = null;
+      if (status === StatusCorrida.FINALIZADA) {
+        valorFinalCorrida =
+          Math.round((current.nValorFinal.toNumber() + expense.valor) * 100) /
+          100;
+        await tx.corrida.update({
+          where: { nCdCorrida: tripId },
+          data: { nValorFinal: valorFinalCorrida },
+        });
+      }
+
+      return {
+        id: despesa.nCdDespesa.toNumber(),
+        tipo: expense.tipo,
+        valor: despesa.nValorDespesa.toNumber(),
+        incluidaEm: despesa.dInclusao.toISOString(),
+        valorFinalCorrida,
+      };
+    });
+  }
+
+  private assertCanRegisterExpense(
+    trip: TrackingTrip,
+    user: AuthenticatedUser,
+  ): void {
+    const perfis = new Set(user.perfis);
+    if (perfis.has(TipoPerfil.ADMIN_MASTER)) return;
+    if (
+      perfis.has(TipoPerfil.ADMIN_FORNECEDOR) &&
+      trip.nCdFornecedor.toNumber() === user.fornecedorId
+    ) {
+      return;
+    }
+    this.assertDriver(trip, user.id);
   }
 
   async completeStop(
@@ -1070,7 +1193,11 @@ type TrackingCalculationCompatibility = {
     inicio: Date,
     fim: Date,
   ) => number;
-  calcularValorFinal: (regras: unknown, quilometragem: number) => number;
+  calcularValorFinal: (
+    regras: unknown,
+    quilometragem: number,
+    minutosEspera: number,
+  ) => number;
 };
 
 const trackingCalculationPrototype =
@@ -1092,7 +1219,13 @@ trackingCalculationPrototype.calcularQuilometragem = function (
 trackingCalculationPrototype.calcularValorFinal = function (
   regras,
   quilometragem,
+  minutosEspera,
 ) {
   if (!Array.isArray(regras)) return 0;
-  return calcularValorFinalOriginal.call(this, regras, quilometragem);
+  return calcularValorFinalOriginal.call(
+    this,
+    regras,
+    quilometragem,
+    minutosEspera,
+  );
 };

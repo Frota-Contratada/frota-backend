@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
+import { TipoDespesa } from '../domain/tipo-despesa';
+import { DespesaCorridaNaoPermitidaException } from '../exceptions/despesa-corrida-nao-permitida.exception';
 import { TrackingAcessoNegadoException } from '../exceptions/tracking-acesso-negado.exception';
 import { TrackingService } from './tracking.service';
 
@@ -759,6 +761,194 @@ describe('TrackingService', () => {
     expect(tripUpdate.mock.invocationCallOrder[0]).toBeLessThan(
       events.publish.mock.invocationCallOrder[0],
     );
+  });
+
+  it('soma espera e despesas no valor final', async () => {
+    const tripUpdate = jest.fn().mockResolvedValue({});
+    const tx = {
+      corridaEspera: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+      corrida: {
+        findUnique: jest.fn().mockResolvedValue({
+          cStatus: 'I',
+          dFimCorrida: null,
+          dInicioCorrida: new Date('2026-08-24T12:00:00.000Z'),
+          nKmPercorrido: decimal(0),
+          nValorFinal: decimal(0),
+          CorridaPosicao: [
+            {
+              nLatitude: decimal(-23.55),
+              nLongitude: decimal(-46.63),
+              nAccuracy: decimal(5),
+              dPosicao: new Date('2026-08-24T12:00:00.000Z'),
+            },
+            {
+              nLatitude: decimal(-23.56),
+              nLongitude: decimal(-46.63),
+              nAccuracy: decimal(5),
+              dPosicao: new Date('2026-08-24T12:05:00.000Z'),
+            },
+          ],
+          RegraCorrida: [
+            {
+              Regra: {
+                nCdRegra: decimal(1),
+                nCdTipoRegra: decimal(2),
+                iPrioridade: 1,
+                nValorKm: null,
+                nValorFixo: decimal(20),
+                nPercentual: null,
+              },
+            },
+            {
+              Regra: {
+                nCdRegra: decimal(2),
+                nCdTipoRegra: decimal(4),
+                iPrioridade: 2,
+                nValorKm: null,
+                nValorFixo: decimal(60),
+                nPercentual: null,
+              },
+            },
+          ],
+          CorridaEspera: [
+            {
+              dInicio: new Date('2026-08-24T12:01:00.000Z'),
+              dFim: new Date('2026-08-24T12:31:00.000Z'),
+            },
+          ],
+          DespesaCorrida: [{ nValorDespesa: decimal(8.9) }],
+        }),
+        update: tripUpdate,
+      },
+      comandoIdempotente: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    const prisma = {
+      corrida: { findUnique: jest.fn().mockResolvedValue(trip) },
+      comandoIdempotente: {
+        create: jest.fn().mockResolvedValue({}),
+        updateMany: jest.fn(),
+      },
+      $transaction: jest.fn((operation: (client: typeof tx) => unknown) =>
+        operation(tx),
+      ),
+    };
+    const service = new TrackingService(
+      prisma as never,
+      {} as never,
+      { publish: jest.fn() } as never,
+    );
+
+    const result = await service.finish(
+      1,
+      driver,
+      '0d8b8a43-4f3e-4ad3-9b1c-6a1a0f3a2c11',
+    );
+
+    // R$ 20 fixo + 30 min de espera a R$ 60/h + R$ 8,90 de pedágio.
+    expect(result.valorFinal).toBe(58.9);
+    expect(tripUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ nValorFinal: 58.9 }) as object,
+      }),
+    );
+  });
+
+  describe('addExpense', () => {
+    const criarService = (cStatus: string) => {
+      const tripUpdate = jest.fn().mockResolvedValue({});
+      const tx = {
+        corrida: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ cStatus, nValorFinal: decimal(40) }),
+          update: tripUpdate,
+        },
+        despesaCorrida: {
+          aggregate: jest
+            .fn()
+            .mockResolvedValue({ _max: { nCdDespesa: decimal(7) } }),
+          create: jest.fn().mockResolvedValue({
+            nCdDespesa: decimal(8),
+            nValorDespesa: decimal(8.9),
+            dInclusao: new Date('2026-08-24T12:40:00.000Z'),
+          }),
+        },
+      };
+      const prisma = {
+        corrida: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ ...trip, nCdFornecedor: decimal(864) }),
+        },
+        $transaction: jest.fn((operation: (client: typeof tx) => unknown) =>
+          operation(tx),
+        ),
+      };
+      const service = new TrackingService(
+        prisma as never,
+        {} as never,
+        { publish: jest.fn() } as never,
+      );
+
+      return { service, tx, tripUpdate };
+    };
+
+    it('registra pedágio da corrida em andamento sem mudar o valor final', async () => {
+      const { service, tx, tripUpdate } = criarService('I');
+
+      const despesa = await service.addExpense(1, driver, {
+        tipo: TipoDespesa.PEDAGIO,
+        valor: 8.9,
+      });
+
+      expect(tx.despesaCorrida.create).toHaveBeenCalledWith({
+        data: {
+          nCdDespesa: 8,
+          nCdCorrida: 1,
+          cTipoDespesa: TipoDespesa.PEDAGIO,
+          nValorDespesa: 8.9,
+        },
+      });
+      expect(despesa.valorFinalCorrida).toBeNull();
+      expect(tripUpdate).not.toHaveBeenCalled();
+    });
+
+    it('soma a despesa ao valor final da corrida já finalizada', async () => {
+      const { service, tripUpdate } = criarService('F');
+
+      const despesa = await service.addExpense(
+        1,
+        { id: 3, perfis: [TipoPerfil.ADMIN_FORNECEDOR], fornecedorId: 864 },
+        { tipo: TipoDespesa.PEDAGIO, valor: 8.9 },
+      );
+
+      expect(despesa.valorFinalCorrida).toBe(48.9);
+      expect(tripUpdate).toHaveBeenCalledWith({
+        where: { nCdCorrida: 1 },
+        data: { nValorFinal: 48.9 },
+      });
+    });
+
+    it('recusa despesa em corrida agendada', async () => {
+      const { service } = criarService('A');
+
+      await expect(
+        service.addExpense(1, driver, { tipo: TipoDespesa.OUTRO, valor: 5 }),
+      ).rejects.toBeInstanceOf(DespesaCorridaNaoPermitidaException);
+    });
+
+    it('recusa despesa lançada por quem não é o motorista nem o fornecedor', async () => {
+      const { service } = criarService('I');
+
+      await expect(
+        service.addExpense(1, passenger, {
+          tipo: TipoDespesa.PEDAGIO,
+          valor: 5,
+        }),
+      ).rejects.toBeInstanceOf(TrackingAcessoNegadoException);
+    });
   });
 
   it('reconstrói o mesmo snapshot durável após reconexão sem expor role', async () => {

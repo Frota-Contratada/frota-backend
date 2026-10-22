@@ -5,6 +5,7 @@ import { BuscarTrackingController } from './controllers/buscar-tracking.controll
 import { ConcluirParadaController } from './controllers/concluir-parada.controller';
 import { FinalizarCorridaController } from './controllers/finalizar-corrida.controller';
 import { IniciarEsperaController } from './controllers/iniciar-espera.controller';
+import { LancarDespesaCorridaController } from './controllers/lancar-despesa-corrida.controller';
 import { RecalcularRotaController } from './controllers/recalcular-rota.controller';
 import { RetomarCorridaController } from './controllers/retomar-corrida.controller';
 import { SalvarPosicaoPassageiroController } from './controllers/salvar-posicao-passageiro.controller';
@@ -14,6 +15,7 @@ import { BuscarTrackingService } from './services/buscar-tracking.service';
 import { ConcluirParadaService } from './services/concluir-parada.service';
 import { FinalizarCorridaService } from './services/finalizar-corrida.service';
 import { IniciarEsperaService } from './services/iniciar-espera.service';
+import { LancarDespesaCorridaService } from './services/lancar-despesa-corrida.service';
 import { RecalcularRotaService } from './services/recalcular-rota.service';
 import { RetomarCorridaService } from './services/retomar-corrida.service';
 import { SalvarPosicaoPassageiroService } from './services/salvar-posicao-passageiro.service';
@@ -33,6 +35,7 @@ import { TrackingService } from './services/tracking.service';
     RetomarCorridaController,
     FinalizarCorridaController,
     ConcluirParadaController,
+    LancarDespesaCorridaController,
   ],
   providers: [
     TomTomRouteService,
@@ -46,6 +49,7 @@ import { TrackingService } from './services/tracking.service';
     RetomarCorridaService,
     FinalizarCorridaService,
     ConcluirParadaService,
+    LancarDespesaCorridaService,
     TrackingGateway,
   ],
   exports: [TrackingService],
