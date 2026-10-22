@@ -6,6 +6,7 @@ import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { CancelarSolicitacaoService } from '../services/cancelar-solicitacao.service';
 import { CancelarSolicitacaoRequestDto } from './dtos/request/cancelar-solicitacao-request.dto';
@@ -20,10 +21,15 @@ export class CancelarSolicitacaoController {
   ) {}
 
   @Patch(':id/cancelamento')
-  @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
+  @Perfis(
+    TipoPerfil.SOLICITANTE,
+    TipoPerfil.SOLICITANTE_EMERGENCIA,
+    TipoPerfil.APROVADOR,
+    TipoPerfil.ADMIN_FILIAL,
+  )
   @ApiRespostaDe(SolicitacaoDto)
   async handle(
-    @CurrentUser('id') solicitanteId: number,
+    @CurrentUser() usuario: AuthenticatedUser,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
     @Body() body: CancelarSolicitacaoRequestDto,
@@ -31,7 +37,7 @@ export class CancelarSolicitacaoController {
     const solicitacao = await this.cancelarSolicitacaoService.execute(
       id,
       body.motivoCancelamentoId,
-      solicitanteId,
+      usuario,
     );
 
     return { response: SolicitacaoDto.aPartirDoDominio(solicitacao) };

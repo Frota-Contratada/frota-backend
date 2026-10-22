@@ -532,23 +532,37 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     id: number,
     motivoCancelamentoId: number,
   ): Promise<Solicitacao> {
-    const resultado = await this.prismaService.solicitacao.updateMany({
-      where: {
-        nCdSolicitacao: id,
-        cStatus: {
-          in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+    await this.prismaService.$transaction(async (tx) => {
+      const resultado = await tx.solicitacao.updateMany({
+        where: {
+          nCdSolicitacao: id,
+          cStatus: {
+            in: [StatusSolicitacao.PENDENTE, StatusSolicitacao.APROVADA],
+          },
+          // Corrida agendada é cancelada junto; iniciada ou finalizada impede.
+          Corrida: {
+            none: {
+              cStatus: {
+                in: [StatusCorrida.INICIADA, StatusCorrida.FINALIZADA],
+              },
+            },
+          },
         },
-        Corrida: { none: {} },
-      },
-      data: {
-        cStatus: StatusSolicitacao.CANCELADA,
-        nCdMotivoCancelamento: motivoCancelamentoId,
-      },
-    });
+        data: {
+          cStatus: StatusSolicitacao.CANCELADA,
+          nCdMotivoCancelamento: motivoCancelamentoId,
+        },
+      });
 
-    if (resultado.count === 0) {
-      throw new SolicitacaoNaoCancelavelException(id);
-    }
+      if (resultado.count === 0) {
+        throw new SolicitacaoNaoCancelavelException(id);
+      }
+
+      await tx.corrida.updateMany({
+        where: { nCdSolicitacao: id, cStatus: StatusCorrida.AGENDADA },
+        data: { cStatus: StatusCorrida.CANCELADA },
+      });
+    });
 
     const cancelada = await this.buscar(id);
 
