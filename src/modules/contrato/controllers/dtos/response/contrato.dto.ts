@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { Contrato } from '../../../domain/contrato';
+import { SituacaoContrato } from '../../../enums/situacao-contrato.enum';
 
 export class ContratoDto {
   id: number;
@@ -8,6 +9,7 @@ export class ContratoDto {
   dataVigenciaInicio: DateTime;
   dataVigenciaFim?: DateTime;
   dataAlteracao?: DateTime;
+  situacao: SituacaoContrato;
 
   constructor(contrato: Contrato) {
     this.id = contrato.id;
@@ -16,5 +18,6 @@ export class ContratoDto {
     this.dataVigenciaInicio = contrato.dataVigenciaInicio;
     this.dataVigenciaFim = contrato.dataVigenciaFim;
     this.dataAlteracao = contrato.dataAlteracao;
+    this.situacao = contrato.situacao;
   }
 }
