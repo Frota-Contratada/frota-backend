@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
+import { TipoVinculo } from '@module/autenticacao/enums/tipo-vinculo.enum';
+import { VinculoDoUsuarioAusenteException } from '@module/autenticacao/exceptions/vinculo-do-usuario-ausente.exception';
 import { CancelarNotificacoesDaSolicitacaoService } from '@module/notificacao/services/cancelar-notificacoes-da-solicitacao.service';
 import { NotificarSolicitacaoService } from '@module/notificacao/services/notificar-solicitacao.service';
 import { CriarCorridaService } from './criar-corrida.service';
 import { MotoristaOuVeiculoIndisponivelException } from '../exceptions/motorista-ou-veiculo-indisponivel.exception';
+import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { Solicitacao } from '../domain/solicitacao';
 import {
   DecisaoFornecedor,
@@ -20,9 +25,11 @@ export class DecidirSolicitacaoFornecedorService {
 
   async execute(
     id: number,
-    fornecedorId: number,
+    usuario: Pick<AuthenticatedUser, 'fornecedorId' | 'perfis'>,
     decisao: DecisaoFornecedor,
   ): Promise<Solicitacao> {
+    const fornecedorId = await this.resolverFornecedor(id, usuario);
+
     if (decisao.decisao === 'RECUSAR') {
       const solicitacao =
         await this.solicitacaoRepository.decidirPeloFornecedor(
@@ -55,5 +62,24 @@ export class DecidirSolicitacaoFornecedorService {
     await this.notificarSolicitacao.agendarLembretesDaCorrida(solicitacao.id);
 
     return solicitacao;
+  }
+
+  private async resolverFornecedor(
+    id: number,
+    usuario: Pick<AuthenticatedUser, 'fornecedorId' | 'perfis'>,
+  ): Promise<number> {
+    if (usuario.fornecedorId != null) return usuario.fornecedorId;
+
+    if (!usuario.perfis.includes(TipoPerfil.ADMIN_MASTER)) {
+      throw new VinculoDoUsuarioAusenteException(TipoVinculo.FORNECEDOR);
+    }
+
+    const solicitacao = await this.solicitacaoRepository.buscar(id);
+
+    if (solicitacao == null) {
+      throw new SolicitacaoNaoEncontradaException(id);
+    }
+
+    return solicitacao.fornecedorId;
   }
 }
