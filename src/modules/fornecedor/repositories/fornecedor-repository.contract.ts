@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoFornecedor } from '../enums/ordenacao-fornecedor.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Fornecedor } from '../domain/fornecedor';
 import { FornecedorBigNumbers } from '../domain/types/fornecedor-big-numbers.type';
@@ -10,6 +12,8 @@ export abstract class FornecedorRepositoryContract {
     cnpjCpf?: string;
     filialId?: number;
     empresaId?: number;
+    ordenarPor?: CampoOrdenacaoFornecedor;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<FornecedorSummary>>;

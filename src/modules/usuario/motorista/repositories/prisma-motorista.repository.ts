@@ -1,3 +1,6 @@
+import { Prisma } from '@prisma/client';
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoMotorista } from '../enums/ordenacao-motorista.enum';
 import { Injectable } from '@nestjs/common';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { MotoristaRepositoryContract } from './motorista-repository.contract';
@@ -5,6 +8,17 @@ import { Motorista } from '../domain/motorista';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { PrismaMotoristaMapper } from './prisma-motorista.mapper';
+
+const ORDENACAO_MOTORISTA: Record<
+  CampoOrdenacaoMotorista,
+  (direcao: DirecaoOrdenacao) => Prisma.UsuarioOrderByWithRelationInput
+> = {
+  [CampoOrdenacaoMotorista.NOME]: (direcao) => ({ cNmUsuario: direcao }),
+  [CampoOrdenacaoMotorista.EMAIL]: (direcao) => ({ cEmail: direcao }),
+  [CampoOrdenacaoMotorista.DATA_ATIVACAO]: (direcao) => ({
+    dAtivacao: direcao,
+  }),
+};
 
 @Injectable()
 export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
@@ -26,6 +40,8 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
+    ordenarPor?: CampoOrdenacaoMotorista;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Motorista>> {
@@ -41,7 +57,12 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
         where,
         skip,
         take: filtros.limit,
-        orderBy: { cNmUsuario: 'asc' },
+        orderBy:
+          filtros.ordenarPor == null
+            ? { cNmUsuario: 'asc' }
+            : ORDENACAO_MOTORISTA[filtros.ordenarPor](
+                filtros.direcao ?? DirecaoOrdenacao.ASC,
+              ),
       }),
       this.prismaService.usuario.count({ where }),
     ]);

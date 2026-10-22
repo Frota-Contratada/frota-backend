@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoColaborador } from '../enums/ordenacao-colaborador.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { Colaborador } from '../domain/colaborador';
@@ -15,6 +17,8 @@ export abstract class ColaboradorRepositoryContract {
     cpf?: string;
     filialId?: number;
     empresaId?: number;
+    ordenarPor?: CampoOrdenacaoColaborador;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ColaboradorSummary>>;

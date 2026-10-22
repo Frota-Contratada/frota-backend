@@ -1,3 +1,6 @@
+import { Prisma } from '@prisma/client';
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoFilial } from '../enums/ordenacao-filial.enum';
 import { Injectable } from '@nestjs/common';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
@@ -8,6 +11,19 @@ import { Filial } from '../domain/filial';
 import { Endereco } from '../domain/endereco';
 import { PrismaService } from '@core/prisma/services/prisma.service';
 import { PrismaFilialMapper } from './prisma-filial.mapper';
+
+const ORDENACAO_FILIAL: Record<
+  CampoOrdenacaoFilial,
+  (direcao: DirecaoOrdenacao) => Prisma.FilialOrderByWithRelationInput
+> = {
+  [CampoOrdenacaoFilial.NOME]: (direcao) => ({ cNmFilial: direcao }),
+  [CampoOrdenacaoFilial.CNPJ]: (direcao) => ({ cCNPJ: direcao }),
+  [CampoOrdenacaoFilial.CIDADE]: (direcao) => ({
+    Endereco: { cCidade: direcao },
+  }),
+  [CampoOrdenacaoFilial.UF]: (direcao) => ({ Endereco: { cUf: direcao } }),
+  [CampoOrdenacaoFilial.DATA_ATIVACAO]: (direcao) => ({ dAtivacao: direcao }),
+};
 
 @Injectable()
 export class PrismaFilialRepository extends FilialRepositoryContract {
@@ -30,6 +46,8 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
     nome?: string;
     cnpj?: string;
     endereco?: string;
+    ordenarPor?: CampoOrdenacaoFilial;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Filial>> {
@@ -55,7 +73,12 @@ export class PrismaFilialRepository extends FilialRepositoryContract {
         skip,
         take: filtros.limit,
         include: { Endereco: true },
-        orderBy: { cNmFilial: 'asc' },
+        orderBy:
+          filtros.ordenarPor == null
+            ? { cNmFilial: 'asc' }
+            : ORDENACAO_FILIAL[filtros.ordenarPor](
+                filtros.direcao ?? DirecaoOrdenacao.ASC,
+              ),
       }),
       this.prismaService.filial.count({ where }),
     ]);

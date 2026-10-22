@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoContrato } from '../enums/ordenacao-contrato.enum';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
@@ -22,6 +24,19 @@ import {
   CONTRATO_VINCULO_SELECT,
   PrismaContratoMapper,
 } from './prisma-contrato.mapper';
+
+const ORDENACAO_CONTRATO: Record<
+  CampoOrdenacaoContrato,
+  (direcao: DirecaoOrdenacao) => Prisma.ContratoOrderByWithRelationInput
+> = {
+  [CampoOrdenacaoContrato.ID]: (direcao) => ({ nCdContrato: direcao }),
+  [CampoOrdenacaoContrato.DATA_VIGENCIA_INICIO]: (direcao) => ({
+    dVigenciaInicio: direcao,
+  }),
+  [CampoOrdenacaoContrato.DATA_VIGENCIA_FIM]: (direcao) => ({
+    dVigenciaFim: direcao,
+  }),
+};
 
 @Injectable()
 export class PrismaContratoRepository extends ContratoRepositoryContract {
@@ -452,6 +467,8 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
     fornecedorId?: number;
     vigenciaDe?: Date;
     vigenciaAte?: Date;
+    ordenarPor?: CampoOrdenacaoContrato;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ContratoSummary>> {
@@ -467,7 +484,12 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
         where,
         skip,
         take: filtros.limit,
-        orderBy: { dVigenciaInicio: 'desc' },
+        orderBy:
+          filtros.ordenarPor == null
+            ? { dVigenciaInicio: 'desc' }
+            : ORDENACAO_CONTRATO[filtros.ordenarPor](
+                filtros.direcao ?? DirecaoOrdenacao.ASC,
+              ),
         include: {
           FilialFornecedor: {
             where: vinculo,

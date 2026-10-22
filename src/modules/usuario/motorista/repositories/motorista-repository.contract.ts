@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoMotorista } from '../enums/ordenacao-motorista.enum';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
 import { Motorista } from '../domain/motorista';
 
@@ -6,6 +8,8 @@ export abstract class MotoristaRepositoryContract {
   abstract buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
+    ordenarPor?: CampoOrdenacaoMotorista;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Motorista>>;

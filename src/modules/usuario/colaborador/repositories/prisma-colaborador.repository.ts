@@ -1,3 +1,5 @@
+import { DirecaoOrdenacao } from '@common/enums/direcao-ordenacao.enum';
+import { CampoOrdenacaoColaborador } from '../enums/ordenacao-colaborador.enum';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PaginatedResponseInterface } from '@common/interfaces/paginated-response.interface';
@@ -11,6 +13,18 @@ import {
   COLABORADOR_SELECT,
   PrismaColaboradorMapper,
 } from './prisma-colaborador.mapper';
+
+const ORDENACAO_COLABORADOR: Record<
+  CampoOrdenacaoColaborador,
+  (direcao: DirecaoOrdenacao) => Prisma.UsuarioOrderByWithRelationInput
+> = {
+  [CampoOrdenacaoColaborador.NOME]: (direcao) => ({ cNmUsuario: direcao }),
+  [CampoOrdenacaoColaborador.EMAIL]: (direcao) => ({ cEmail: direcao }),
+  [CampoOrdenacaoColaborador.CARGO]: (direcao) => ({ cCargo: direcao }),
+  [CampoOrdenacaoColaborador.DATA_ATIVACAO]: (direcao) => ({
+    dAtivacao: direcao,
+  }),
+};
 
 @Injectable()
 export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
@@ -138,6 +152,8 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
     cpf?: string;
     empresaId?: number;
     filialId?: number;
+    ordenarPor?: CampoOrdenacaoColaborador;
+    direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<ColaboradorSummary>> {
@@ -149,7 +165,12 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
         where,
         skip,
         take: filtros.limit,
-        orderBy: { cNmUsuario: 'asc' },
+        orderBy:
+          filtros.ordenarPor == null
+            ? { cNmUsuario: 'asc' }
+            : ORDENACAO_COLABORADOR[filtros.ordenarPor](
+                filtros.direcao ?? DirecaoOrdenacao.ASC,
+              ),
         select: COLABORADOR_SELECT,
       }),
       this.prismaService.usuario.count({ where }),
