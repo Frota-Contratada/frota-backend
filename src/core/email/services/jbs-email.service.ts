@@ -19,13 +19,22 @@ export class JbsEmailService extends EmailServiceContract {
 
     this.from = this.configService.get<string>('SMTP_FROM')!;
 
+    // Servidores sem autenticação (relay interno) não recebem credenciais;
+    // SMTP_SECURE=true usa TLS direto (porta 465), senão STARTTLS se oferecido.
+    const usuario = this.configService.get<string>('SMTP_USER')?.trim();
+
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST'),
-      port: this.configService.get<number>('SMTP_PORT'),
-      auth: {
-        user: this.configService.get<string>('SMTP_USER'),
-        pass: this.configService.get<string>('SMTP_PASSWORD'),
-      },
+      port: Number(this.configService.get<string>('SMTP_PORT') ?? 587),
+      secure: this.configService.get<string>('SMTP_SECURE') === 'true',
+      ...(usuario
+        ? {
+            auth: {
+              user: usuario,
+              pass: this.configService.get<string>('SMTP_PASSWORD'),
+            },
+          }
+        : {}),
     });
   }
 
