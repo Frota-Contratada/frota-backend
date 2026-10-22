@@ -5,7 +5,6 @@ import { Solicitacao } from '../domain/solicitacao';
 import { MotivoNaoEncontradoException } from '../exceptions/motivo-nao-encontrado.exception';
 import { SolicitacaoNaoEncontradaException } from '../exceptions/solicitacao-nao-encontrada.exception';
 import { FornecedorIndisponivelException } from '../exceptions/fornecedor-indisponivel.exception';
-import { FornecedorObrigatorioException } from '../exceptions/fornecedor-obrigatorio.exception';
 import { AprovadorNaoAutorizadoException } from '../exceptions/aprovador-nao-autorizado.exception';
 import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
 import {
@@ -123,9 +122,9 @@ export class DecidirSolicitacaoAprovadorService {
       return undefined;
     }
 
-    if (fornecedorId == null) {
-      throw new FornecedorObrigatorioException();
-    }
+    // Sem escolha do aprovador, mantém o fornecedor selecionado na criação,
+    // revalidado abaixo contra os contratos vigentes da filial.
+    const fornecedorEscolhidoId = fornecedorId ?? solicitacao.fornecedorId;
 
     if (solicitante?.nCdEmpresa == null || solicitante.nCdFilial == null) {
       throw new FornecedorIndisponivelException(0, solicitacao.tipoCorrida.id);
@@ -139,7 +138,7 @@ export class DecidirSolicitacaoAprovadorService {
         solicitacao.dataCorrida,
       );
     const candidato = candidatos.find(
-      (item) => item.fornecedorId === fornecedorId,
+      (item) => item.fornecedorId === fornecedorEscolhidoId,
     );
 
     if (candidato == null) {

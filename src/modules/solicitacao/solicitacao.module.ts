@@ -9,6 +9,7 @@ import { ColaboradorModule } from '@module/usuario/colaborador/colaborador.modul
 import { TrackingModule } from '@module/tracking/tracking.module';
 import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { BuscarCatalogosController } from './controllers/buscar-catalogos.controller';
+import { BuscarFornecedoresCandidatosController } from './controllers/buscar-fornecedores-candidatos.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
 import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-agendadas.controller';
 import { CancelarSolicitacaoController } from './controllers/cancelar-solicitacao.controller';
@@ -23,6 +24,7 @@ import { PrismaCatalogoSolicitacaoRepository } from './repositories/prisma-catal
 import { PrismaContratoPrecificacaoRepository } from './repositories/prisma-contrato-precificacao.repository';
 import { PrismaSolicitacaoRepository } from './repositories/prisma-solicitacao.repository';
 import { SolicitacaoRepositoryContract } from './repositories/solicitacao-repository.contract';
+import { BuscarFornecedoresCandidatosService } from './services/buscar-fornecedores-candidatos.service';
 import { BuscarSolicitacaoService } from './services/buscar-solicitacao.service';
 import { BuscarTiposCorridaService } from './services/buscar-tipos-corrida.service';
 import { BuscarTiposVeiculoService } from './services/buscar-tipos-veiculo.service';
@@ -59,6 +61,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     DecidirSolicitacaoFornecedorController,
     DecidirSolicitacaoAprovadorController,
     BuscarSolicitacoesAprovadorController,
+    BuscarFornecedoresCandidatosController,
     BuscarSolicitacaoController,
   ],
   providers: [
@@ -67,6 +70,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     BuscarSolicitacaoService,
     BuscarVariasSolicitacoesService,
     BuscarSolicitacoesParaAprovacaoService,
+    BuscarFornecedoresCandidatosService,
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
     DecidirSolicitacaoFornecedorService,
