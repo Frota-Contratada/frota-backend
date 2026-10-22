@@ -21,7 +21,9 @@ import { Solicitacao } from '../domain/solicitacao';
 import { SolicitacaoCentroCusto } from '../domain/solicitacao-centro-custo';
 import { SolicitacaoPassageiro } from '../domain/solicitacao-passageiro';
 import { TipoVeiculo } from '../domain/tipo-veiculo';
+import { TipoCorridaEnum } from '../enums/tipo-corrida.enum';
 import { TipoMotivo } from '../enums/tipo-motivo.enum';
+import { CorridaEmergencialNaoAutorizadaException } from '../exceptions/corrida-emergencial-nao-autorizada.exception';
 import { CatalogoSolicitacaoRepositoryContract } from '../repositories/catalogo-solicitacao-repository.contract';
 import { SolicitacaoRepositoryContract } from '../repositories/solicitacao-repository.contract';
 import { AcompanhanteDuplicadoException } from '../exceptions/acompanhante-duplicado.exception';
@@ -115,6 +117,13 @@ export class CriarSolicitacaoService {
 
     if (!tipoCorrida) {
       throw new TipoCorridaNaoEncontradoException(input.tipoCorridaId);
+    }
+
+    if (
+      tipoCorrida.id === Number(TipoCorridaEnum.EMERGENCIAL) &&
+      !input.perfis.includes(TipoPerfil.SOLICITANTE_EMERGENCIA)
+    ) {
+      throw new CorridaEmergencialNaoAutorizadaException();
     }
 
     const tipoVeiculo = await this.resolverTipoVeiculo(input.tipoVeiculoId);
