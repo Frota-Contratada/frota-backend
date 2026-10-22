@@ -5,6 +5,7 @@ import { ResponseInterface } from '@common/interfaces/response-interface';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ApiRespostaDe } from '@common/decorators/api-resposta.decorator';
 import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
 import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 import { CriarSolicitacaoService } from '../services/criar-solicitacao.service';
 import { CriarSolicitacaoRequestDto } from './dtos/request/criar-solicitacao-request.dto';
@@ -20,14 +21,19 @@ export class CriarSolicitacaoController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Perfis(TipoPerfil.SOLICITANTE, TipoPerfil.SOLICITANTE_EMERGENCIA)
+  @Perfis(
+    TipoPerfil.SOLICITANTE,
+    TipoPerfil.SOLICITANTE_EMERGENCIA,
+    TipoPerfil.APROVADOR,
+  )
   @ApiRespostaDe(SolicitacaoDto, { status: HttpStatus.CREATED })
   async handle(
-    @CurrentUser('id') solicitanteId: number,
+    @CurrentUser() usuario: AuthenticatedUser,
     @Body() body: CriarSolicitacaoRequestDto,
   ): Promise<ResponseInterface<SolicitacaoDto>> {
     const solicitacao = await this.criarSolicitacaoService.execute({
-      solicitanteId,
+      solicitanteId: usuario.id,
+      perfis: usuario.perfis,
       dataCorrida: DateTime.fromISO(body.dataCorrida),
       tipoCorridaId: body.tipoCorridaId,
       tipoVeiculoId: body.tipoVeiculoId,
@@ -38,6 +44,7 @@ export class CriarSolicitacaoController {
       centrosCustoIds: body.centrosCustoIds,
       cpfsAcompanhantes: body.cpfsAcompanhantes,
       respostasPerguntas: body.respostasPerguntas,
+      beneficiarioId: body.beneficiarioId,
     });
 
     return { response: SolicitacaoDto.aPartirDoDominio(solicitacao) };

@@ -4,6 +4,7 @@ import { PrismaModule } from '@core/prisma/prisma.module';
 import { StorageModule } from '@core/storage/storage.module';
 import { CentroDeCustoModule } from '@module/centro-de-custo/centro-de-custo.module';
 import { FilialModule } from '@module/filial/filial.module';
+import { BuscarBeneficiariosController } from './controllers/buscar-beneficiarios.controller';
 import { BuscarPerfisDoColaboradorController } from './controllers/buscar-perfis-do-colaborador.controller';
 import { BuscarVariosColaboradoresController } from './controllers/buscar-varios-colaboradores.controller';
 import { TornarAprovadorController } from './controllers/tornar-aprovador.controller';
@@ -11,6 +12,7 @@ import { TornarSolicitanteController } from './controllers/tornar-solicitante.co
 import { TornarSolicitanteEmergenciaController } from './controllers/tornar-solicitante-emergencia.controller';
 import { ColaboradorRepositoryContract } from './repositories/colaborador-repository.contract';
 import { PrismaColaboradorRepository } from './repositories/prisma-colaborador.repository';
+import { BuscarBeneficiariosService } from './services/buscar-beneficiarios.service';
 import { BuscarBigNumbersColaboradoresService } from './services/buscar-big-numbers-colaboradores.service';
 import { BuscarPerfisDoColaboradorService } from './services/buscar-perfis-do-colaborador.service';
 import { BuscarVariosColaboradoresService } from './services/buscar-varios-colaboradores.service';
@@ -28,6 +30,7 @@ import { TornarSolicitanteEmergenciaService } from './services/tornar-solicitant
   ],
   controllers: [
     BuscarVariosColaboradoresController,
+    BuscarBeneficiariosController,
     BuscarPerfisDoColaboradorController,
     TornarSolicitanteController,
     TornarAprovadorController,
@@ -35,6 +38,7 @@ import { TornarSolicitanteEmergenciaService } from './services/tornar-solicitant
   ],
   providers: [
     BuscarVariosColaboradoresService,
+    BuscarBeneficiariosService,
     BuscarBigNumbersColaboradoresService,
     BuscarPerfisDoColaboradorService,
     TornarSolicitanteService,

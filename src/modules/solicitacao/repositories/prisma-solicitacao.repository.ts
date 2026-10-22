@@ -314,6 +314,30 @@ export class PrismaSolicitacaoRepository extends SolicitacaoRepositoryContract {
     };
   }
 
+  async aprovarTodosOsRateios(id: number): Promise<Solicitacao> {
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.solicitacaoCentroCusto.updateMany({
+        where: {
+          nCdSolicitacao: id,
+          cStatusAprovacao: StatusAprovacao.PENDENTE,
+        },
+        data: { cStatusAprovacao: StatusAprovacao.APROVADA },
+      });
+      await tx.solicitacao.update({
+        where: { nCdSolicitacao: id },
+        data: { cStatus: StatusSolicitacao.APROVADA },
+      });
+    });
+
+    const aprovada = await this.buscar(id);
+
+    if (!aprovada) {
+      throw new SolicitacaoNaoEncontradaException(id);
+    }
+
+    return aprovada;
+  }
+
   async decidirPeloAprovador(
     id: number,
     aprovadorId: number,

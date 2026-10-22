@@ -76,6 +76,7 @@ export abstract class SolicitacaoRepositoryContract {
     aprovadorId: number,
     decisao: DecisaoAprovador,
   ): Promise<Solicitacao>;
+  abstract aprovarTodosOsRateios(id: number): Promise<Solicitacao>;
   abstract criarCorrida(
     id: number,
     fornecedorId: number,
