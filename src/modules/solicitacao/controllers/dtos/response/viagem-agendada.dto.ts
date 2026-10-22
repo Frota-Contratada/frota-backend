@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Solicitacao } from '../../../domain/solicitacao';
+import { StatusSolicitacao } from '../../../enums/status-solicitacao.enum';
 import { StatusViagem } from '../../../enums/status-viagem.enum';
 
 export class ViagemAgendadaDto {
@@ -33,7 +34,7 @@ export class ViagemAgendadaDto {
 
   @ApiProperty({
     description:
-      'Derivado da existência de uma corrida em execução para a solicitação.',
+      'Aguardando aprovação enquanto a solicitação estiver pendente; depois, derivado da existência de uma corrida em execução.',
     enum: StatusViagem,
     example: StatusViagem.AGENDADA,
   })
@@ -64,7 +65,9 @@ export class ViagemAgendadaDto {
     this.destino = solicitacao.destino.descricao;
     this.status = solicitacao.emAndamento
       ? StatusViagem.EM_ANDAMENTO
-      : StatusViagem.AGENDADA;
+      : solicitacao.status === StatusSolicitacao.PENDENTE
+        ? StatusViagem.AGUARDANDO_APROVACAO
+        : StatusViagem.AGENDADA;
     this.tipoCorrida = solicitacao.tipoCorrida.nome;
     this.valorEstimado = solicitacao.valorEstimado;
     this.motoristaNome = solicitacao.corrida?.motoristaNome;
