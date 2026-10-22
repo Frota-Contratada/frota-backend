@@ -19,6 +19,7 @@ export class CriarMotoristaController {
       body.email,
       body.cpf,
       body.fornecedorId,
+      body.telefone,
     );
 
     const response = new MotoristaDto(
@@ -27,6 +28,8 @@ export class CriarMotoristaController {
       motorista.email,
       motorista.cpf,
       motorista.fornecedorId,
+      motorista.telefone,
+      motorista.dataAtivacao.toISO() ?? undefined,
     );
 
     return {

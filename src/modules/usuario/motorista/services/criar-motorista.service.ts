@@ -21,6 +21,7 @@ export class CriarMotoristaService {
     email: string,
     cpf: string,
     fornecedorId: number,
+    telefone?: string,
   ): Promise<Motorista> {
     const usuarioComMesmoCpf = await this.usuarioRepository.buscarPorCpf(cpf);
 
@@ -48,6 +49,8 @@ export class CriarMotoristaService {
       0,
       fornecedorId,
       cpf,
+      undefined,
+      telefone,
     );
 
     return this.motoristaRepository.criar(motorista);

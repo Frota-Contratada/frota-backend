@@ -10,6 +10,17 @@ export const CriarMotoristaRequestSchema = z.object({
     .int()
     .positive({ message: 'Informe um id de fornecedor válido' })
     .max(9999999999, { message: 'Id de fornecedor inválido' }),
+  // Aceita o telefone formatado e guarda só os dígitos.
+  telefone: z
+    .string()
+    .transform((valor) => valor.replace(/\D/g, ''))
+    .pipe(
+      z
+        .string()
+        .min(10, { message: 'Informe o telefone com DDD' })
+        .max(11, { message: 'Informe o telefone com DDD' }),
+    )
+    .optional(),
 });
 
 export class CriarMotoristaRequestDto extends createZodDto(

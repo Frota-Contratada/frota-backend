@@ -18,6 +18,7 @@ export class PrismaMotoristaMapper {
       entity.dDesativacao == null
         ? undefined
         : DateTime.fromJSDate(entity.dDesativacao),
+      entity.cTelefone ?? undefined,
     );
   }
 }
