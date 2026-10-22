@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { DiaSemana } from '../../contrato/enums/dia-semana.enum';
 import { resolverPeriodo } from '../../contrato/enums/periodo.enum';
+import { calcularValorPorRegras } from '../domain/calculo-valor-regras';
 import { CondicaoRegra } from '../domain/condicao-regra';
 import { ContratoPrecificacao } from '../domain/contrato-precificacao';
 import {
@@ -66,36 +67,30 @@ export class CalcularValorEstimadoService {
       }
     }
 
-    let valor = 0;
-    const regrasAplicadas: RegraAplicada[] = [];
+    const resultado = calcularValorPorRegras(
+      regrasAplicaveis.map(({ regra }) => ({
+        id: regra.id,
+        prioridade: regra.prioridade,
+        tipoRegraId: regra.tipoRegraId,
+        valorFixo: regra.valorFixo,
+        valorKm: regra.valorKm,
+        percentual: regra.percentual,
+      })),
+      contexto.distanciaKm,
+    );
 
-    for (const { regra } of regrasAplicaveis) {
-      let valorCobrado = 0;
+    if (resultado == null) return undefined;
 
-      if (regra.valorFixo != null) {
-        valorCobrado += regra.valorFixo;
-      }
-
-      if (regra.valorKm != null) {
-        valorCobrado += regra.valorKm * contexto.distanciaKm;
-      }
-
-      if (regra.percentual != null) {
-        valorCobrado += valor * (regra.percentual / 100);
-      }
-
-      valor += valorCobrado;
-      regrasAplicadas.push({
-        regraId: regra.id,
-        valorCobrado: Math.round(valorCobrado * 100) / 100,
-      });
-    }
+    const regrasCobradas = new Set(
+      resultado.regrasAplicadas.map((item) => item.regraId),
+    );
 
     return {
-      valorEstimado: Math.round(valor * 100) / 100,
-      rotaFixaId: regrasAplicaveis.find((item) => item.rotaFixaId != null)
-        ?.rotaFixaId,
-      regrasAplicadas,
+      valorEstimado: resultado.valor,
+      rotaFixaId: regrasAplicaveis.find(
+        (item) => item.rotaFixaId != null && regrasCobradas.has(item.regra.id),
+      )?.rotaFixaId,
+      regrasAplicadas: resultado.regrasAplicadas,
     };
   }
 
@@ -103,21 +98,23 @@ export class CalcularValorEstimadoService {
     regra: Regra,
     contexto: ContextoPrecificacao,
   ): RegraAplicavel | undefined {
+    // Sem condição a regra vale para qualquer corrida; lista vazia não restringe.
     const condicao = regra.condicao;
-    if (condicao == null) return undefined;
+    if (condicao == null) return { regra };
 
     const diaSemana = this.diaSemanaDaData(contexto.dataCorrida);
     const periodo = resolverPeriodo(contexto.dataCorrida);
 
-    if (!condicao.diasSemana.includes(diaSemana)) return undefined;
-    if (!condicao.periodos.includes(periodo)) return undefined;
+    if (!this.permite(condicao.diasSemana, diaSemana)) return undefined;
+    if (!this.permite(condicao.periodos, periodo)) return undefined;
     if (
-      contexto.tipoVeiculoId == null ||
-      !condicao.tipoVeiculoIds.includes(contexto.tipoVeiculoId)
+      condicao.tipoVeiculoIds.length > 0 &&
+      (contexto.tipoVeiculoId == null ||
+        !condicao.tipoVeiculoIds.includes(contexto.tipoVeiculoId))
     ) {
       return undefined;
     }
-    if (!condicao.tipoCorridaIds.includes(contexto.tipoCorridaId)) {
+    if (!this.permite(condicao.tipoCorridaIds, contexto.tipoCorridaId)) {
       return undefined;
     }
 
@@ -133,6 +130,10 @@ export class CalcularValorEstimadoService {
     }
 
     return { regra, rotaFixaId };
+  }
+
+  private permite<T>(opcoes: T[], valor: T): boolean {
+    return opcoes.length === 0 || opcoes.includes(valor);
   }
 
   private perguntaFoiRespondidaComSim(

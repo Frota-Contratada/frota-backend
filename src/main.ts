@@ -10,7 +10,7 @@ import Redis from 'ioredis';
 import { Server, ServerOptions } from 'socket.io';
 import { hmlCorsOrigins } from './common/config/hml-cors-origins';
 
-Settings.defaultZone = process.env.TZ ?? 'UTC';
+Settings.defaultZone = process.env.TIME_ZONE ?? 'UTC';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

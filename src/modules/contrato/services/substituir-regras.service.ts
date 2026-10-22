@@ -34,21 +34,25 @@ export class SubstituirRegrasService {
             0,
             regra.prioridade,
             regra.tipo,
-            new CondicaoRegra(
-              0,
-              regra.condicao.diasSemana,
-              regra.condicao.periodos,
-              regra.condicao.rotasFixas.map(
-                (rota) =>
-                  new CondicaoRotaFixa(
-                    this.criarEndereco(rota.origem),
-                    this.criarEndereco(rota.destino),
+            regra.condicao == null
+              ? undefined
+              : new CondicaoRegra(
+                  0,
+                  regra.condicao.diasSemana,
+                  regra.condicao.periodos,
+                  regra.condicao.rotasFixas.map(
+                    (rota) =>
+                      new CondicaoRotaFixa(
+                        this.criarEndereco(rota.origem),
+                        this.criarEndereco(rota.destino),
+                      ),
                   ),
-              ),
-              regra.condicao.tipoVeiculoIds,
-              regra.condicao.tipoCorridaIds,
-              new CondicaoOutro(regra.condicao.outro.pergunta),
-            ),
+                  regra.condicao.tipoVeiculoIds,
+                  regra.condicao.tipoCorridaIds,
+                  regra.condicao.outro == null
+                    ? undefined
+                    : new CondicaoOutro(regra.condicao.outro.pergunta),
+                ),
             regra.valorKm,
             regra.valorFixo,
             regra.percentual,

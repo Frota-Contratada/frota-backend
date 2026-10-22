@@ -352,6 +352,9 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
           },
         });
 
+        const condicao = regra.condicao;
+        if (condicao == null) continue;
+
         await tx.condicaoRegra.create({
           data: {
             nCdContrato: contratoId,
@@ -359,16 +362,16 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
             nCdCondicao: condicaoId,
             cTipoCondicao: 'CONDICAO_COMPLETA',
             cValor: JSON.stringify({
-              diasSemana: regra.condicao.diasSemana,
-              periodos: regra.condicao.periodos,
-              tipoVeiculoIds: regra.condicao.tipoVeiculoIds,
-              tipoCorridaIds: regra.condicao.tipoCorridaIds,
-              aplicaOutroQuando: 'SIM',
+              diasSemana: condicao.diasSemana,
+              periodos: condicao.periodos,
+              tipoVeiculoIds: condicao.tipoVeiculoIds,
+              tipoCorridaIds: condicao.tipoCorridaIds,
+              ...(condicao.outro == null ? {} : { aplicaOutroQuando: 'SIM' }),
             }),
           },
         });
 
-        for (const rota of regra.condicao.rotasFixas) {
+        for (const rota of condicao.rotasFixas) {
           const enderecoOrigemId = proximoEnderecoId++;
           const enderecoDestinoId = proximoEnderecoId++;
           const rotaId = proximaRotaId++;
@@ -422,12 +425,14 @@ export class PrismaContratoRepository extends ContratoRepositoryContract {
           });
         }
 
+        if (condicao.outro == null) continue;
+
         const perguntaId = proximaPerguntaId++;
         await tx.perguntaContrato.create({
           data: {
             nCdContrato: contratoId,
             nCdPergunta: perguntaId,
-            cPergunta: regra.condicao.outro.pergunta,
+            cPergunta: condicao.outro.pergunta,
           },
         });
         await tx.condicaoRegraOutro.create({
