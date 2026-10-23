@@ -13,6 +13,7 @@ describe('DecidirSolicitacaoAprovadorService', () => {
       id: 8,
       solicitanteId: 1002,
       fornecedorId: 20,
+      contratoId: 2,
       centrosCusto: [
         {
           aprovadorId: 1003,
@@ -39,8 +40,12 @@ describe('DecidirSolicitacaoAprovadorService', () => {
     const contratoPrecificacaoRepository = {
       buscarCandidatos: jest.fn().mockResolvedValue(candidatos),
     };
+    // Valor por contrato; sem valor definido, 38,50.
+    const valores: Record<number, number> = { 3: 30, 4: 50, 5: 25 };
     const calcularValorEstimadoService = {
-      avaliar: jest.fn().mockReturnValue({ valorEstimado: 38.5 }),
+      avaliar: jest.fn((contrato: { contratoId: number }) => ({
+        valorEstimado: valores[contrato.contratoId] ?? 38.5,
+      })),
     };
     const prismaService = {
       usuario: {
@@ -84,6 +89,45 @@ describe('DecidirSolicitacaoAprovadorService', () => {
     expect(
       notificarSolicitacao.solicitacaoAguardandoFornecedor,
     ).toHaveBeenCalledWith(8);
+  });
+
+  it('mantém o contrato da solicitação quando o fornecedor tem outro mais barato', async () => {
+    const { service, solicitacaoRepository } = criarService([
+      { fornecedorId: 20, contratoId: 3 },
+      { fornecedorId: 20, contratoId: 2 },
+    ]);
+
+    await service.execute(8, 1003, { decisao: 'APROVAR' });
+
+    expect(solicitacaoRepository.decidirPeloAprovador).toHaveBeenCalledWith(
+      8,
+      1003,
+      expect.objectContaining({
+        fornecedorId: 20,
+        contratoId: 2,
+        valorEstimado: 38.5,
+      }),
+    );
+  });
+
+  it('usa o contrato de menor valor do fornecedor trocado pelo aprovador', async () => {
+    const { service, solicitacaoRepository } = criarService([
+      { fornecedorId: 20, contratoId: 2 },
+      { fornecedorId: 10, contratoId: 4 },
+      { fornecedorId: 10, contratoId: 5 },
+    ]);
+
+    await service.execute(8, 1003, { decisao: 'APROVAR', fornecedorId: 10 });
+
+    expect(solicitacaoRepository.decidirPeloAprovador).toHaveBeenCalledWith(
+      8,
+      1003,
+      expect.objectContaining({
+        fornecedorId: 10,
+        contratoId: 5,
+        valorEstimado: 25,
+      }),
+    );
   });
 
   it('usa o fornecedor escolhido pelo aprovador quando informado', async () => {
