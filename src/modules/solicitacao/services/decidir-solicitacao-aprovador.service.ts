@@ -137,39 +137,46 @@ export class DecidirSolicitacaoAprovadorService {
         solicitacao.tipoCorrida.id,
         solicitacao.dataCorrida,
       );
-    const candidato = candidatos.find(
-      (item) => item.fornecedorId === fornecedorEscolhidoId,
-    );
-
-    if (candidato == null) {
-      throw new FornecedorIndisponivelException(
-        solicitante.nCdFilial.toNumber(),
-        solicitacao.tipoCorrida.id,
+    // Fornecedor com mais de um contrato vigente: fica o contrato gravado na
+    // solicitação; se o aprovador trocou de fornecedor, o de menor valor.
+    const precificados = candidatos
+      .filter((item) => item.fornecedorId === fornecedorEscolhidoId)
+      .flatMap((candidato) => {
+        const resultado = this.calcularValorEstimadoService.avaliar(candidato, {
+          distanciaKm: solicitacao.distanciaEstimadaKm,
+          dataCorrida: solicitacao.dataCorrida,
+          tipoCorridaId: solicitacao.tipoCorrida.id,
+          tipoVeiculoId: solicitacao.tipoVeiculo?.id,
+          quantidadeParadas: solicitacao.paradas.length,
+          origem: {
+            latitude: solicitacao.origem.latitude,
+            longitude: solicitacao.origem.longitude,
+          },
+          destino: {
+            latitude: solicitacao.destino.latitude,
+            longitude: solicitacao.destino.longitude,
+          },
+          respostasPerguntas: solicitacao.respostasPerguntas.map(
+            (resposta) => ({
+              contratoId: candidato.contratoId,
+              perguntaId: resposta.perguntaId,
+              resposta: resposta.resposta,
+            }),
+          ),
+        });
+        return resultado == null ? [] : [{ candidato, resultado }];
+      })
+      .sort(
+        (um, outro) =>
+          um.resultado.valorEstimado - outro.resultado.valorEstimado,
       );
-    }
 
-    const resultado = this.calcularValorEstimadoService.avaliar(candidato, {
-      distanciaKm: solicitacao.distanciaEstimadaKm,
-      dataCorrida: solicitacao.dataCorrida,
-      tipoCorridaId: solicitacao.tipoCorrida.id,
-      tipoVeiculoId: solicitacao.tipoVeiculo?.id,
-      quantidadeParadas: solicitacao.paradas.length,
-      origem: {
-        latitude: solicitacao.origem.latitude,
-        longitude: solicitacao.origem.longitude,
-      },
-      destino: {
-        latitude: solicitacao.destino.latitude,
-        longitude: solicitacao.destino.longitude,
-      },
-      respostasPerguntas: solicitacao.respostasPerguntas.map((resposta) => ({
-        contratoId: candidato.contratoId,
-        perguntaId: resposta.perguntaId,
-        resposta: resposta.resposta,
-      })),
-    });
+    const escolhido =
+      precificados.find(
+        ({ candidato }) => candidato.contratoId === solicitacao.contratoId,
+      ) ?? precificados[0];
 
-    if (resultado == null) {
+    if (escolhido == null) {
       throw new FornecedorIndisponivelException(
         solicitante.nCdFilial.toNumber(),
         solicitacao.tipoCorrida.id,
@@ -177,10 +184,10 @@ export class DecidirSolicitacaoAprovadorService {
     }
 
     return {
-      fornecedorId: candidato.fornecedorId,
-      contratoId: candidato.contratoId,
-      valorEstimado: resultado.valorEstimado,
-      rotaFixaId: resultado.rotaFixaId,
+      fornecedorId: escolhido.candidato.fornecedorId,
+      contratoId: escolhido.candidato.contratoId,
+      valorEstimado: escolhido.resultado.valorEstimado,
+      rotaFixaId: escolhido.resultado.rotaFixaId,
     };
   }
 }
