@@ -127,6 +127,8 @@ const MOTIVO = {
   CANCEL_MUDANCA_AGENDA: 20,
   CANCEL_NAO_PRECISO: 21,
   CANCEL_ERRO: 22,
+  CANCEL_EXPIRACAO: 23,
+  CANCEL_NAO_REALIZADA: 24,
   RECUSA_FORA_POLITICA: 40,
   RECUSA_CC_INCORRETO: 41,
   RECUSA_SEM_VERBA: 42,
@@ -470,6 +472,16 @@ async function semearCatalogos() {
     {
       id: MOTIVO.CANCEL_ERRO,
       nome: 'Erro ao preencher a solicitação',
+      tipo: TIPO_MOTIVO.CANCELAMENTO,
+    },
+    {
+      id: MOTIVO.CANCEL_EXPIRACAO,
+      nome: 'Não aprovada até o horário da corrida',
+      tipo: TIPO_MOTIVO.CANCELAMENTO,
+    },
+    {
+      id: MOTIVO.CANCEL_NAO_REALIZADA,
+      nome: 'Solicitação aprovada, mas não realizada até o final do dia da corrida',
       tipo: TIPO_MOTIVO.CANCELAMENTO,
     },
     {

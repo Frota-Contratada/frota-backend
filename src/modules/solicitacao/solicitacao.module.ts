@@ -38,6 +38,8 @@ import { CalcularValorEstimadoService } from './services/calcular-valor-estimado
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
 import { CalcularRotaSolicitacaoService } from './services/calcular-rota-solicitacao.service';
 import { BuscarSugestoesEnderecoService } from './services/buscar-sugestoes-endereco.service';
+import { ExpirarSolicitacoesPendentesJob } from './services/expirar-solicitacoes-pendentes.job';
+import { ExpirarSolicitacoesPendentesService } from './services/expirar-solicitacoes-pendentes.service';
 import { CriarCorridaService } from './services/criar-corrida.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
 import { DecidirSolicitacaoFornecedorService } from './services/decidir-solicitacao-fornecedor.service';
@@ -83,6 +85,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     CancelarSolicitacaoService,
     CalcularRotaSolicitacaoService,
     BuscarSugestoesEnderecoService,
+    ExpirarSolicitacoesPendentesService,
+    ExpirarSolicitacoesPendentesJob,
     DecidirSolicitacaoFornecedorService,
     DecidirSolicitacaoAprovadorService,
     CriarCorridaService,
