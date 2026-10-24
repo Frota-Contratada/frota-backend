@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@core/auth/auth.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { RotaModule } from '@core/rota/rota.module';
+import { GeocodificacaoModule } from '@integration/geocodificacao/geocodificacao.module';
 import { CentroDeCustoModule } from '@module/centro-de-custo/centro-de-custo.module';
 import { MotivoModule } from '@module/motivo/motivo.module';
 import { NotificacaoModule } from '@module/notificacao/notificacao.module';
@@ -9,6 +10,8 @@ import { ColaboradorModule } from '@module/usuario/colaborador/colaborador.modul
 import { TrackingModule } from '@module/tracking/tracking.module';
 import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { BuscarCatalogosController } from './controllers/buscar-catalogos.controller';
+import { CalcularRotaController } from './controllers/calcular-rota.controller';
+import { BuscarSugestoesEnderecoController } from './controllers/buscar-sugestoes-endereco.controller';
 import { BuscarFornecedoresCandidatosController } from './controllers/buscar-fornecedores-candidatos.controller';
 import { BuscarSolicitacaoController } from './controllers/buscar-solicitacao.controller';
 import { BuscarViagensAgendadasController } from './controllers/buscar-viagens-agendadas.controller';
@@ -33,6 +36,8 @@ import { BuscarSolicitacoesParaAprovacaoService } from './services/buscar-solici
 import { BuscarViagensAgendadasService } from './services/buscar-viagens-agendadas.service';
 import { CalcularValorEstimadoService } from './services/calcular-valor-estimado.service';
 import { CancelarSolicitacaoService } from './services/cancelar-solicitacao.service';
+import { CalcularRotaSolicitacaoService } from './services/calcular-rota-solicitacao.service';
+import { BuscarSugestoesEnderecoService } from './services/buscar-sugestoes-endereco.service';
 import { CriarCorridaService } from './services/criar-corrida.service';
 import { CriarSolicitacaoService } from './services/criar-solicitacao.service';
 import { DecidirSolicitacaoFornecedorService } from './services/decidir-solicitacao-fornecedor.service';
@@ -45,6 +50,7 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     PrismaModule,
     AuthModule,
     RotaModule,
+    GeocodificacaoModule,
     UsuarioInfoModule,
     ColaboradorModule,
     CentroDeCustoModule,
@@ -54,6 +60,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
   ],
   controllers: [
     BuscarCatalogosController,
+    CalcularRotaController,
+    BuscarSugestoesEnderecoController,
     BuscarViagensAgendadasController,
     SimularSolicitacaoController,
     CriarSolicitacaoController,
@@ -73,6 +81,8 @@ import { SimularSolicitacaoService } from './services/simular-solicitacao.servic
     BuscarFornecedoresCandidatosService,
     BuscarViagensAgendadasService,
     CancelarSolicitacaoService,
+    CalcularRotaSolicitacaoService,
+    BuscarSugestoesEnderecoService,
     DecidirSolicitacaoFornecedorService,
     DecidirSolicitacaoAprovadorService,
     CriarCorridaService,
