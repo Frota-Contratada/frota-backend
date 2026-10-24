@@ -882,16 +882,26 @@ async function semearFornecedores() {
 
 async function semearContratos() {
   const contratos = CONTRATOS;
+  const inicioVigencia = DateTime.now()
+    .minus({ months: 6 })
+    .startOf('day')
+    .toJSDate();
 
   for (const contrato of contratos) {
     await prisma.contrato.upsert({
       where: { nCdContrato: contrato.id },
-      update: { dVigenciaFim: null },
+      update: {
+        cSituacao: 'publicado',
+        dVigenciaInicio: inicioVigencia,
+        dVigenciaFim: null,
+      },
       create: {
         nCdContrato: contrato.id,
         cCaminhoArquivo: `contratos/contrato-${contrato.id}.pdf`,
         nCdUsuarioCadastro: USUARIO.ADMIN,
-        dVigenciaInicio: DateTime.now().minus({ months: 6 }).toJSDate(),
+        dVigenciaInicio: inicioVigencia,
+        dVigenciaFim: null,
+        cSituacao: 'publicado',
       },
     });
 
