@@ -54,6 +54,7 @@ const USUARIO = {
   SOLICITANTE_MARINGA: 1021,
   APROVADOR_COMERCIAL_MARINGA: 1022,
   APROVADOR_SUPRIMENTOS_MARINGA: 1023,
+  PRIMEIRO_ACESSO: 1024,
 };
 
 const CPF = {
@@ -76,6 +77,7 @@ const CPF = {
   SOLICITANTE_MARINGA: '77722233344',
   APROVADOR_COMERCIAL_MARINGA: '66611122233',
   APROVADOR_SUPRIMENTOS_MARINGA: '66622233344',
+  PRIMEIRO_ACESSO: '77733344466',
 };
 
 const TIPO_CORRIDA = {
@@ -807,6 +809,17 @@ async function semearUsuarios() {
       centroCustoId: CENTRO_CUSTO_MARINGA.SUPRIMENTOS,
       perfis: ['aprovador'],
     },
+    {
+      id: USUARIO.PRIMEIRO_ACESSO,
+      nome: 'Usuário Primeiro Acesso',
+      email: 'primeiro.acesso@frota.com.br',
+      cargo: 'Usuário de teste de primeiro acesso',
+      cpf: CPF.PRIMEIRO_ACESSO,
+      filialId: FILIAL.LONDRINA,
+      centroCustoId: CENTRO_CUSTO.OPERACOES,
+      perfis: ['solicitante'],
+      semSenha: true,
+    },
   ];
 
   for (const usuario of usuarios) {
@@ -818,7 +831,7 @@ async function semearUsuarios() {
       nCdFilial: usuario.filialId ?? null,
       nCdCentroCusto: usuario.centroCustoId ?? null,
       nCdFornecedor: usuario.fornecedorId ?? null,
-      cHashSenha: senha,
+      cHashSenha: 'semSenha' in usuario && usuario.semSenha ? null : senha,
       cDisponivel: 'S',
       dDesativacao: null,
     };
@@ -2087,6 +2100,7 @@ async function main() {
   console.log('  solicitante:       passageiro.teste@frota.com.br');
   console.log('                     bruno.cavalcanti@frota.com.br');
   console.log('                     larissa.antunes@frota.com.br (Maringá)');
+  console.log('  primeiro acesso:   primeiro.acesso@frota.com.br (sem senha)');
   console.log('  motorista:         motorista.teste@frota.com.br');
   console.log('');
   console.log(
