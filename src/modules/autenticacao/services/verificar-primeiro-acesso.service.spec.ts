@@ -1,3 +1,4 @@
+import { EmailNaoCadastradoException } from '../exceptions/email-nao-cadastrado.exception';
 import { VerificarPrimeiroAcessoService } from './verificar-primeiro-acesso.service';
 
 describe('VerificarPrimeiroAcessoService', () => {
@@ -18,9 +19,9 @@ describe('VerificarPrimeiroAcessoService', () => {
     ).resolves.toBe(false);
   });
 
-  it('não indica primeiro acesso para e-mail inexistente', async () => {
+  it('rejeita e-mail inexistente sem encaminhar para senha', async () => {
     await expect(
       criarService(null).execute('inexistente@frota.com.br'),
-    ).resolves.toBe(false);
+    ).rejects.toBeInstanceOf(EmailNaoCadastradoException);
   });
 });
