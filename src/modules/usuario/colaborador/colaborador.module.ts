@@ -4,9 +4,11 @@ import { PrismaModule } from '@core/prisma/prisma.module';
 import { StorageModule } from '@core/storage/storage.module';
 import { CentroDeCustoModule } from '@module/centro-de-custo/centro-de-custo.module';
 import { FilialModule } from '@module/filial/filial.module';
+import { UsuarioInfoModule } from '@module/usuario/info/usuario-info.module';
 import { BuscarBeneficiariosController } from './controllers/buscar-beneficiarios.controller';
 import { BuscarPerfisDoColaboradorController } from './controllers/buscar-perfis-do-colaborador.controller';
 import { BuscarVariosColaboradoresController } from './controllers/buscar-varios-colaboradores.controller';
+import { CriarColaboradorController } from './controllers/criar-colaborador.controller';
 import { TornarAprovadorController } from './controllers/tornar-aprovador.controller';
 import { TornarSolicitanteController } from './controllers/tornar-solicitante.controller';
 import { TornarSolicitanteEmergenciaController } from './controllers/tornar-solicitante-emergencia.controller';
@@ -16,6 +18,7 @@ import { BuscarBeneficiariosService } from './services/buscar-beneficiarios.serv
 import { BuscarBigNumbersColaboradoresService } from './services/buscar-big-numbers-colaboradores.service';
 import { BuscarPerfisDoColaboradorService } from './services/buscar-perfis-do-colaborador.service';
 import { BuscarVariosColaboradoresService } from './services/buscar-varios-colaboradores.service';
+import { CriarColaboradorService } from './services/criar-colaborador.service';
 import { TornarAprovadorService } from './services/tornar-aprovador.service';
 import { TornarSolicitanteService } from './services/tornar-solicitante.service';
 import { TornarSolicitanteEmergenciaService } from './services/tornar-solicitante-emergencia.service';
@@ -27,9 +30,11 @@ import { TornarSolicitanteEmergenciaService } from './services/tornar-solicitant
     AuthModule,
     CentroDeCustoModule,
     FilialModule,
+    UsuarioInfoModule,
   ],
   controllers: [
     BuscarVariosColaboradoresController,
+    CriarColaboradorController,
     BuscarBeneficiariosController,
     BuscarPerfisDoColaboradorController,
     TornarSolicitanteController,
@@ -38,6 +43,7 @@ import { TornarSolicitanteEmergenciaService } from './services/tornar-solicitant
   ],
   providers: [
     BuscarVariosColaboradoresService,
+    CriarColaboradorService,
     BuscarBeneficiariosService,
     BuscarBigNumbersColaboradoresService,
     BuscarPerfisDoColaboradorService,
