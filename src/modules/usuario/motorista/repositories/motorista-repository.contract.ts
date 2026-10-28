@@ -8,6 +8,7 @@ export abstract class MotoristaRepositoryContract {
   abstract buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
+    fornecedorId?: number;
     ordenarPor?: CampoOrdenacaoMotorista;
     direcao?: DirecaoOrdenacao;
     page: number;

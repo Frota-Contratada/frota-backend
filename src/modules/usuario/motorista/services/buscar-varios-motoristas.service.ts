@@ -14,6 +14,7 @@ export class BuscarVariosMotoristasService {
   async execute(filtros: {
     nome?: string;
     cpf?: string;
+    fornecedorId?: number;
     ordenarPor?: CampoOrdenacaoMotorista;
     direcao?: DirecaoOrdenacao;
     page: number;
@@ -22,6 +23,7 @@ export class BuscarVariosMotoristasService {
     return this.motoristaRepository.buscarVarios({
       nome: filtros.nome,
       cpf: filtros.cpf,
+      fornecedorId: filtros.fornecedorId,
       ordenarPor: filtros.ordenarPor,
       direcao: filtros.direcao,
       page: filtros.page,
