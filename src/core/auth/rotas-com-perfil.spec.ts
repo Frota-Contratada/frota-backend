@@ -71,6 +71,7 @@ const PERFIS_ESPERADOS: Record<string, TipoPerfil[]> = {
   ],
   'BuscarEmpresaController.buscar': [ADMIN_MASTER, ADMIN_FILIAL],
   'BuscarPerfisDoColaboradorController.handle': [ADMIN_MASTER, ADMIN_FILIAL],
+  'CriarColaboradorController.handle': [ADMIN_MASTER, ADMIN_FILIAL],
 };
 
 function arquivosDeController(pasta: string): string[] {

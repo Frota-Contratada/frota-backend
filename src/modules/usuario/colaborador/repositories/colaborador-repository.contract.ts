@@ -36,4 +36,13 @@ export abstract class ColaboradorRepositoryContract {
     usuarioId: number,
     tipoPerfil: TipoPerfil,
   ): Promise<void>;
+  /** Grava o colaborador sem senha e devolve o ID gerado. */
+  abstract criar(dados: {
+    nome: string;
+    email: string;
+    cpf?: string;
+    cargo?: string;
+    empresaId: number;
+    filialId: number;
+  }): Promise<number>;
 }

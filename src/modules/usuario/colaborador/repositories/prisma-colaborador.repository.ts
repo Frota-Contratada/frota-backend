@@ -147,6 +147,36 @@ export class PrismaColaboradorRepository extends ColaboradorRepositoryContract {
     });
   }
 
+  async criar(dados: {
+    nome: string;
+    email: string;
+    cpf?: string;
+    cargo?: string;
+    empresaId: number;
+    filialId: number;
+  }): Promise<number> {
+    const cliente = this.prismaService.cliente;
+    const ultimoUsuario = await cliente.usuario.aggregate({
+      _max: { nCdUsuario: true },
+    });
+    const proximoId = (ultimoUsuario._max.nCdUsuario?.toNumber() ?? 0) + 1;
+
+    await cliente.usuario.create({
+      data: {
+        nCdUsuario: proximoId,
+        cNmUsuario: dados.nome,
+        cEmail: dados.email,
+        cCPF: dados.cpf ?? null,
+        cCargo: dados.cargo ?? null,
+        nCdEmpresa: dados.empresaId,
+        nCdFilial: dados.filialId,
+        cDisponivel: 'S',
+      },
+    });
+
+    return proximoId;
+  }
+
   async buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
