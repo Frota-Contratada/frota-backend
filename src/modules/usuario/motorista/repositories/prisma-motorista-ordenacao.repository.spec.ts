@@ -24,4 +24,22 @@ describe('PrismaMotoristaRepository.buscarVarios', () => {
       }),
     );
   });
+
+  it('filtra pelo fornecedor quando informado', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const repository = new PrismaMotoristaRepository({
+      usuario: { findMany, count },
+    } as never);
+
+    await repository.buscarVarios({ fornecedorId: 864, page: 1, limit: 10 });
+    await repository.buscarVarios({ page: 1, limit: 10 });
+
+    expect(count).toHaveBeenNthCalledWith(1, {
+      where: { nCdFornecedor: 864 },
+    });
+    expect(count).toHaveBeenNthCalledWith(2, {
+      where: { nCdFornecedor: { not: null } },
+    });
+  });
 });

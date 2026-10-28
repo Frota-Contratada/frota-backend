@@ -6,6 +6,7 @@ import { CampoOrdenacaoMotorista } from '../../../enums/ordenacao-motorista.enum
 export const BuscarMotoristasQuerySchema = z.object({
   nome: z.string().optional(),
   cpf: z.string().optional(),
+  fornecedorId: z.coerce.number().int().positive().optional(),
   ordenarPor: z.enum(CampoOrdenacaoMotorista).optional(),
   direcao: z.enum(DirecaoOrdenacao).default(DirecaoOrdenacao.ASC),
   page: z.coerce.number().int().positive().default(1),

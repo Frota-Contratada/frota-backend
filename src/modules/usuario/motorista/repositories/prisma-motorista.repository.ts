@@ -40,13 +40,15 @@ export class PrismaMotoristaRepository extends MotoristaRepositoryContract {
   async buscarVarios(filtros: {
     nome?: string;
     cpf?: string;
+    fornecedorId?: number;
     ordenarPor?: CampoOrdenacaoMotorista;
     direcao?: DirecaoOrdenacao;
     page: number;
     limit: number;
   }): Promise<PaginatedResponseInterface<Motorista>> {
     const where = {
-      nCdFornecedor: { not: null },
+      nCdFornecedor:
+        filtros.fornecedorId != null ? filtros.fornecedorId : { not: null },
       ...(filtros.nome ? { cNmUsuario: { contains: filtros.nome } } : {}),
       ...(filtros.cpf ? { cCPF: { contains: filtros.cpf } } : {}),
     };

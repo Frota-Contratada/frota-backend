@@ -8,6 +8,11 @@ import { BuscarMotoristaService } from '../services/buscar-motorista.service';
 import { BuscarVariosMotoristasService } from '../services/buscar-varios-motoristas.service';
 import { BuscarMotoristasQueryDto } from './dtos/request/buscar-motoristas-query.dto';
 import { MotoristaDto } from './dtos/response/motorista.dto';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import type { AuthenticatedUser } from '@core/auth/types/authenticated-user';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
+import { fornecedorDoEscopo } from '../services/fornecedor-do-escopo';
 
 @ApiTags('Motorista')
 @Controller()
@@ -18,10 +23,19 @@ export class BuscarMotoristaController {
   ) {}
 
   @Get()
+  @Perfis(
+    TipoPerfil.ADMIN_MASTER,
+    TipoPerfil.ADMIN_FILIAL,
+    TipoPerfil.ADMIN_FORNECEDOR,
+  )
   async buscarVarios(
+    @CurrentUser() usuario: AuthenticatedUser,
     @Query() query: BuscarMotoristasQueryDto,
   ): Promise<ResponseInterface<PaginatedResponseInterface<MotoristaDto>>> {
-    const resultado = await this.buscarVariosMotoristasService.execute(query);
+    const resultado = await this.buscarVariosMotoristasService.execute({
+      ...query,
+      fornecedorId: fornecedorDoEscopo(usuario) ?? query.fornecedorId,
+    });
 
     return {
       response: {
@@ -44,11 +58,20 @@ export class BuscarMotoristaController {
   }
 
   @Get(':id')
+  @Perfis(
+    TipoPerfil.ADMIN_MASTER,
+    TipoPerfil.ADMIN_FILIAL,
+    TipoPerfil.ADMIN_FORNECEDOR,
+  )
   async buscar(
+    @CurrentUser() usuario: AuthenticatedUser,
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
   ): Promise<ResponseInterface<MotoristaDto>> {
-    const motorista = await this.buscarMotoristaService.execute(id);
+    const motorista = await this.buscarMotoristaService.execute(
+      id,
+      fornecedorDoEscopo(usuario),
+    );
 
     return {
       response: new MotoristaDto(
