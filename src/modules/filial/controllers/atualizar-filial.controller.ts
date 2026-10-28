@@ -6,6 +6,8 @@ import z from 'zod';
 import { AtualizarFilialService } from '../services/atualizar-filial.service';
 import { AtualizarFilialRequestDto } from './dtos/request/atualizar-filial-request.dto';
 import { FilialDto } from './dtos/response/filial.dto';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 
 @ApiTags('Filial')
 @Controller()
@@ -15,6 +17,7 @@ export class AtualizarFilialController {
   ) {}
 
   @Patch(':id')
+  @Perfis(TipoPerfil.ADMIN_MASTER)
   async handle(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,

@@ -5,6 +5,8 @@ import { PaginatedResponseInterface } from '@common/interfaces/paginated-respons
 import { BuscarVariasFiliaisService } from '../services/buscar-varias-filiais.service';
 import { BuscarVariasFiliaisQueryDto } from './dtos/request/buscar-varias-filiais-query.dto';
 import { FilialDto } from './dtos/response/filial.dto';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 
 @ApiTags('Filial')
 @Controller()
@@ -14,6 +16,11 @@ export class BuscarVariasFiliaisController {
   ) {}
 
   @Get()
+  @Perfis(
+    TipoPerfil.ADMIN_MASTER,
+    TipoPerfil.ADMIN_FILIAL,
+    TipoPerfil.APROVADOR,
+  )
   async handle(
     @Query() query: BuscarVariasFiliaisQueryDto,
   ): Promise<ResponseInterface<PaginatedResponseInterface<FilialDto>>> {

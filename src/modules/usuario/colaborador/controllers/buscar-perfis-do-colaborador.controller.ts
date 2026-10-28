@@ -5,6 +5,8 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarPerfisDoColaboradorService } from '../services/buscar-perfis-do-colaborador.service';
 import { PerfisDoColaboradorDto } from './dtos/response/perfis-do-colaborador.dto';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 
 const idParamPipe = new ZodValidationPipe(z.coerce.number().int().positive());
 
@@ -17,6 +19,7 @@ export class BuscarPerfisDoColaboradorController {
   ) {}
 
   @Get(':id/perfis')
+  @Perfis(TipoPerfil.ADMIN_MASTER, TipoPerfil.ADMIN_FILIAL)
   async handle(
     @Param('id', idParamPipe) id: number,
   ): Promise<ResponseInterface<PerfisDoColaboradorDto>> {

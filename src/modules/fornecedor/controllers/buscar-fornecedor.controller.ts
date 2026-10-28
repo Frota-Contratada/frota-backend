@@ -5,6 +5,8 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import z from 'zod';
 import { BuscarFornecedorService } from '../services/buscar-fornecedor.service';
 import { FornecedorDto } from './dtos/response/fornecedor.dto';
+import { Perfis } from '@core/auth/decorators/perfis.decorator';
+import { TipoPerfil } from '@module/autenticacao/enums/tipo-perfil.enum';
 
 @ApiTags('Fornecedor')
 @Controller()
@@ -14,6 +16,7 @@ export class BuscarFornecedorController {
   ) {}
 
   @Get(':id')
+  @Perfis(TipoPerfil.ADMIN_MASTER, TipoPerfil.ADMIN_FILIAL)
   async buscar(
     @Param('id', new ZodValidationPipe(z.coerce.number().int().positive()))
     id: number,
