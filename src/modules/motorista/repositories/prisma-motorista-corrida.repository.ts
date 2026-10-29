@@ -11,6 +11,9 @@ import {
 import { MotoristaCorrida, MotoristaPerfil } from '../domain/motorista-corrida';
 import { MotoristaCorridaRepositoryContract } from './motorista-corrida-repository.contract';
 
+// O motorista só inicia a corrida a partir de 30 min antes do horário marcado.
+const ANTECEDENCIA_INICIO_MINUTOS = 30;
+
 const INCLUDE_CORRIDA = {
   Solicitacao: {
     include: {
@@ -100,7 +103,9 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
         atual,
         tipoAtual?.cNmTipoCorrida ?? '',
       );
-      const limiteInicio = DateTime.now().plus({ minutes: 30 });
+      const limiteInicio = DateTime.now().plus({
+        minutes: ANTECEDENCIA_INICIO_MINUTOS,
+      });
 
       if (
         !dominioAtual.ehProxima ||
@@ -333,7 +338,13 @@ export class PrismaMotoristaCorridaRepository extends MotoristaCorridaRepository
     status: StatusCorrida,
     agora: DateTime,
   ): boolean {
-    if (status === StatusCorrida.AGENDADA) return true;
+    // O app mostra "Iniciar" e "Recusar" quando ehProxima vem true; por isso a
+    // agendada só é próxima dentro da janela em que o início é aceito.
+    if (status === StatusCorrida.AGENDADA) {
+      return (
+        dataHoraPartida <= agora.plus({ minutes: ANTECEDENCIA_INICIO_MINUTOS })
+      );
+    }
     if (status !== StatusCorrida.INICIADA || dataHoraPartida <= agora) {
       return false;
     }
