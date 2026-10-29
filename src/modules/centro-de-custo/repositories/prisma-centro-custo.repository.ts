@@ -87,7 +87,8 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
   ): Promise<number[]> {
     const agora = new Date();
 
-    const aprovadores = await this.prismaService.usuario.findMany({
+    // Pelo cliente da transação: enxerga um aprovador concedido na mesma operação.
+    const aprovadores = await this.prismaService.cliente.usuario.findMany({
       where: {
         nCdEmpresa: empresaId,
         nCdFilial: filialId,
@@ -130,7 +131,9 @@ export class PrismaCentroCustoRepository extends CentroCustoRepositoryContract {
   ): Promise<number | null> {
     const agora = new Date();
 
-    const aprovador = await this.prismaService.usuario.findFirst({
+    // Pelo cliente da transação: no cadastro de colaborador, o perfil de
+    // aprovador concedido antes do de solicitante ainda não foi confirmado.
+    const aprovador = await this.prismaService.cliente.usuario.findFirst({
       where: {
         nCdEmpresa: empresaId,
         nCdFilial: filialId,
